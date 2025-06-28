@@ -1,0 +1,90 @@
+{
+  "projectName": "Comiketter",
+  "language": "ja",
+  "framework": "react-typescript",
+  "codingStandards": {
+    "indentSize": 2,
+    "maxLineLength": 100,
+    "quoteStyle": "single",
+    "semicolons": true,
+    "trailingComma": "es5"
+  },
+  "fileNaming": {
+    "directories": "kebab-case",
+    "files": "kebab-case",
+    "components": "PascalCase",
+    "types": "PascalCase",
+    "constants": "UPPER_SNAKE_CASE"
+  },
+  "testing": {
+    "framework": "jest",
+    "library": "@testing-library/react",
+    "coverage": 80,
+    "naming": {
+      "testFiles": ".test.ts",
+      "specFiles": ".spec.ts"
+    }
+  },
+  "linting": {
+    "eslint": true,
+    "prettier": true,
+    "typescript": true
+  },
+  "documentation": {
+    "language": "ja",
+    "format": "markdown",
+    "structure": {
+      "api": "docs/api/",
+      "userGuide": "docs/user-guide/",
+      "development": "docs/development/"
+    }
+  },
+  "security": {
+    "xssProtection": true,
+    "inputValidation": true,
+    "secureStorage": true
+  },
+  "performance": {
+    "bundleOptimization": true,
+    "lazyLoading": true,
+    "memoization": true
+  },
+  "aiAssistance": {
+    "codeReview": true,
+    "testGeneration": true,
+    "documentation": true,
+    "refactoring": true
+  },
+  "projectStructure": {
+    "src": {
+      "background": "バックグラウンドスクリプト",
+      "components": "再利用可能なUIコンポーネント",
+      "contentScript": "コンテンツスクリプト",
+      "hooks": "カスタムReactフック",
+      "options": "オプションページ",
+      "popup": "ポップアップページ",
+      "stores": "状態管理",
+      "test": "テストファイル",
+      "types": "型定義",
+      "utils": "ユーティリティ関数"
+    }
+  },
+  "features": {
+    "filenameSettings": {
+      "enabled": true,
+      "patternTokens": 13,
+      "validation": true,
+      "preview": true
+    },
+    "apiInterception": {
+      "enabled": true,
+      "typeSafety": true,
+      "errorHandling": true
+    },
+    "customBookmarks": {
+      "enabled": true,
+      "flexibleStructure": true,
+      "uiConsistency": true
+    }
+  }
+} 
