@@ -39,6 +39,41 @@
 | ダウンロード履歴DB | ダウンロードの記録を CB とは別DBに保存し、ファイル名・保存時刻・URL などを後から参照可能 |
 | コミケAPI連携（予定） | 将来的にコミケ公式APIを用いた出展者情報取得・CB自動分類等の機能追加を検討中 |
 
+### 📁 ファイル名・パス設定機能（TwitterMediaHarvest準拠）
+
+#### パターントークン（ファイル名に含める情報）
+- `{account}` - アカウント名（screenName）
+- `{accountId}` - アカウントID（userId）
+- `{tweetId}` - ツイートID
+- `{serial}` - シリアル番号（メディアファイルの順番）
+- `{hash}` - ハッシュ値
+- `{date}` - ダウンロード日付（YYYYMMDD）
+- `{datetime}` - ダウンロード日時（YYYYMMDDHHMMSS）
+- `{underscoreDatetime}` - ダウンロード日時（YYYYMMDD_HHMMSS）
+- `{timestamp}` - ダウンロードタイムスタンプ
+- `{tweetDate}` - ツイート投稿日付（YYYYMMDD）
+- `{tweetDatetime}` - ツイート投稿日時（YYYYMMDDHHMMSS）
+- `{underscroeTweetDatetime}` - ツイート投稿日時（YYYYMMDD_HHMMSS）
+- `{tweetTimestamp}` - ツイート投稿タイムスタンプ
+
+#### ディレクトリ設定
+- **サブディレクトリ**: 作成/無効化の切り替え
+- **ディレクトリ名**: カスタマイズ可能（例: `comiketter`）
+- **アカウント別ディレクトリ**: `{account}`でグループ化（例: `comiketter/elonMask/114514.png`）
+
+#### ファイル名パターン設定UI
+- **ドラッグ&ドロップ**: トークンの順序変更
+- **トグル機能**: トークンの有効/無効切り替え
+- **リアルタイムプレビュー**: 設定変更時の即座なファイル名表示
+- **設定永続化**: IndexedDBによる設定保存
+
+#### 設定例
+```
+ディレクトリ: comiketter
+ファイル名パターン: {account}-{tweetDate}-{tweetId}-{serial}
+結果: comiketter/elonMask/20241201-1145141919810-01.jpg
+```
+
 ---
 
 ## 🏗 技術スタック
@@ -77,3 +112,4 @@
 - [ ] DL履歴構造のDB設計
 - [ ] コミケAPI連携の仕様リサーチ
 - [ ] API傍受→DL処理→DB構築→ブックマーク処理→ブックマーク表示の順で開発
+- [ ] ファイル名・パス設定機能の実装（TwitterMediaHarvest準拠）

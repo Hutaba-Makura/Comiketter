@@ -1,121 +1,265 @@
 // Chrome extension storage utility functions
 import type { Settings, CustomBookmark, BookmarkedTweet, DownloadHistory } from '@/types';
+import { FilenameSettingProps, AppSettings } from '../types';
+import { FilenameGenerator } from './filenameGenerator';
 
-const DEFAULT_SETTINGS: Settings = {
-  tlAutoUpdateDisabled: false,
-  saveFormat: 'url',
-  autoDownloadConditions: {
+// ストレージキー定数
+const STORAGE_KEYS = {
+  SETTINGS: 'comiketter_settings',
+  FILENAME_SETTINGS: 'comiketter_filename_settings',
+  CUSTOM_BOOKMARKS: 'comiketter_custom_bookmarks',
+  DOWNLOAD_HISTORY: 'comiketter_download_history',
+} as const;
+
+// デフォルト設定
+const DEFAULT_SETTINGS: AppSettings = {
+  downloadMethod: 'chrome-api',
+  saveFormat: 'mixed',
+  autoSaveTriggers: {
     retweet: false,
     like: false,
-    both: false,
+    retweetAndLike: false,
   },
-  downloadMethod: 'chrome-api',
-  saveDirectory: '',
+  filenameSettings: FilenameGenerator.getDefaultFilenameSettings(),
+  timelineAutoUpdate: false,
+  showCustomBookmarks: true,
 };
 
+/**
+ * ストレージ管理クラス
+ */
 export class StorageManager {
-  // Settings management
-  static async getSettings(): Promise<Settings> {
-    return new Promise((resolve) => {
-      chrome.storage.sync.get(['settings'], (result) => {
-        resolve(result.settings || DEFAULT_SETTINGS);
+  /**
+   * 設定を取得
+   */
+  static async getSettings(): Promise<AppSettings> {
+    try {
+      const result = await chrome.storage.local.get(STORAGE_KEYS.SETTINGS);
+      return result[STORAGE_KEYS.SETTINGS] || DEFAULT_SETTINGS;
+    } catch (error) {
+      console.error('Failed to get settings:', error);
+      return DEFAULT_SETTINGS;
+    }
+  }
+
+  /**
+   * 設定を保存
+   */
+  static async saveSettings(settings: Partial<AppSettings>): Promise<void> {
+    try {
+      const currentSettings = await this.getSettings();
+      const newSettings = { ...currentSettings, ...settings };
+      await chrome.storage.local.set({ [STORAGE_KEYS.SETTINGS]: newSettings });
+    } catch (error) {
+      console.error('Failed to save settings:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * ファイル名設定を取得
+   */
+  static async getFilenameSettings(): Promise<FilenameSettingProps> {
+    try {
+      const result = await chrome.storage.local.get(STORAGE_KEYS.FILENAME_SETTINGS);
+      return result[STORAGE_KEYS.FILENAME_SETTINGS] || FilenameGenerator.getDefaultFilenameSettings();
+    } catch (error) {
+      console.error('Failed to get filename settings:', error);
+      return FilenameGenerator.getDefaultFilenameSettings();
+    }
+  }
+
+  /**
+   * ファイル名設定を保存
+   */
+  static async saveFilenameSettings(settings: FilenameSettingProps): Promise<void> {
+    try {
+      // 設定の検証
+      const validationError = FilenameGenerator.validateFilenameSettings(settings);
+      if (validationError) {
+        throw new Error(validationError);
+      }
+
+      await chrome.storage.local.set({ [STORAGE_KEYS.FILENAME_SETTINGS]: settings });
+    } catch (error) {
+      console.error('Failed to save filename settings:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * ファイル名設定をリセット
+   */
+  static async resetFilenameSettings(): Promise<void> {
+    try {
+      await chrome.storage.local.set({
+        [STORAGE_KEYS.FILENAME_SETTINGS]: FilenameGenerator.getDefaultFilenameSettings()
       });
-    });
+    } catch (error) {
+      console.error('Failed to reset filename settings:', error);
+      throw error;
+    }
   }
 
-  static async saveSettings(settings: Partial<Settings>): Promise<void> {
-    return new Promise((resolve) => {
-      chrome.storage.sync.set({ settings }, resolve);
-    });
-  }
-
-  // Custom Bookmarks management
+  /**
+   * カスタムブックマークを取得
+   */
   static async getCustomBookmarks(): Promise<CustomBookmark[]> {
-    return new Promise((resolve) => {
-      chrome.storage.local.get(['customBookmarks'], (result) => {
-        resolve(result.customBookmarks || []);
-      });
-    });
-  }
-
-  static async saveCustomBookmark(bookmark: CustomBookmark): Promise<void> {
-    const bookmarks = await this.getCustomBookmarks();
-    const existingIndex = bookmarks.findIndex((b) => b.id === bookmark.id);
-    
-    if (existingIndex >= 0) {
-      bookmarks[existingIndex] = bookmark;
-    } else {
-      bookmarks.push(bookmark);
+    try {
+      const result = await chrome.storage.local.get(STORAGE_KEYS.CUSTOM_BOOKMARKS);
+      return result[STORAGE_KEYS.CUSTOM_BOOKMARKS] || [];
+    } catch (error) {
+      console.error('Failed to get custom bookmarks:', error);
+      return [];
     }
-
-    return new Promise((resolve) => {
-      chrome.storage.local.set({ customBookmarks: bookmarks }, resolve);
-    });
   }
 
-  static async deleteCustomBookmark(bookmarkId: string): Promise<void> {
-    const bookmarks = await this.getCustomBookmarks();
-    const filteredBookmarks = bookmarks.filter((b) => b.id !== bookmarkId);
-
-    return new Promise((resolve) => {
-      chrome.storage.local.set({ customBookmarks: filteredBookmarks }, resolve);
-    });
-  }
-
-  // Bookmarked Tweets management
-  static async getBookmarkedTweets(): Promise<BookmarkedTweet[]> {
-    return new Promise((resolve) => {
-      chrome.storage.local.get(['bookmarkedTweets'], (result) => {
-        resolve(result.bookmarkedTweets || []);
-      });
-    });
-  }
-
-  static async saveBookmarkedTweet(bookmarkedTweet: BookmarkedTweet): Promise<void> {
-    const bookmarkedTweets = await this.getBookmarkedTweets();
-    const existingIndex = bookmarkedTweets.findIndex((bt) => bt.id === bookmarkedTweet.id);
-    
-    if (existingIndex >= 0) {
-      bookmarkedTweets[existingIndex] = bookmarkedTweet;
-    } else {
-      bookmarkedTweets.push(bookmarkedTweet);
+  /**
+   * カスタムブックマークを保存
+   */
+  static async saveCustomBookmarks(bookmarks: CustomBookmark[]): Promise<void> {
+    try {
+      await chrome.storage.local.set({ [STORAGE_KEYS.CUSTOM_BOOKMARKS]: bookmarks });
+    } catch (error) {
+      console.error('Failed to save custom bookmarks:', error);
+      throw error;
     }
-
-    return new Promise((resolve) => {
-      chrome.storage.local.set({ bookmarkedTweets }, resolve);
-    });
   }
 
-  static async deleteBookmarkedTweet(bookmarkedTweetId: string): Promise<void> {
-    const bookmarkedTweets = await this.getBookmarkedTweets();
-    const filteredTweets = bookmarkedTweets.filter((bt) => bt.id !== bookmarkedTweetId);
-
-    return new Promise((resolve) => {
-      chrome.storage.local.set({ bookmarkedTweets: filteredTweets }, resolve);
-    });
+  /**
+   * カスタムブックマークを追加
+   */
+  static async addCustomBookmark(bookmark: Omit<CustomBookmark, 'id' | 'createdAt' | 'updatedAt' | 'tweetCount'>): Promise<CustomBookmark> {
+    try {
+      const bookmarks = await this.getCustomBookmarks();
+      const newBookmark: CustomBookmark = {
+        ...bookmark,
+        id: this.generateId(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        tweetCount: 0,
+      };
+      
+      bookmarks.push(newBookmark);
+      await this.saveCustomBookmarks(bookmarks);
+      return newBookmark;
+    } catch (error) {
+      console.error('Failed to add custom bookmark:', error);
+      throw error;
+    }
   }
 
-  // Download History management
+  /**
+   * カスタムブックマークを更新
+   */
+  static async updateCustomBookmark(id: string, updates: Partial<CustomBookmark>): Promise<void> {
+    try {
+      const bookmarks = await this.getCustomBookmarks();
+      const index = bookmarks.findIndex(b => b.id === id);
+      if (index === -1) {
+        throw new Error(`Bookmark with id ${id} not found`);
+      }
+
+      bookmarks[index] = {
+        ...bookmarks[index],
+        ...updates,
+        updatedAt: new Date().toISOString(),
+      };
+
+      await this.saveCustomBookmarks(bookmarks);
+    } catch (error) {
+      console.error('Failed to update custom bookmark:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * カスタムブックマークを削除
+   */
+  static async deleteCustomBookmark(id: string): Promise<void> {
+    try {
+      const bookmarks = await this.getCustomBookmarks();
+      const filteredBookmarks = bookmarks.filter(b => b.id !== id);
+      await this.saveCustomBookmarks(filteredBookmarks);
+    } catch (error) {
+      console.error('Failed to delete custom bookmark:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * ダウンロード履歴を取得
+   */
   static async getDownloadHistory(): Promise<DownloadHistory[]> {
-    return new Promise((resolve) => {
-      chrome.storage.local.get(['downloadHistory'], (result) => {
-        resolve(result.downloadHistory || []);
-      });
-    });
+    try {
+      const result = await chrome.storage.local.get(STORAGE_KEYS.DOWNLOAD_HISTORY);
+      return result[STORAGE_KEYS.DOWNLOAD_HISTORY] || [];
+    } catch (error) {
+      console.error('Failed to get download history:', error);
+      return [];
+    }
   }
 
-  static async saveDownloadHistory(history: DownloadHistory): Promise<void> {
-    const downloadHistory = await this.getDownloadHistory();
-    downloadHistory.push(history);
-
-    return new Promise((resolve) => {
-      chrome.storage.local.set({ downloadHistory }, resolve);
-    });
+  /**
+   * ダウンロード履歴を保存
+   */
+  static async saveDownloadHistory(history: DownloadHistory[]): Promise<void> {
+    try {
+      await chrome.storage.local.set({ [STORAGE_KEYS.DOWNLOAD_HISTORY]: history });
+    } catch (error) {
+      console.error('Failed to save download history:', error);
+      throw error;
+    }
   }
 
-  static async clearDownloadHistory(): Promise<void> {
-    return new Promise((resolve) => {
-      chrome.storage.local.remove(['downloadHistory'], resolve);
-    });
+  /**
+   * ダウンロード履歴を追加
+   */
+  static async addDownloadHistory(history: Omit<DownloadHistory, 'id'>): Promise<DownloadHistory> {
+    try {
+      const histories = await this.getDownloadHistory();
+      const newHistory: DownloadHistory = {
+        ...history,
+        id: this.generateId(),
+      };
+      
+      histories.push(newHistory);
+      await this.saveDownloadHistory(histories);
+      return newHistory;
+    } catch (error) {
+      console.error('Failed to add download history:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 全データをクリア
+   */
+  static async clearAllData(): Promise<void> {
+    try {
+      await chrome.storage.local.clear();
+    } catch (error) {
+      console.error('Failed to clear all data:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * ストレージ使用量を取得
+   */
+  static async getStorageUsage(): Promise<number> {
+    try {
+      return await chrome.storage.local.getBytesInUse()
+    } catch (error) {
+      console.error('Failed to get storage usage:', error)
+      throw error
+    }
+  }
+
+  /**
+   * ID生成
+   */
+  private static generateId(): string {
+    return Date.now().toString(36) + Math.random().toString(36).substr(2);
   }
 } 

@@ -25,6 +25,7 @@
   "author": "Comiketter Team",
   "license": "MIT",
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.3",
     "@types/chrome": "^0.0.260",
     "@types/jest": "^29.5.8",
     "@types/node": "^20.8.10",
@@ -46,6 +47,7 @@
     "style-loader": "^3.3.3",
     "ts-jest": "^29.1.1",
     "ts-loader": "^9.5.0",
+    "ts-node": "^10.9.2",
     "typescript": "^5.2.2",
     "webpack": "^5.89.0",
     "webpack-cli": "^5.1.4",
@@ -61,4 +63,4 @@
     "node": ">=18.0.0",
     "yarn": ">=1.22.0"
   }
-} 
+}
