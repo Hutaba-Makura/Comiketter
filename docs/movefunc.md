@@ -1,7 +1,16 @@
+# 機能移植・流用方針
+
+- TwitterMediaHarvest から流用する際は、該当ソースの先頭や修正箇所にライセンス表記を必ず記載すること。
+- 保存方式はchrome.downloads API（デフォルト）とNativeMessaging+curl（オプション、.bat等で連携）両対応。
+- CBデータ構造は保存形式や参照方式に応じて柔軟に設計。
+- 開発順序は「API傍受→DL処理→DB構築→ブックマーク処理→ブックマーク表示」。
+
+---
+
 移植したい機能の関連ファイルを調査してリストアップいたします。まず、プロジェクト構造を詳しく確認して、各機能に関連するファイルを特定していきます。
 ## 移植したい機能の関連ファイル一覧
 
-### 1. �� API傍受（リクエスト/レスポンス監視）
+### 1.  API傍受（リクエスト/レスポンス監視）
 
 #### XHR / Fetch 傍受
 - **`src/injections/injectFetch.ts`** - メインのAPI傍受処理
@@ -57,7 +66,7 @@
   - `restIdFetchTweet.ts`
   - `guestFetchTweet.ts`
 
-### 4. �� ダウンロードボタンの追加（DOM操作）
+### 4.  ダウンロードボタンの追加（DOM操作）
 
 #### MutationObserverによる監視
 - **`src/contentScript/observers/observer.ts`** - 基本のObserver実装
