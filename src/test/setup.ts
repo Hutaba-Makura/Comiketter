@@ -29,7 +29,7 @@ global.chrome = {
     query: jest.fn(),
     sendMessage: jest.fn(),
   },
-} as any;
+} as unknown as typeof chrome;
 
 // Mock window.fetch
 global.fetch = jest.fn();

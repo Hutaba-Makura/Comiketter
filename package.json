@@ -10,8 +10,8 @@
     "watch": "webpack --config webpack.config.mjs --watch",
     "test": "jest",
     "test:watch": "jest --watch",
-    "lint": "eslint src --ext .ts,.tsx",
-    "lint:fix": "eslint src --ext .ts,.tsx --fix",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
     "format": "prettier --write src/**/*.{ts,tsx,js,jsx,json,css,scss}",
     "type-check": "tsc --noEmit"
   },

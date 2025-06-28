@@ -18,6 +18,25 @@ export default [
           jsx: true,
         },
       },
+      globals: {
+        // Browser globals
+        window: 'readonly',
+        document: 'readonly',
+        console: 'readonly',
+        // Chrome extension globals
+        chrome: 'readonly',
+        // Jest globals
+        jest: 'readonly',
+        global: 'readonly',
+        describe: 'readonly',
+        it: 'readonly',
+        test: 'readonly',
+        expect: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        beforeAll: 'readonly',
+        afterAll: 'readonly',
+      },
     },
     plugins: {
       '@typescript-eslint': typescript,
@@ -41,6 +60,25 @@ export default [
       sourceType: 'module',
       ecmaFeatures: {
         jsx: true,
+      },
+      globals: {
+        // Browser globals
+        window: 'readonly',
+        document: 'readonly',
+        console: 'readonly',
+        // Chrome extension globals
+        chrome: 'readonly',
+        // Jest globals
+        jest: 'readonly',
+        global: 'readonly',
+        describe: 'readonly',
+        it: 'readonly',
+        test: 'readonly',
+        expect: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        beforeAll: 'readonly',
+        afterAll: 'readonly',
       },
     },
     plugins: {

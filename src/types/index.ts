@@ -61,8 +61,8 @@ export interface Settings {
   saveDirectory: string;
 }
 
-export interface ApiResponse {
+export interface ApiResponse<T = unknown> {
   success: boolean;
-  data?: any;
+  data?: T;
   error?: string;
 } 
