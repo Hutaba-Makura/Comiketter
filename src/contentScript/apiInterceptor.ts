@@ -28,7 +28,7 @@ const requestPathWeakMap = new WeakMap<XMLHttpRequest, TxTarget>();
 
 const Pattern = Object.freeze({
   tweetRelated:
-    /^(?:\/i\/api)?\/graphql\/(?<queryId>.+)?\/(?<queryName>TweetDetail|TweetResultByRestId|UserTweets|UserMedia|HomeTimeline|HomeLatestTimeline|UserTweetsAndReplies|UserHighlightsTweets|UserArticlesTweets|Bookmarks|Likes|CommunitiesExploreTimeline|ListLatestTweetsTimeline)$/,
+    /^(?:\/i\/api)?\/graphql\/(?<queryId>.+)?\/(?<queryName>TweetDetail|TweetResultByRestId|UserTweets|UserMedia|HomeTimeline|HomeLatestTimeline|UserTweetsAndReplies|UserHighlightsTweets|UserArticlesTweets|Bookmarks|Likes|CommunitiesExploreTimeline|ListLatestTweetsTimeline|SearchTimeline|UserByScreenName|UserByRestId)$/,
 });
 
 const enum ComiketterEvent {
@@ -53,6 +53,7 @@ XMLHttpRequest.prototype.open = new Proxy(XMLHttpRequest.prototype.open, {
     if (validUrl) {
       const matchedUrl = validUrl.pathname.match(Pattern.tweetRelated);
       if (validUrl && matchedUrl) {
+        console.log('Comiketter: URL matched pattern, adding listener:', validUrl.pathname);
         thisArg.addEventListener('load', captureResponse);
         requestPathWeakMap.set(thisArg, {
           method,
@@ -70,6 +71,7 @@ function captureResponse(this: XMLHttpRequest, _ev: ProgressEvent) {
     const url = URL.parse(this.responseURL);
     if (!url) return;
 
+    console.log('Comiketter: Response captured for:', url.pathname);
     const event = new CustomEvent<Comiketter.ApiResponseDetail>(
       ComiketterEvent.ApiResponse,
       {

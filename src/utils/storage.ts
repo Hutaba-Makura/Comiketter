@@ -13,14 +13,32 @@ const STORAGE_KEYS = {
 
 // デフォルト設定
 const DEFAULT_SETTINGS: AppSettings = {
+  // 基本設定
+  tlAutoUpdateDisabled: false,
+  
+  // ダウンロード設定
   downloadMethod: 'chrome-api',
   saveFormat: 'mixed',
+  saveDirectory: 'comiketter',
+  
+  // 自動ダウンロード条件
+  autoDownloadConditions: {
+    retweet: false,
+    like: false,
+    both: false,
+  },
+  
+  // 自動保存トリガー
   autoSaveTriggers: {
     retweet: false,
     like: false,
     retweetAndLike: false,
   },
+  
+  // ファイル名・パス設定
   filenameSettings: FilenameGenerator.getDefaultFilenameSettings(),
+  
+  // UI設定
   timelineAutoUpdate: false,
   showCustomBookmarks: true,
 };
@@ -249,10 +267,10 @@ export class StorageManager {
    */
   static async getStorageUsage(): Promise<number> {
     try {
-      return await chrome.storage.local.getBytesInUse()
+      return await chrome.storage.local.getBytesInUse();
     } catch (error) {
-      console.error('Failed to get storage usage:', error)
-      throw error
+      console.error('Failed to get storage usage:', error);
+      throw error;
     }
   }
 

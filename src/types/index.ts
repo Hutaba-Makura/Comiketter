@@ -140,23 +140,24 @@ export interface DownloadHistory {
   status?: 'success' | 'failed' | 'pending'
 }
 
-// 設定関連の型定義
-export interface Settings {
+// 設定関連の型定義（統一版）
+export interface AppSettings {
+  // 基本設定
   tlAutoUpdateDisabled: boolean;
-  saveFormat: 'url' | 'blob' | 'mixed';
+  
+  // ダウンロード設定
+  downloadMethod: 'chrome-api' | 'native-messaging'
+  saveFormat: 'url' | 'blob' | 'mixed'
+  saveDirectory: string
+  
+  // 自動ダウンロード条件
   autoDownloadConditions: {
     retweet: boolean;
     like: boolean;
     both: boolean;
-  };
-  downloadMethod: 'chrome-api' | 'native-messaging';
-  saveDirectory: string;
-}
-
-export interface AppSettings {
-  // ダウンロード設定
-  downloadMethod: 'chrome-api' | 'native-messaging'
-  saveFormat: 'url' | 'file' | 'mixed'
+  }
+  
+  // 自動保存トリガー（新しい形式）
   autoSaveTriggers: {
     retweet: boolean
     like: boolean
@@ -170,6 +171,9 @@ export interface AppSettings {
   timelineAutoUpdate: boolean
   showCustomBookmarks: boolean
 }
+
+// 後方互換性のためのSettings型（AppSettingsのエイリアス）
+export type Settings = AppSettings;
 
 export interface ApiResponse<T = unknown> {
   success: boolean;
