@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Title, Text, Switch, Select, Button, Stack, Group, Divider } from '@mantine/core';
 import { StorageManager } from '@/utils/storage';
+import { FilenameSettings } from '@/components/FilenameSettings';
 import type { Settings } from '@/types';
 
 export const OptionsApp: React.FC = () => {
@@ -41,6 +42,11 @@ export const OptionsApp: React.FC = () => {
   const updateSettings = (updates: Partial<Settings>) => {
     if (!settings) return;
     setSettings({ ...settings, ...updates });
+  };
+
+  const updateFilenameSettings = (filenameSettings: Settings['filenameSettings']) => {
+    if (!settings) return;
+    setSettings({ ...settings, filenameSettings });
   };
 
   if (loading) {
@@ -98,6 +104,21 @@ export const OptionsApp: React.FC = () => {
               { value: 'chrome-api', label: 'Chrome Downloads API' },
               { value: 'native-messaging', label: 'Native Messaging (curl)' },
             ]}
+          />
+        </Stack>
+
+        <Divider />
+
+        <Stack gap="md">
+          <Title order={3} size="h4">ファイル名・パス設定</Title>
+          <Text size="sm" c="dimmed">
+            TwitterMediaHarvest準拠のファイル名・パス設定機能です。ダウンロードするファイルの命名規則をカスタマイズできます。
+          </Text>
+          
+          <FilenameSettings
+            settings={settings.filenameSettings}
+            onSettingsChange={updateFilenameSettings}
+            disabled={saving}
           />
         </Stack>
 

@@ -15,6 +15,11 @@ export class FilenameGenerator {
       return 'Maximum path is 4096 characters.'
     }
 
+    // 空のディレクトリ名は有効とする
+    if (directory === '') {
+      return undefined;
+    }
+
     const dirPattern = /^[^<>:"/\\|?*][^<>:"\\|?*]+$/
     if (!dirPattern.test(directory)) {
       return 'Directory path contains reserved characters. (`\\`, `?`, `<`, `>`, `,`, `:`, `*`, `|`, and `"`)'
@@ -189,7 +194,7 @@ export class FilenameGenerator {
    */
   private static formatPath(pathObj: { dir?: string; name: string; ext: string }): string {
     const { dir, name, ext } = pathObj
-    const filename = this.sanitizeFilename(name) + ext
+    const filename = this.sanitizeFilename(name) + (ext.startsWith('.') ? ext : '.' + ext)
     return dir ? this.joinPath(dir, filename) : filename
   }
 
@@ -222,14 +227,40 @@ export class FilenameGenerator {
         displayName: 'NickName',
         isProtected: false,
       },
-      createdAt: new Date(2222, 1, 2, 12, 5, 38),
+      createdAt: new Date(2024, 1, 2, 12, 5, 38),
       serial: 2,
       hash: '2vfn8shkjvd98892pR',
       source: 'https://somewhere.com',
       type: 'image',
-      ext: '.jpg',
+      ext: 'jpg',
     }
 
     return this.makeFilename(previewMediaFile, settings, { noDir: true })
+  }
+
+  /**
+   * パターントークンの一覧を取得する
+   * @returns パターントークンの説明付きリスト
+   */
+  static getPatternTokenDescriptions(): Array<{
+    token: PatternToken;
+    description: string;
+    example: string;
+  }> {
+    return [
+      { token: PatternToken.Account, description: 'アカウント名（screenName）', example: 'elonMask' },
+      { token: PatternToken.AccountId, description: 'アカウントID（userId）', example: '44196397' },
+      { token: PatternToken.TweetId, description: 'ツイートID', example: '1145141919810' },
+      { token: PatternToken.Serial, description: 'シリアル番号（メディアファイルの順番）', example: '01' },
+      { token: PatternToken.Hash, description: 'ハッシュ値', example: 'abc123' },
+      { token: PatternToken.Date, description: 'ダウンロード日付（YYYYMMDD）', example: '20241201' },
+      { token: PatternToken.Datetime, description: 'ダウンロード日時（YYYYMMDDHHMMSS）', example: '20241201143000' },
+      { token: PatternToken.UnderscoreDateTime, description: 'ダウンロード日時（YYYYMMDD_HHMMSS）', example: '20241201_143000' },
+      { token: PatternToken.Timestamp, description: 'ダウンロードタイムスタンプ', example: '1701432000000' },
+      { token: PatternToken.TweetDate, description: 'ツイート投稿日付（YYYYMMDD）', example: '20241201' },
+      { token: PatternToken.TweetDatetime, description: 'ツイート投稿日時（YYYYMMDDHHMMSS）', example: '20241201143000' },
+      { token: PatternToken.UnderscroeTweetDatetime, description: 'ツイート投稿日時（YYYYMMDD_HHMMSS）', example: '20241201_143000' },
+      { token: PatternToken.TweetTimestamp, description: 'ツイート投稿タイムスタンプ', example: '1701432000000' },
+    ];
   }
 } 

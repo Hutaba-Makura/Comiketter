@@ -251,6 +251,43 @@ export class StorageManager {
   }
 
   /**
+   * ダウンロード履歴を更新
+   */
+  static async updateDownloadHistory(id: string, updates: Partial<DownloadHistory>): Promise<void> {
+    try {
+      const histories = await this.getDownloadHistory();
+      const index = histories.findIndex(h => h.id === id);
+      if (index === -1) {
+        throw new Error(`Download history with id ${id} not found`);
+      }
+
+      histories[index] = {
+        ...histories[index],
+        ...updates,
+      };
+
+      await this.saveDownloadHistory(histories);
+    } catch (error) {
+      console.error('Failed to update download history:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * ダウンロード履歴を削除
+   */
+  static async deleteDownloadHistory(id: string): Promise<void> {
+    try {
+      const histories = await this.getDownloadHistory();
+      const filteredHistories = histories.filter(h => h.id !== id);
+      await this.saveDownloadHistory(filteredHistories);
+    } catch (error) {
+      console.error('Failed to delete download history:', error);
+      throw error;
+    }
+  }
+
+  /**
    * 全データをクリア
    */
   static async clearAllData(): Promise<void> {
