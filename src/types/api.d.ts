@@ -3,33 +3,56 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  * 
- * Comiketter: Modified and adapted from TwitterMediaHarvest
+ * Comiketter: API related type definitions
  */
+
+declare global {
+  namespace Comiketter {
+    interface ApiResponseDetail {
+      path: string;
+      status: number;
+      body: string;
+    }
+
+    interface TxIdRequestDetail {
+      path: string;
+      method: string;
+      uuid: string;
+    }
+
+    interface TxIdResponseDetail {
+      uuid: string;
+      value: string;
+    }
+  }
+}
+
+export type MakeTransactionId = (path: string, method: string) => Promise<string>;
+
+export type WebPackModuleItem = [string[], Module];
+
+export interface Module {
+  [key: string]: unknown;
+}
+
+export interface ESModule {
+  __esModule: true;
+  default: unknown;
+}
+
+export type WebpackLoadFunction = (
+  _: object,
+  esModule: Partial<ESModule>,
+  loader: CallableFunction
+) => void;
 
 export {};
 
 export declare namespace Comiketter {
-  interface ApiResponseDetail {
-    path: string;
-    status: number;
-    body: string;
-  }
-
   interface ApiResponseProcessedDetail {
     path: string;
     data: unknown;
     timestamp: number;
-  }
-
-  interface TxIdRequestDetail {
-    uuid: string;
-    path: string;
-    method: string;
-  }
-
-  interface TxIdResponseDetail {
-    uuid: string;
-    value: string;
   }
 }
 
@@ -41,15 +64,6 @@ interface CustomEventMap {
 }
 
 interface DocumentEventMap extends CustomEventMap {}
-
-export type WebpackLoadFunction = (a: unknown, b: unknown, c: unknown) => void;
-export type Module = Record<number | string, WebpackLoadFunction>;
-export type WebPackModuleItem = [[string], Module];
-export type ESModule<T = unknown> = {
-  default: T;
-  __esModule: true;
-};
-export type MakeTransactionId = (path: string, method: string) => Promise<string>;
 
 declare global {
   interface Window {

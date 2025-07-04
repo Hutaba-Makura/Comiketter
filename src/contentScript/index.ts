@@ -1,72 +1,41 @@
-// ContentScript entry point for Comiketter (ISOLATED world)
-// This file will be injected into Twitter/X pages in ISOLATED environment
+/**
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ * 
+ * Comiketter: Content script main entry point
+ */
 
 import { TweetObserver } from './tweetObserver';
-import { CustomBookmarkManager } from './customBookmarkManager';
-
-console.log('Comiketter: ContentScript loaded in ISOLATED world');
 
 class ContentScript {
   private tweetObserver: TweetObserver;
-  private customBookmarkManager: CustomBookmarkManager;
 
   constructor() {
+    console.log('Comiketter: Content script starting...');
+    
     this.tweetObserver = new TweetObserver();
-    this.customBookmarkManager = new CustomBookmarkManager();
+    
+    this.initialize();
   }
 
-  async init(): Promise<void> {
+  private async initialize(): Promise<void> {
     try {
-      // Initialize tweet observation
+      // ツイート監視を初期化
       await this.tweetObserver.init();
       
-      // Initialize custom bookmark functionality
-      await this.customBookmarkManager.init();
-      
-      // Listen for API responses from MAIN world
-      this.setupApiResponseListener();
-      
-      console.log('Comiketter: ContentScript initialized successfully');
+      console.log('Comiketter: Content script initialized successfully');
     } catch (error) {
-      console.error('Comiketter: Failed to initialize ContentScript', error);
+      console.error('Comiketter: Failed to initialize content script:', error);
     }
-  }
-
-  /**
-   * MAIN環境からのAPIレスポンスイベントを受信し、Service Workerに送信する
-   */
-  private setupApiResponseListener(): void {
-    document.addEventListener('comiketter:api-response-processed', (event: Event) => {
-      const customEvent = event as CustomEvent<{
-        path: string;
-        data: unknown;
-        timestamp: number;
-      }>;
-      
-      console.log('Comiketter: API response received from MAIN world:', customEvent.detail.path);
-      
-      // Service Workerにメッセージ送信
-      chrome.runtime.sendMessage({
-        type: 'API_RESPONSE_CAPTURED',
-        path: customEvent.detail.path,
-        data: customEvent.detail.data,
-        timestamp: customEvent.detail.timestamp,
-      }).catch(error => {
-        console.error('Comiketter: Failed to send message to background script', error);
-      });
-    });
   }
 }
 
-// Initialize when DOM is ready
+// ページ読み込み完了後にコンテンツスクリプトを開始
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(() => {
-      new ContentScript().init();
-    }, 100); // 少し遅延させて他のスクリプトの読み込みを待つ
+    new ContentScript();
   });
 } else {
-  setTimeout(() => {
-    new ContentScript().init();
-  }, 100);
+  new ContentScript();
 } 

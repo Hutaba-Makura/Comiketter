@@ -1,88 +1,177 @@
-// Message Handler for Chrome extension messaging
-// Handles API response messages from content script
+/**
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ * 
+ * Comiketter: Message handler for background script
+ */
 
-import type { Comiketter } from '@/types/api';
-
-interface ApiResponseMessage {
-  type: 'API_RESPONSE_CAPTURED';
-  path: string;
-  data: unknown;
-}
+import { DownloadManager, DownloadRequest } from './downloadManager';
+import { StorageManager } from '../utils/storage';
 
 export class MessageHandler {
+  private downloadManager: DownloadManager;
+
   constructor() {
-    console.log('Comiketter: MessageHandler constructor called');
+    this.downloadManager = new DownloadManager();
+    this.setupMessageListeners();
   }
 
-  async init(): Promise<void> {
-    console.log('Comiketter: MessageHandler initialized');
-    
-    // Listen for messages from content script
+  /**
+   * メッセージリスナーを設定
+   */
+  private setupMessageListeners(): void {
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       this.handleMessage(message, sender, sendResponse);
-      return true; // Keep the message channel open for async responses
+      return true; // 非同期レスポンスのためtrueを返す
+    });
+
+    // ダウンロード状態変更の監視
+    chrome.downloads.onChanged.addListener((downloadDelta) => {
+      this.handleDownloadChange(downloadDelta);
     });
   }
 
-  private handleMessage(
-    message: unknown,
-    sender: chrome.runtime.MessageSender,
-    sendResponse: (response?: unknown) => void
-  ): void {
-    console.log('Comiketter: Received message', message);
+  /**
+   * メッセージを処理
+   */
+  private async handleMessage(
+    message: any, 
+    sender: chrome.runtime.MessageSender, 
+    sendResponse: (response: any) => void
+  ): Promise<void> {
+    try {
+      console.log('Comiketter: Received message:', message);
 
-    if (this.isApiResponseMessage(message)) {
-      this.handleApiResponseMessage(message, sender);
+      switch (message.type) {
+        case 'DOWNLOAD_TWEET_MEDIA':
+          await this.handleDownloadTweetMedia(message.payload, sendResponse);
+          break;
+
+        case 'GET_SETTINGS':
+          await this.handleGetSettings(sendResponse);
+          break;
+
+        case 'SAVE_SETTINGS':
+          await this.handleSaveSettings(message.payload, sendResponse);
+          break;
+
+        case 'GET_DOWNLOAD_HISTORY':
+          await this.handleGetDownloadHistory(sendResponse);
+          break;
+
+        default:
+          console.warn('Comiketter: Unknown message type:', message.type);
+          sendResponse({ success: false, error: 'Unknown message type' });
+      }
+    } catch (error) {
+      console.error('Comiketter: Message handling error:', error);
+      sendResponse({ 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      });
+    }
+  }
+
+  /**
+   * ツイートメディアダウンロード要求を処理
+   */
+  private async handleDownloadTweetMedia(
+    payload: DownloadRequest, 
+    sendResponse: (response: any) => void
+  ): Promise<void> {
+    try {
+      const result = await this.downloadManager.downloadTweetMedia(payload);
+      sendResponse(result);
+    } catch (error) {
+      console.error('Comiketter: Download request failed:', error);
+      sendResponse({ 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Download failed' 
+      });
+    }
+  }
+
+  /**
+   * 設定取得要求を処理
+   */
+  private async handleGetSettings(sendResponse: (response: any) => void): Promise<void> {
+    try {
+      const settings = await StorageManager.getSettings();
+      sendResponse({ success: true, data: settings });
+    } catch (error) {
+      console.error('Comiketter: Failed to get settings:', error);
+      sendResponse({ 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to get settings' 
+      });
+    }
+  }
+
+  /**
+   * 設定保存要求を処理
+   */
+  private async handleSaveSettings(
+    payload: any, 
+    sendResponse: (response: any) => void
+  ): Promise<void> {
+    try {
+      await StorageManager.saveSettings(payload);
       sendResponse({ success: true });
-    } else {
-      console.warn('Comiketter: Unknown message type', message);
-      sendResponse({ success: false, error: 'Unknown message type' });
+    } catch (error) {
+      console.error('Comiketter: Failed to save settings:', error);
+      sendResponse({ 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to save settings' 
+      });
     }
   }
 
-  private isApiResponseMessage(message: unknown): message is ApiResponseMessage {
-    return (
-      typeof message === 'object' &&
-      message !== null &&
-      'type' in message &&
-      message.type === 'API_RESPONSE_CAPTURED' &&
-      'path' in message &&
-      'data' in message
-    );
-  }
-
-  private handleApiResponseMessage(
-    message: ApiResponseMessage,
-    sender: chrome.runtime.MessageSender
-  ): void {
-    console.log('Comiketter: Processing API response message', {
-      path: message.path,
-      tabId: sender.tab?.id,
-    });
-
-    // TODO: Implement specific API response processing based on path
-    // This will be expanded to handle different types of API responses
-    // such as tweet data, user actions (like, retweet), etc.
-    
-    switch (message.path) {
-      case '/i/api/graphql/HomeTimeline':
-        this.processHomeTimelineResponse(message.data);
-        break;
-      case '/i/api/graphql/TweetDetail':
-        this.processTweetDetailResponse(message.data);
-        break;
-      default:
-        console.log('Comiketter: Unhandled API path', message.path);
+  /**
+   * ダウンロード履歴取得要求を処理
+   */
+  private async handleGetDownloadHistory(sendResponse: (response: any) => void): Promise<void> {
+    try {
+      const history = await this.downloadManager.getDownloadHistory();
+      sendResponse({ success: true, data: history });
+    } catch (error) {
+      console.error('Comiketter: Failed to get download history:', error);
+      sendResponse({ 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to get download history' 
+      });
     }
   }
 
-  private processHomeTimelineResponse(data: unknown): void {
-    console.log('Comiketter: Processing HomeTimeline response');
-    // TODO: Extract tweet data and trigger download if conditions are met
-  }
+  /**
+   * ダウンロード状態変更を処理
+   */
+  private async handleDownloadChange(downloadDelta: chrome.downloads.DownloadDelta): Promise<void> {
+    try {
+      const { id, state } = downloadDelta;
+      
+      if (id && state) {
+        let status: string;
+        
+        switch (state.current) {
+          case 'complete':
+            status = 'success';
+            break;
+          case 'interrupted':
+            status = 'failed';
+            break;
+          case 'in_progress':
+            status = 'pending';
+            break;
+          default:
+            return;
+        }
 
-  private processTweetDetailResponse(data: unknown): void {
-    console.log('Comiketter: Processing TweetDetail response');
-    // TODO: Extract tweet data and trigger download if conditions are met
+        await this.downloadManager.updateDownloadStatus(id, status as any);
+        console.log('Comiketter: Download status updated:', { id, status });
+      }
+    } catch (error) {
+      console.error('Comiketter: Failed to handle download change:', error);
+    }
   }
 } 

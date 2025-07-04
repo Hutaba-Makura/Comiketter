@@ -1,24 +1,44 @@
+/**
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ * 
+ * Comiketter: Modified and adapted from TwitterMediaHarvest browserDownloadMediaFile.ts
+ */
+
 // Download Manager for media download functionality
-import { FilenameGenerator } from '@/utils/filenameGenerator';
-import { StorageManager } from '@/utils/storage';
-import type { TweetMediaFileProps, DownloadHistory, AppSettings } from '@/types';
+import { FilenameGenerator } from '../utils/filenameGenerator';
+import { StorageManager } from '../utils/storage';
+import type { TweetMediaFileProps, DownloadHistory, AppSettings } from '../types';
+
+export enum DownloadStatus {
+  Pending = 'pending',
+  InProgress = 'in_progress',
+  Complete = 'complete',
+  Failed = 'failed',
+  Cancelled = 'cancelled',
+}
+
+export interface DownloadRequest {
+  tweetId: string;
+  screenName: string;
+  mediaUrls?: string[];
+}
 
 export class DownloadManager {
   private settings: AppSettings | null = null;
+  private downloadHistory: Map<number, DownloadHistory> = new Map();
 
   constructor() {
-    // TODO: Initialize download management
+    this.initialize();
   }
 
-  async init(): Promise<void> {
-    console.log('Comiketter: DownloadManager initialized');
-    
-    // 設定を読み込み
+  private async initialize(): Promise<void> {
     try {
       this.settings = await StorageManager.getSettings();
-      console.log('Comiketter: Settings loaded for DownloadManager');
+      console.log('Comiketter: DownloadManager initialized');
     } catch (error) {
-      console.error('Comiketter: Failed to load settings for DownloadManager:', error);
+      console.error('Comiketter: Failed to initialize DownloadManager:', error);
     }
   }
 
@@ -40,6 +60,66 @@ export class DownloadManager {
     if (message.path.includes('/graphql/')) {
       console.log('Comiketter: GraphQL API response detected');
       // TODO: GraphQLレスポンスの解析とダウンロード処理
+    }
+  }
+
+  /**
+   * ツイートメディアのダウンロードを開始
+   */
+  async downloadTweetMedia(request: DownloadRequest): Promise<{ success: boolean; error?: string }> {
+    try {
+      console.log('Comiketter: Starting download for tweet:', request.tweetId);
+
+      // 設定を取得
+      const settings = await this.getSettings();
+      if (!settings) {
+        throw new Error('Settings not available');
+      }
+
+      // メディアURLを取得（API傍受から取得済みの場合）
+      let mediaUrls = request.mediaUrls;
+      if (!mediaUrls || mediaUrls.length === 0) {
+        // API傍受からメディア情報を取得
+        const cachedMedia = await this.getCachedMediaInfo(request.tweetId);
+        if (cachedMedia) {
+          mediaUrls = cachedMedia.map(media => media.source);
+        }
+      }
+
+      if (!mediaUrls || mediaUrls.length === 0) {
+        throw new Error('No media found for this tweet');
+      }
+
+      // 各メディアファイルをダウンロード
+      const downloadPromises = mediaUrls.map((url, index) => 
+        this.downloadMediaFile({
+          tweetId: request.tweetId,
+          source: url,
+          tweetUser: { 
+            screenName: request.screenName,
+            userId: '',
+            displayName: request.screenName,
+            isProtected: false
+          },
+          type: this.detectMediaType(url),
+          ext: this.getFileExtension(url),
+          serial: index + 1,
+          hash: this.generateHash(url),
+          createdAt: new Date(),
+        }, settings)
+      );
+
+      await Promise.all(downloadPromises);
+
+      console.log('Comiketter: Download completed for tweet:', request.tweetId);
+      return { success: true };
+
+    } catch (error) {
+      console.error('Comiketter: Download failed:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      };
     }
   }
 
@@ -74,11 +154,14 @@ export class DownloadManager {
         downloadMethod: currentSettings.downloadMethod,
         accountName: mediaFile.tweetUser.screenName,
         mediaUrl: mediaFile.source,
-        status: 'pending',
+        status: DownloadStatus.Pending,
       };
 
       // 履歴を保存
       const savedHistory = await StorageManager.addDownloadHistory(downloadHistory);
+      
+      // ダウンロードIDを履歴に保存
+      this.downloadHistory.set(downloadId, savedHistory);
       
       console.log('Comiketter: Media file download started:', filename);
       return savedHistory;
@@ -89,88 +172,167 @@ export class DownloadManager {
   }
 
   /**
-   * 実際のダウンロードを実行する
-   * @param url ダウンロードURL
-   * @param filename ファイル名
-   * @param settings 設定
-   * @returns ダウンロードID
+   * Chrome APIを使用してダウンロードを実行
    */
   private async executeDownload(
-    url: string,
-    filename: string,
+    url: string, 
+    filename: string, 
     settings: AppSettings
   ): Promise<number> {
-    if (settings.downloadMethod === 'chrome-api') {
-      return this.downloadWithChromeAPI(url, filename);
-    } else {
-      return this.downloadWithNativeMessaging(url, filename);
-    }
-  }
-
-  /**
-   * Chrome Downloads APIを使用してダウンロード
-   * @param url ダウンロードURL
-   * @param filename ファイル名
-   * @returns ダウンロードID
-   */
-  private async downloadWithChromeAPI(url: string, filename: string): Promise<number> {
-    return new Promise((resolve, reject) => {
-      chrome.downloads.download(
+    const downloadOptions: chrome.downloads.DownloadOptions = {
+      url: url,
+      filename: filename,
+      saveAs: false, // 設定に応じて変更可能
+      conflictAction: 'uniquify',
+      headers: [
         {
-          url: url,
-          filename: filename,
-          saveAs: false,
-          conflictAction: 'uniquify',
-        },
-        (downloadId) => {
-          if (chrome.runtime.lastError) {
-            reject(new Error(chrome.runtime.lastError.message));
-          } else {
-            resolve(downloadId);
-          }
+          name: 'Referer',
+          value: 'https://x.com/'
         }
-      );
-    });
-  }
+      ]
+    };
 
-  /**
-   * Native Messagingを使用してダウンロード（curl経由）
-   * @param url ダウンロードURL
-   * @param filename ファイル名
-   * @returns ダウンロードID（ダミー値）
-   */
-  private async downloadWithNativeMessaging(url: string, filename: string): Promise<number> {
-    // TODO: Native Messagingの実装
-    // 現在はダミー実装
-    console.log('Comiketter: Native messaging download requested:', { url, filename });
-    
-    // 実際の実装では、Native Messaging Hostとの通信を行う
-    // chrome.runtime.sendNativeMessage()を使用
-    
-    return Date.now(); // ダミーのダウンロードID
-  }
-
-  /**
-   * ダウンロード完了を処理する
-   * @param downloadId ダウンロードID
-   * @param success 成功フラグ
-   */
-  async handleDownloadComplete(downloadId: number, success: boolean): Promise<void> {
-    try {
-      // ダウンロード履歴を更新
-      const histories = await StorageManager.getDownloadHistory();
-      const history = histories.find(h => h.fileName.includes(downloadId.toString()));
-      
-      if (history) {
-        await StorageManager.updateDownloadHistory(history.id, {
-          status: success ? 'success' : 'failed',
-        });
-      }
-      
-      console.log('Comiketter: Download completed:', { downloadId, success });
-    } catch (error) {
-      console.error('Comiketter: Failed to handle download complete:', error);
+    // サブディレクトリが設定されている場合
+    if (!settings.filenameSettings.noSubDirectory && settings.filenameSettings.directory) {
+      downloadOptions.filename = `${settings.filenameSettings.directory}/${filename}`;
     }
+
+    try {
+      const downloadId = await chrome.downloads.download(downloadOptions);
+      
+      if (chrome.runtime.lastError) {
+        throw new Error(chrome.runtime.lastError.message);
+      }
+
+      return downloadId;
+    } catch (error) {
+      console.error('Comiketter: Chrome download failed:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * メディアタイプを検出
+   */
+  private detectMediaType(url: string): 'image' | 'video' {
+    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+    const videoExtensions = ['.mp4', '.mov', '.avi', '.webm'];
+    
+    const urlLower = url.toLowerCase();
+    
+    if (imageExtensions.some(ext => urlLower.includes(ext))) {
+      return 'image';
+    }
+    
+    if (videoExtensions.some(ext => urlLower.includes(ext))) {
+      return 'video';
+    }
+    
+    // URLパターンから判定
+    if (urlLower.includes('pbs.twimg.com/media/')) {
+      return 'image';
+    }
+    
+    if (urlLower.includes('video.twimg.com/')) {
+      return 'video';
+    }
+    
+    // デフォルトは画像
+    return 'image';
+  }
+
+  /**
+   * ファイル拡張子を取得
+   */
+  private getFileExtension(url: string): string {
+    const urlLower = url.toLowerCase();
+    
+    if (urlLower.includes('.jpg') || urlLower.includes('.jpeg')) return 'jpg';
+    if (urlLower.includes('.png')) return 'png';
+    if (urlLower.includes('.gif')) return 'gif';
+    if (urlLower.includes('.webp')) return 'webp';
+    if (urlLower.includes('.mp4')) return 'mp4';
+    if (urlLower.includes('.mov')) return 'mov';
+    if (urlLower.includes('.avi')) return 'avi';
+    if (urlLower.includes('.webm')) return 'webm';
+    
+    // デフォルト
+    return 'jpg';
+  }
+
+  /**
+   * ハッシュ値を生成
+   */
+  private generateHash(url: string): string {
+    let hash = 0;
+    for (let i = 0; i < url.length; i++) {
+      const char = url.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // 32bit整数に変換
+    }
+    return Math.abs(hash).toString(16);
+  }
+
+  /**
+   * キャッシュされたメディア情報を取得
+   */
+  private async getCachedMediaInfo(tweetId: string): Promise<TweetMediaFileProps[] | null> {
+    try {
+      // API傍受でキャッシュされたメディア情報を取得
+      // TODO: 実装予定のgetTweetCacheメソッドを使用
+      console.warn('Comiketter: getTweetCache not implemented yet');
+      return null;
+    } catch (error) {
+      console.warn('Comiketter: Failed to get cached media info:', error);
+      return null;
+    }
+  }
+
+  /**
+   * 設定を取得
+   */
+  private async getSettings(): Promise<AppSettings | null> {
+    if (!this.settings) {
+      try {
+        this.settings = await StorageManager.getSettings();
+      } catch (error) {
+        console.error('Comiketter: Failed to get settings:', error);
+      }
+    }
+    return this.settings;
+  }
+
+  /**
+   * ダウンロード状態を更新
+   */
+  async updateDownloadStatus(downloadId: number, status: DownloadStatus): Promise<void> {
+    const history = this.downloadHistory.get(downloadId);
+    if (history) {
+      const statusString = status === DownloadStatus.Complete ? 'success' : 
+                          status === DownloadStatus.Failed ? 'failed' : 'pending';
+      history.status = statusString;
+      await StorageManager.updateDownloadHistory(history.id, { status: statusString });
+      
+      if (status === DownloadStatus.Complete || status === DownloadStatus.Failed) {
+        this.downloadHistory.delete(downloadId);
+      }
+    }
+  }
+
+  /**
+   * ダウンロード履歴を取得
+   */
+  async getDownloadHistory(): Promise<DownloadHistory[]> {
+    return await StorageManager.getDownloadHistory();
+  }
+
+  /**
+   * ダウンロード履歴をクリア
+   */
+  async clearDownloadHistory(): Promise<void> {
+    // TODO: StorageManagerにclearDownloadHistoryメソッドを追加予定
+    console.warn('Comiketter: clearDownloadHistory not implemented yet');
+    this.downloadHistory.clear();
   }
 
   /**

@@ -3,113 +3,103 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  * 
- * Comiketter: Modified and adapted from TwitterMediaHarvest injectFetch.ts
+ * Comiketter: API Interceptor for capturing Twitter API responses
+ * Modified and adapted from TwitterMediaHarvest
  */
 
-import type { 
-  Comiketter, 
-  MakeTransactionId, 
-  WebPackModuleItem, 
-  Module, 
-  ESModule, 
-  WebpackLoadFunction 
-} from '@/types/api';
-
-export {}
-
-let generateTransactionId: MakeTransactionId;
-
+// 型定義
 type TxTarget = {
   method: string;
   path: string;
 };
 
-const requestPathWeakMap = new WeakMap<XMLHttpRequest, TxTarget>();
+type WebPackModuleItem = [string[], Module];
+type Module = Record<string, unknown>;
+type ESModule = {
+  __esModule: true;
+  default: unknown;
+};
+type WebpackLoadFunction = (
+  _: object,
+  esModule: Partial<ESModule>,
+  loader: CallableFunction
+) => void;
+type MakeTransactionId = (path: string, method: string) => Promise<string>;
 
-const Pattern = Object.freeze({
-  tweetRelated:
-    /^(?:\/i\/api)?\/graphql\/(?<queryId>.+)?\/(?<queryName>TweetDetail|TweetResultByRestId|UserTweets|UserMedia|HomeTimeline|HomeLatestTimeline|UserTweetsAndReplies|UserHighlightsTweets|UserArticlesTweets|Bookmarks|Likes|CommunitiesExploreTimeline|ListLatestTweetsTimeline|SearchTimeline|UserByScreenName|UserByRestId|FavoriteTweet|CreateRetweet)$/,
-});
+// パターンマッチング
+const Pattern = {
+  tweetRelated: /^\/i\/api\/graphql\/(HomeTimeline|TweetDetail|UserTweets|UserTweetsAndReplies|TweetResultByRestId|Conversation|SearchTimeline|Bookmarks)/,
+} as const;
 
-
-
+// イベント定義
 const enum ComiketterEvent {
   ApiResponse = 'comiketter:api-response',
   ResponseTransactionId = 'comiketter:tx-id:response',
   RequestTransactionId = 'comiketter:tx-id:request',
 }
 
-/**
- * URLの妥当性を検証し、有効なURLオブジェクトを返す
- * @param url 検証するURL文字列またはURLオブジェクト
- * @returns 有効なURLオブジェクト、またはundefined
- */
+// グローバル変数
+let generateTransactionId: MakeTransactionId | undefined;
+
+// URL検証関数
 function validateUrl(url: string | URL | undefined): URL | undefined {
   if (!url) return undefined;
-  if (url instanceof URL) return url;
-  if (URL.canParse(url)) return new URL(url);
-  return undefined;
+  try {
+    return new URL(url, window.location.origin);
+  } catch {
+    return undefined;
+  }
 }
 
-// Proxy XMLHttpRequest.prototype.open to intercept API calls
-XMLHttpRequest.prototype.open = new Proxy(XMLHttpRequest.prototype.open, {
-  apply(target, thisArg: XMLHttpRequest, args) {
-    const [method, url] = args;
-
-    const validUrl = validateUrl(url);
-    if (validUrl) {
-      const matchedUrl = validUrl.pathname.match(Pattern.tweetRelated);
-      if (validUrl && matchedUrl) {
-        console.log('Comiketter: XMLHttpRequest.open called with method:', method, 'URL:', url);
+// XMLHttpRequestのプロキシ（Service Worker環境では実行しない）
+if (typeof XMLHttpRequest !== 'undefined') {
+  XMLHttpRequest.prototype.open = new Proxy(XMLHttpRequest.prototype.open, {
+    apply(target, thisArg: XMLHttpRequest, args) {
+      const [method, url] = args;
+      const validUrl = validateUrl(url);
+      
+      if (validUrl && validUrl.pathname.match(Pattern.tweetRelated)) {
         thisArg.addEventListener('load', captureResponse);
-        requestPathWeakMap.set(thisArg, {
-          method,
-          path: validUrl.pathname,
-        });
       }
+      
+      return Reflect.apply(target, thisArg, args);
     }
+  });
 
-    return Reflect.apply(target, thisArg, args);
-  },
-});
-
-/**
- * XMLHttpRequestのレスポンスをキャプチャし、APIレスポンスイベントを発火する
- * @param this XMLHttpRequestインスタンス
- * @param _ev ProgressEvent（未使用）
- */
-function captureResponse(this: XMLHttpRequest, _ev: ProgressEvent) {
-  if (this.status === 200) {
+  function captureResponse(this: XMLHttpRequest, _ev: ProgressEvent) {
     try {
-      const url = new URL(this.responseURL);
-      const event = new CustomEvent<Comiketter.ApiResponseDetail>(
-        ComiketterEvent.ApiResponse,
-        {
-          detail: {
-            path: url.pathname,
-            status: this.status,
-            body: this.responseText,
-          },
-        }
-      );
-
-      document.dispatchEvent(event);
+      const url = validateUrl(this.responseURL);
+      if (url && url.pathname.match(Pattern.tweetRelated)) {
+        const event = new CustomEvent<Comiketter.ApiResponseDetail>(
+          ComiketterEvent.ApiResponse,
+          {
+            detail: {
+              path: url.pathname,
+              status: this.status,
+              body: this.responseText,
+            },
+          }
+        );
+        document.dispatchEvent(event);
+      }
     } catch (error) {
-      console.error('Comiketter: Failed to parse response URL:', this.responseURL, error);
+      console.error('Comiketter: Error capturing XMLHttpRequest response:', error);
     }
   }
 }
 
 // Proxy webpackChunk to intercept dynamic module loading
-self.webpackChunk_twitter_responsive_web = new Proxy<
-  Window['webpackChunk_twitter_responsive_web']
->([], {
-  get: function (target, prop, receiver) {
-    return prop === 'push'
-      ? arrayPushProxy(target.push.bind(target))
-      : Reflect.get(target, prop, receiver);
-  },
-});
+if (typeof self !== 'undefined' && self.webpackChunk_twitter_responsive_web) {
+  self.webpackChunk_twitter_responsive_web = new Proxy<
+    Window['webpackChunk_twitter_responsive_web']
+  >([], {
+    get: function (target, prop, receiver) {
+      return prop === 'push'
+        ? arrayPushProxy(target.push.bind(target))
+        : Reflect.get(target, prop, receiver);
+    },
+  });
+}
 
 /**
  * webpackChunkのpushメソッドをプロキシして、動的モジュール読み込みを傍受する
@@ -172,8 +162,12 @@ function esModuleProxy(esModule: Partial<ESModule>) {
  * @param loaderFunc プロキシ対象のローダー関数
  * @returns プロキシされたローダー関数
  */
-function webpackLoaderFunctionProxy(loaderFunc: WebpackLoadFunction) {
-  return new Proxy(loaderFunc, {
+function webpackLoaderFunctionProxy(loaderFunc: unknown) {
+  if (typeof loaderFunc !== 'function') {
+    return loaderFunc;
+  }
+  
+  return new Proxy(loaderFunc as WebpackLoadFunction, {
     apply(
       exportItem,
       thisArg,
@@ -228,27 +222,76 @@ function isCallableFunction<T>(value: unknown): value is T {
 }
 
 // Handle transaction ID requests
-document.addEventListener('comiketter:tx-id:request', async (e: Event) => {
-  const event = e as CustomEvent<Comiketter.TxIdRequestDetail>;
-  const { path, method, uuid } = event.detail;
-  const txId = await generateTransactionId(path, method);
+if (typeof document !== 'undefined') {
+  document.addEventListener('comiketter:tx-id:request', async (e: Event) => {
+    const event = e as CustomEvent<Comiketter.TxIdRequestDetail>;
+    const { path, method, uuid } = event.detail;
+    
+    if (generateTransactionId) {
+      const txId = await generateTransactionId(path, method);
 
-  document.dispatchEvent(
-    new CustomEvent<Comiketter.TxIdResponseDetail>(
-      ComiketterEvent.ResponseTransactionId,
-      {
-        detail: {
-          uuid,
-          value: txId,
-        },
+      document.dispatchEvent(
+        new CustomEvent<Comiketter.TxIdResponseDetail>(
+          ComiketterEvent.ResponseTransactionId,
+          {
+            detail: {
+              uuid,
+              value: txId,
+            },
+          }
+        )
+      );
+    }
+  });
+}
+
+// Proxy fetch API to intercept API calls
+if (typeof window !== 'undefined' && typeof window.fetch !== 'undefined') {
+  const originalFetch = window.fetch;
+  window.fetch = new Proxy(originalFetch, {
+    apply(target, thisArg, args) {
+      const [input, init] = args;
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+      const method = init?.method || 'GET';
+      
+      try {
+        const validUrl = validateUrl(url);
+        if (validUrl) {
+          const matchedUrl = validUrl.pathname.match(Pattern.tweetRelated);
+          if (validUrl && matchedUrl) {
+            // レスポンスを傍受するためにPromiseをラップ
+            return Reflect.apply(target, thisArg, args).then((response: Response) => {
+              if (response.status === 200) {
+                // レスポンスのクローンを作成（元のレスポンスを保持）
+                const clonedResponse = response.clone();
+                clonedResponse.text().then(body => {
+                  const event = new CustomEvent<Comiketter.ApiResponseDetail>(
+                    ComiketterEvent.ApiResponse,
+                    {
+                      detail: {
+                        path: validUrl.pathname,
+                        status: response.status,
+                        body: body,
+                      },
+                    }
+                  );
+                  document.dispatchEvent(event);
+                }).catch(error => {
+                  console.error('Comiketter: Failed to read fetch response body:', error);
+                });
+              }
+              return response;
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Comiketter: Error processing fetch URL:', url, error);
       }
-    )
-  );
-});
 
-// MAIN環境での初期化
-// ApiInterceptorクラスは使用せず、直接的なAPI傍受のみ実行
-console.log('Comiketter: API Interceptor initialized in MAIN world');
+      return Reflect.apply(target, thisArg, args);
+    },
+  });
+}
 
 /**
  * X（Twitter）のAPI呼び出しを傍受し、レスポンスを処理するクラス
@@ -264,8 +307,7 @@ export class ApiInterceptor {
    * MAIN環境では直接的な処理は行わず、イベント発火のみ
    */
   async init(): Promise<void> {
-    // MAIN環境では初期化処理は不要
-    // API傍受は自動的に動作する
+    console.log('Comiketter: API Interceptor initialized in browser environment');
   }
 
   /**
@@ -297,52 +339,4 @@ export class ApiInterceptor {
     });
     document.dispatchEvent(event);
   }
-}
-
-// Proxy fetch API to intercept API calls
-const originalFetch = window.fetch;
-window.fetch = new Proxy(originalFetch, {
-  apply(target, thisArg, args) {
-    const [input, init] = args;
-    const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
-    const method = init?.method || 'GET';
-    
-    try {
-      const validUrl = validateUrl(url);
-      if (validUrl) {
-        const matchedUrl = validUrl.pathname.match(Pattern.tweetRelated);
-        if (validUrl && matchedUrl) {
-          // レスポンスを傍受するためにPromiseをラップ
-          return Reflect.apply(target, thisArg, args).then((response: Response) => {
-            if (response.status === 200) {
-              // レスポンスのクローンを作成（元のレスポンスを保持）
-              const clonedResponse = response.clone();
-              clonedResponse.text().then(body => {
-                const event = new CustomEvent<Comiketter.ApiResponseDetail>(
-                  ComiketterEvent.ApiResponse,
-                  {
-                    detail: {
-                      path: validUrl.pathname,
-                      status: response.status,
-                      body: body,
-                    },
-                  }
-                );
-                document.dispatchEvent(event);
-              }).catch(error => {
-                console.error('Comiketter: Failed to read fetch response body:', error);
-              });
-            }
-            return response;
-          });
-        }
-      }
-    } catch (error) {
-      console.error('Comiketter: Error processing fetch URL:', url, error);
-    }
-
-    return Reflect.apply(target, thisArg, args);
-  },
-});
-
-// デバッグ用のHTTPリクエスト監視は削除（パフォーマンス向上のため） 
+} 
