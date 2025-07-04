@@ -6,6 +6,7 @@ const __dirname = path.dirname(__filename);
 
 export default {
   entry: {
+    apiInterceptor: './src/contentScript/apiInterceptor.ts',
     contentScript: './src/contentScript/index.ts',
     background: './src/background/index.ts',
     popup: './src/popup/index.tsx',

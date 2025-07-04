@@ -15,6 +15,12 @@ export declare namespace Comiketter {
     body: string;
   }
 
+  interface ApiResponseProcessedDetail {
+    path: string;
+    data: unknown;
+    timestamp: number;
+  }
+
   interface TxIdRequestDetail {
     uuid: string;
     path: string;
@@ -29,6 +35,7 @@ export declare namespace Comiketter {
 
 interface CustomEventMap {
   'comiketter:api-response': CustomEvent<Comiketter.ApiResponseDetail>;
+  'comiketter:api-response-processed': CustomEvent<Comiketter.ApiResponseProcessedDetail>;
   'comiketter:tx-id:request': CustomEvent<Comiketter.TxIdRequestDetail>;
   'comiketter:tx-id:response': CustomEvent<Comiketter.TxIdResponseDetail>;
 }

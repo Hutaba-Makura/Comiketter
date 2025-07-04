@@ -246,8 +246,13 @@ document.addEventListener('comiketter:tx-id:request', async (e: Event) => {
   );
 });
 
+// MAIN環境での初期化
+// ApiInterceptorクラスは使用せず、直接的なAPI傍受のみ実行
+console.log('Comiketter: API Interceptor initialized in MAIN world');
+
 /**
  * X（Twitter）のAPI呼び出しを傍受し、レスポンスを処理するクラス
+ * MAIN環境で実行されるため、Chrome APIは使用不可
  */
 export class ApiInterceptor {
   constructor() {
@@ -255,14 +260,12 @@ export class ApiInterceptor {
   }
 
   /**
-   * API傍受機能を初期化し、イベントリスナーを設定する
+   * API傍受機能を初期化する
+   * MAIN環境では直接的な処理は行わず、イベント発火のみ
    */
   async init(): Promise<void> {
-    // Listen for API responses
-    document.addEventListener(ComiketterEvent.ApiResponse, (event: Event) => {
-      const customEvent = event as CustomEvent<Comiketter.ApiResponseDetail>;
-      this.handleApiResponse(customEvent.detail);
-    });
+    // MAIN環境では初期化処理は不要
+    // API傍受は自動的に動作する
   }
 
   /**
@@ -279,26 +282,20 @@ export class ApiInterceptor {
   }
 
   /**
-   * 特定のAPIパスに対するレスポンスデータを処理し、バックグラウンドスクリプトに送信する
+   * 特定のAPIパスに対するレスポンスデータを処理し、ISOLATED環境にイベント送信する
    * @param path APIパス
    * @param data レスポンスデータ
    */
   private processApiResponse(path: string, data: unknown): void {
-    // TODO: Implement specific API response processing
-    // This will be expanded based on the specific APIs we need to monitor
-    
-    // Send message to background script for further processing
-    if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
-      chrome.runtime.sendMessage({
-        type: 'API_RESPONSE_CAPTURED',
+    // MAIN環境からISOLATED環境にイベント送信
+    const event = new CustomEvent('comiketter:api-response-processed', {
+      detail: {
         path,
         data,
-      }).catch(error => {
-        console.error('Comiketter: Failed to send message to background script', error);
-      });
-    } else {
-      console.warn('Comiketter: chrome.runtime.sendMessage is not available');
-    }
+        timestamp: Date.now(),
+      },
+    });
+    document.dispatchEvent(event);
   }
 }
 

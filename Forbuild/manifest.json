@@ -22,9 +22,18 @@
         "https://twitter.com/*",
         "https://x.com/*"
       ],
+      "js": ["apiInterceptor.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": [
+        "https://twitter.com/*",
+        "https://x.com/*"
+      ],
       "js": ["contentScript.js"],
       "run_at": "document_end",
-      "world": "MAIN"
+      "world": "ISOLATED"
     }
   ],
   "action": {
