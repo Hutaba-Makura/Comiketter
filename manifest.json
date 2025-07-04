@@ -23,7 +23,8 @@
         "https://x.com/*"
       ],
       "js": ["contentScript.js"],
-      "run_at": "document_end"
+      "run_at": "document_end",
+      "world": "MAIN"
     }
   ],
   "action": {

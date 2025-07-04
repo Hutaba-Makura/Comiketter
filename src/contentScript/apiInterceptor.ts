@@ -375,21 +375,4 @@ window.fetch = new Proxy(originalFetch, {
 });
 console.log('Comiketter: fetch proxy setup complete');
 
-// すべてのHTTPリクエストを傍受するためのデバッグ
-console.log('Comiketter: Setting up comprehensive HTTP request monitoring...');
-
-// XMLHttpRequestのすべての呼び出しをログ
-const originalXHROpen = XMLHttpRequest.prototype.open;
-XMLHttpRequest.prototype.open = function(method: string, url: string | URL, async: boolean = true, username?: string | null, password?: string | null) {
-  console.log('Comiketter: ALL XMLHttpRequest.open called:', method, url);
-  return originalXHROpen.call(this, method, url, async, username, password);
-};
-
-// fetchのすべての呼び出しをログ（既存のプロキシの前に）
-const originalFetchGlobal = window.fetch;
-window.fetch = function(input: RequestInfo | URL, init?: RequestInit) {
-  const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
-  const method = init?.method || 'GET';
-  console.log('Comiketter: ALL fetch called:', method, url);
-  return originalFetchGlobal.call(this, input, init);
-}; 
+// デバッグ用のHTTPリクエスト監視は削除（パフォーマンス向上のため） 
