@@ -334,90 +334,101 @@ export class TweetObserver {
     // メディア（画像・動画）が存在するかチェック
     const hasMedia = this.hasMedia(article);
     console.log('Comiketter: Tweet has media:', hasMedia);
+    
+    // 追加の検証：実際にメディアが含まれているか最終確認
+    if (hasMedia) {
+      const finalCheck = this.finalMediaCheck(article);
+      if (!finalCheck) {
+        console.log('Comiketter: Final media check failed, skipping tweet');
+        return false;
+      }
+    }
+    
     return hasMedia;
   }
 
   /**
-   * ツイートにメディアが含まれているかチェック（改善版）
+   * 最終的なメディアチェック（誤検出を防ぐ）
    */
-  private hasMedia(article: HTMLElement): boolean {
-    // 画像の存在チェック（複数のセレクターを試行）
-    const imageSelectors = [
+  private finalMediaCheck(article: HTMLElement): boolean {
+    // 1. メディアコンテナの存在確認
+    const mediaContainers = [
       '[data-testid="tweetPhoto"]',
-      '[data-testid="tweetPhoto"] img',
-      'img[src*="pbs.twimg.com/media"]',
-      'img[src*="twimg.com/media"]',
-      '[data-testid="tweet"] img[src*="twimg.com"]',
-      'img[alt*="画像"]',
-      'img[alt*="Image"]',
-      '[role="img"]',
-    ];
-
-    let hasImage = false;
-    let foundImageSelector = '';
-
-    for (const selector of imageSelectors) {
-      const imageElement = article.querySelector(selector);
-      if (imageElement) {
-        hasImage = true;
-        foundImageSelector = selector;
-        break;
-      }
-    }
-
-    // 動画の存在チェック
-    const videoSelectors = [
       '[data-testid="videoPlayer"]',
-      '[data-testid="playButton"]',
       '[data-testid="videoComponent"]',
-      'video',
+      '[role="img"]',
       '[role="application"]',
     ];
 
-    let hasVideo = false;
-    let foundVideoSelector = '';
-
-    for (const selector of videoSelectors) {
-      const videoElement = article.querySelector(selector);
-      if (videoElement) {
-        hasVideo = true;
-        foundVideoSelector = selector;
+    let hasMediaContainer = false;
+    for (const selector of mediaContainers) {
+      const container = article.querySelector(selector);
+      if (container) {
+        hasMediaContainer = true;
         break;
       }
     }
 
-    // 引用ツイート内のメディアは除外
-    const isInQuotedTweet = article.closest('[role="link"]') !== null;
-    
-    const result = (hasImage || hasVideo) && !isInQuotedTweet;
-    
-    // 詳細なデバッグ情報
-    console.log('Comiketter: Media check details:', {
-      hasImage,
-      foundImageSelector,
-      hasVideo,
-      foundVideoSelector,
-      isInQuotedTweet,
-      result,
-      articleClasses: article.className,
-      articleTestId: article.getAttribute('data-testid'),
+    if (!hasMediaContainer) {
+      console.log('Comiketter: No media container found');
+      return false;
+    }
+
+    // 2. 実際のメディアURLの存在確認
+    const mediaUrls = this.extractMediaUrls(article);
+    if (mediaUrls.length === 0) {
+      console.log('Comiketter: No media URLs found');
+      return false;
+    }
+
+    console.log('Comiketter: Found media URLs:', mediaUrls);
+    return true;
+  }
+
+  /**
+   * ツイートからメディアURLを抽出
+   */
+  private extractMediaUrls(article: HTMLElement): string[] {
+    const urls: string[] = [];
+
+    // 画像URLの抽出
+    const images = article.querySelectorAll('img[src*="twimg.com"]');
+    images.forEach(img => {
+      const src = img.getAttribute('src');
+      if (src && (
+        src.includes('pbs.twimg.com/media') ||
+        src.includes('twimg.com/media') ||
+        src.includes('twimg.com/ext_tw_video_thumb')
+      )) {
+        urls.push(src);
+      }
     });
 
-    // 画像が見つかった場合、画像要素の詳細をログ出力
-    if (hasImage) {
-      const imageElement = article.querySelector(foundImageSelector);
-      if (imageElement) {
-        console.log('Comiketter: Found image element:', {
-          tagName: imageElement.tagName,
-          src: imageElement.getAttribute('src'),
-          alt: imageElement.getAttribute('alt'),
-          className: imageElement.className,
-          testId: imageElement.getAttribute('data-testid'),
-        });
+    // 動画URLの抽出
+    const videos = article.querySelectorAll('video[src*="twimg.com"]');
+    videos.forEach(video => {
+      const src = video.getAttribute('src');
+      if (src && (
+        src.includes('video.twimg.com') ||
+        src.includes('twimg.com/ext_tw_video')
+      )) {
+        urls.push(src);
       }
-    }
-    
-    return result;
+    });
+
+    // 背景画像の抽出
+    const elementsWithBg = article.querySelectorAll('[style*="background-image"]');
+    elementsWithBg.forEach(element => {
+      const style = element.getAttribute('style');
+      if (style) {
+        const bgMatch = style.match(/background-image:\s*url\(['"]?([^'"]*twimg\.com[^'"]*)['"]?\)/);
+        if (bgMatch) {
+          urls.push(bgMatch[1]);
+        }
+      }
+    });
+
+    return urls;
   }
 
   /**
@@ -482,6 +493,215 @@ export class TweetObserver {
 
     console.warn('Comiketter: No action bar found with any selector');
     return null;
+  }
+
+  /**
+   * ツイートにメディアが含まれているかチェック（厳密版）
+   */
+  private hasMedia(article: HTMLElement): boolean {
+    // 画像の存在チェック（複数のセレクターを試行）
+    const imageSelectors = [
+      '[data-testid="tweetPhoto"]',
+      '[data-testid="tweetPhoto"] img',
+      'img[src*="pbs.twimg.com/media"]',
+      'img[src*="twimg.com/media"]',
+      '[data-testid="tweet"] img[src*="twimg.com"]',
+      'img[alt*="画像"]',
+      'img[alt*="Image"]',
+      '[role="img"]',
+    ];
+
+    let hasImage = false;
+    let foundImageSelector = '';
+    let imageElement: Element | null = null;
+
+    for (const selector of imageSelectors) {
+      imageElement = article.querySelector(selector);
+      if (imageElement) {
+        // 追加の検証：実際に画像URLが含まれているかチェック
+        if (this.isValidImageElement(imageElement)) {
+          hasImage = true;
+          foundImageSelector = selector;
+          break;
+        }
+      }
+    }
+
+    // 動画の存在チェック
+    const videoSelectors = [
+      '[data-testid="videoPlayer"]',
+      '[data-testid="playButton"]',
+      '[data-testid="videoComponent"]',
+      'video',
+      '[role="application"]',
+    ];
+
+    let hasVideo = false;
+    let foundVideoSelector = '';
+    let videoElement: Element | null = null;
+
+    for (const selector of videoSelectors) {
+      videoElement = article.querySelector(selector);
+      if (videoElement) {
+        // 追加の検証：実際に動画要素かチェック
+        if (this.isValidVideoElement(videoElement)) {
+          hasVideo = true;
+          foundVideoSelector = selector;
+          break;
+        }
+      }
+    }
+
+    // 引用ツイート内のメディアは除外
+    const isInQuotedTweet = article.closest('[role="link"]') !== null;
+    
+    const result = (hasImage || hasVideo) && !isInQuotedTweet;
+    
+    // 詳細なデバッグ情報
+    console.log('Comiketter: Media check details:', {
+      hasImage,
+      foundImageSelector,
+      hasVideo,
+      foundVideoSelector,
+      isInQuotedTweet,
+      result,
+      articleClasses: article.className,
+      articleTestId: article.getAttribute('data-testid'),
+    });
+
+    // 画像が見つかった場合、画像要素の詳細をログ出力
+    if (hasImage && imageElement) {
+      console.log('Comiketter: Found image element:', {
+        tagName: imageElement.tagName,
+        src: imageElement.getAttribute('src'),
+        alt: imageElement.getAttribute('alt'),
+        className: imageElement.className,
+        testId: imageElement.getAttribute('data-testid'),
+      });
+    }
+
+    // 動画が見つかった場合、動画要素の詳細をログ出力
+    if (hasVideo && videoElement) {
+      console.log('Comiketter: Found video element:', {
+        tagName: videoElement.tagName,
+        className: videoElement.className,
+        testId: videoElement.getAttribute('data-testid'),
+      });
+    }
+    
+    return result;
+  }
+
+  /**
+   * 有効な画像要素かどうかを検証
+   */
+  private isValidImageElement(element: Element): boolean {
+    // imgタグの場合
+    if (element.tagName === 'IMG') {
+      const src = element.getAttribute('src');
+      const alt = element.getAttribute('alt');
+      
+      // src属性が存在し、Twitterの画像URLパターンに一致するかチェック
+      if (src && (
+        src.includes('pbs.twimg.com/media') ||
+        src.includes('twimg.com/media') ||
+        src.includes('twimg.com/ext_tw_video_thumb')
+      )) {
+        return true;
+      }
+      
+      // alt属性に画像関連のテキストが含まれているかチェック
+      if (alt && (
+        alt.includes('画像') ||
+        alt.includes('Image') ||
+        alt.includes('photo') ||
+        alt.includes('media')
+      )) {
+        return true;
+      }
+    }
+    
+    // data-testid="tweetPhoto"の場合
+    if (element.getAttribute('data-testid') === 'tweetPhoto') {
+      // 子要素にimgタグがあるかチェック
+      const imgChild = element.querySelector('img');
+      if (imgChild) {
+        return this.isValidImageElement(imgChild);
+      }
+      
+      // 背景画像として設定されているかチェック
+      const style = element.getAttribute('style');
+      if (style && style.includes('background-image')) {
+        return true;
+      }
+    }
+    
+    // role="img"の場合
+    if (element.getAttribute('role') === 'img') {
+      // aria-labelに画像関連のテキストが含まれているかチェック
+      const ariaLabel = element.getAttribute('aria-label');
+      if (ariaLabel && (
+        ariaLabel.includes('画像') ||
+        ariaLabel.includes('Image') ||
+        ariaLabel.includes('photo') ||
+        ariaLabel.includes('media')
+      )) {
+        return true;
+      }
+    }
+    
+    return false;
+  }
+
+  /**
+   * 有効な動画要素かどうかを検証
+   */
+  private isValidVideoElement(element: Element): boolean {
+    // videoタグの場合
+    if (element.tagName === 'VIDEO') {
+      const src = element.getAttribute('src');
+      if (src && (
+        src.includes('video.twimg.com') ||
+        src.includes('twimg.com/ext_tw_video')
+      )) {
+        return true;
+      }
+    }
+    
+    // data-testid="videoPlayer"の場合
+    if (element.getAttribute('data-testid') === 'videoPlayer') {
+      // 子要素にvideoタグがあるかチェック
+      const videoChild = element.querySelector('video');
+      if (videoChild) {
+        return this.isValidVideoElement(videoChild);
+      }
+      
+      // プレイボタンがあるかチェック
+      const playButton = element.querySelector('[data-testid="playButton"]');
+      if (playButton) {
+        return true;
+      }
+    }
+    
+    // data-testid="playButton"の場合
+    if (element.getAttribute('data-testid') === 'playButton') {
+      return true;
+    }
+    
+    // role="application"の場合（動画プレイヤー）
+    if (element.getAttribute('role') === 'application') {
+      // aria-labelに動画関連のテキストが含まれているかチェック
+      const ariaLabel = element.getAttribute('aria-label');
+      if (ariaLabel && (
+        ariaLabel.includes('動画') ||
+        ariaLabel.includes('Video') ||
+        ariaLabel.includes('play')
+      )) {
+        return true;
+      }
+    }
+    
+    return false;
   }
 
   /**
