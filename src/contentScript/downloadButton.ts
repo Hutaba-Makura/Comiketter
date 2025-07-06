@@ -54,6 +54,10 @@ export class DownloadButton {
       .comiketter-download-button {
         cursor: pointer;
         transition: opacity 0.2s ease;
+        /* 既存のボタンとの干渉を防ぐ */
+        pointer-events: auto;
+        position: relative;
+        z-index: 1;
       }
       
       .comiketter-download-button:hover {
@@ -75,6 +79,19 @@ export class DownloadButton {
       .comiketter-download-button.downloaded svg {
         color: #00ba7c !important;
         opacity: 0.7;
+      }
+
+      /* 既存のボタンとの干渉を防ぐ */
+      .comiketter-download-button * {
+        pointer-events: auto;
+      }
+
+      /* 他のボタンへの影響を防ぐ */
+      [data-testid="like"],
+      [data-testid="reply"],
+      [data-testid="retweet"],
+      [data-testid="share"] {
+        pointer-events: auto !important;
       }
     `;
     
@@ -203,11 +220,17 @@ export class DownloadButton {
    */
   private setupClickHandler(button: HTMLElement, tweetInfo: TweetInfo): void {
     button.addEventListener('click', (e: MouseEvent) => {
+      // Comiketterボタン以外のクリックは無視
+      const target = e.target as HTMLElement;
+      if (!target.closest('.comiketter-download-button')) {
+        return;
+      }
+
       e.stopImmediatePropagation();
       e.preventDefault();
       
       this.handleButtonClick(button, tweetInfo);
-    });
+    }, true); // capture phaseで処理
   }
 
   /**

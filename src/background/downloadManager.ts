@@ -28,6 +28,7 @@ export interface DownloadRequest {
 export class DownloadManager {
   private settings: AppSettings | null = null;
   private downloadHistory: Map<number, DownloadHistory> = new Map();
+  private mediaCache: Map<string, TweetMediaFileProps[]> = new Map();
 
   constructor() {
     this.initialize();
@@ -53,13 +54,133 @@ export class DownloadManager {
   }): void {
     console.log('Comiketter: DownloadManager processing API response:', message.path);
     
-    // TODO: 特定のAPIパスに対する処理を実装
-    // 例: ツイート情報の抽出、メディアURLの取得、ダウンロード実行など
-    
-    // 現在はログ出力のみ
-    if (message.path.includes('/graphql/')) {
-      console.log('Comiketter: GraphQL API response detected');
-      // TODO: GraphQLレスポンスの解析とダウンロード処理
+    try {
+      // GraphQLレスポンスの解析
+      if (message.path.includes('/graphql/')) {
+        this.processGraphQLResponse(message.data);
+      }
+    } catch (error) {
+      console.error('Comiketter: Failed to process API response:', error);
+    }
+  }
+
+  /**
+   * GraphQLレスポンスを処理してメディア情報を抽出
+   */
+  private processGraphQLResponse(data: unknown): void {
+    try {
+      const response = data as any;
+      
+      // ツイート情報を抽出
+      if (response.data && response.data.instructions) {
+        for (const instruction of response.data.instructions) {
+          if (instruction.type === 'TimelineAddEntries') {
+            for (const entry of instruction.entries) {
+              if (entry.content && entry.content.itemContent) {
+                this.extractMediaFromTweet(entry.content.itemContent);
+              }
+            }
+          }
+        }
+      }
+
+      // 直接的なツイート情報
+      if (response.data && response.data.tweet) {
+        this.extractMediaFromTweet(response.data.tweet);
+      }
+
+      // タイムラインエントリー
+      if (response.data && response.data.user && response.data.user.result && response.data.user.result.timeline_v2) {
+        const timeline = response.data.user.result.timeline_v2.timeline.instructions;
+        for (const instruction of timeline) {
+          if (instruction.type === 'TimelineAddEntries') {
+            for (const entry of instruction.entries) {
+              if (entry.content && entry.content.itemContent) {
+                this.extractMediaFromTweet(entry.content.itemContent);
+              }
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Comiketter: Failed to process GraphQL response:', error);
+    }
+  }
+
+  /**
+   * ツイートからメディア情報を抽出
+   */
+  private extractMediaFromTweet(tweetData: any): void {
+    try {
+      const tweet = tweetData.tweet_results?.result || tweetData;
+      if (!tweet || !tweet.legacy) return;
+
+      const legacy = tweet.legacy;
+      const tweetId = legacy.id_str;
+      const user = tweet.core?.user_results?.result?.legacy || {};
+      
+      const mediaFiles: TweetMediaFileProps[] = [];
+
+      // メディア情報を抽出
+      if (legacy.extended_entities && legacy.extended_entities.media) {
+        for (const media of legacy.extended_entities.media) {
+          if (media.type === 'photo') {
+            // 画像の場合、最高品質のURLを取得
+            const photoUrl = media.media_url_https || media.media_url;
+            if (photoUrl) {
+              mediaFiles.push({
+                tweetId,
+                source: photoUrl,
+                tweetUser: {
+                  screenName: user.screen_name || '',
+                  userId: user.id_str || '',
+                  displayName: user.name || user.screen_name || '',
+                  isProtected: user.protected || false,
+                },
+                type: 'image',
+                ext: this.getFileExtension(photoUrl),
+                serial: mediaFiles.length + 1,
+                hash: this.generateHash(photoUrl),
+                createdAt: new Date(),
+              });
+            }
+          } else if (media.type === 'video') {
+            // 動画の場合、最高品質のURLを取得
+            const videoInfo = media.video_info;
+            if (videoInfo && videoInfo.variants) {
+              const videoVariant = videoInfo.variants
+                .filter((v: any) => v.content_type === 'video/mp4')
+                .sort((a: any, b: any) => (b.bitrate || 0) - (a.bitrate || 0))[0];
+              
+              if (videoVariant && videoVariant.url) {
+                mediaFiles.push({
+                  tweetId,
+                  source: videoVariant.url,
+                  tweetUser: {
+                    screenName: user.screen_name || '',
+                    userId: user.id_str || '',
+                    displayName: user.name || user.screen_name || '',
+                    isProtected: user.protected || false,
+                  },
+                  type: 'video',
+                  ext: 'mp4',
+                  serial: mediaFiles.length + 1,
+                  hash: this.generateHash(videoVariant.url),
+                  createdAt: new Date(),
+                });
+              }
+            }
+          }
+        }
+      }
+
+      // キャッシュに保存
+      if (mediaFiles.length > 0) {
+        this.mediaCache.set(tweetId, mediaFiles);
+        console.log('Comiketter: Media info cached for tweet:', tweetId, mediaFiles.length, 'files');
+      }
+    } catch (error) {
+      console.error('Comiketter: Failed to extract media from tweet:', error);
     }
   }
 
@@ -278,9 +399,14 @@ export class DownloadManager {
    */
   private async getCachedMediaInfo(tweetId: string): Promise<TweetMediaFileProps[] | null> {
     try {
-      // API傍受でキャッシュされたメディア情報を取得
-      // TODO: 実装予定のgetTweetCacheメソッドを使用
-      console.warn('Comiketter: getTweetCache not implemented yet');
+      // キャッシュからメディア情報を取得
+      const cachedMedia = this.mediaCache.get(tweetId);
+      if (cachedMedia && cachedMedia.length > 0) {
+        console.log('Comiketter: Found cached media for tweet:', tweetId, cachedMedia.length, 'files');
+        return cachedMedia;
+      }
+
+      console.log('Comiketter: No cached media found for tweet:', tweetId);
       return null;
     } catch (error) {
       console.warn('Comiketter: Failed to get cached media info:', error);

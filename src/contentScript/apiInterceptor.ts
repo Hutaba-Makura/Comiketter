@@ -60,6 +60,7 @@ if (typeof XMLHttpRequest !== 'undefined') {
       
       if (validUrl && validUrl.pathname.match(Pattern.tweetRelated)) {
         thisArg.addEventListener('load', captureResponse);
+        console.log('Comiketter: XMLHttpRequest intercepted', method, url); // 消さないで
       }
       
       return Reflect.apply(target, thisArg, args);

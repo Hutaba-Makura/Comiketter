@@ -48,6 +48,16 @@ export class MessageHandler {
           await this.handleDownloadTweetMedia(message.payload, sendResponse);
           break;
 
+        case 'API_RESPONSE_CAPTURED':
+          await this.handleApiResponseCaptured(message.payload);
+          sendResponse({ success: true });
+          break;
+
+        case 'API_RESPONSE_PROCESSED':
+          await this.handleApiResponseProcessed(message.payload);
+          sendResponse({ success: true });
+          break;
+
         case 'GET_SETTINGS':
           await this.handleGetSettings(sendResponse);
           break;
@@ -172,6 +182,38 @@ export class MessageHandler {
       }
     } catch (error) {
       console.error('Comiketter: Failed to handle download change:', error);
+    }
+  }
+
+  /**
+   * APIレスポンスキャプチャを処理
+   */
+  private async handleApiResponseCaptured(payload: {
+    path: string;
+    data: unknown;
+    timestamp: number;
+  }): Promise<void> {
+    try {
+      console.log('Comiketter: API response captured:', payload.path);
+      this.downloadManager.processApiResponse(payload);
+    } catch (error) {
+      console.error('Comiketter: Failed to process API response:', error);
+    }
+  }
+
+  /**
+   * 処理済みAPIレスポンスを処理
+   */
+  private async handleApiResponseProcessed(payload: {
+    path: string;
+    data: unknown;
+    timestamp: number;
+  }): Promise<void> {
+    try {
+      console.log('Comiketter: Processed API response:', payload.path);
+      this.downloadManager.processApiResponse(payload);
+    } catch (error) {
+      console.error('Comiketter: Failed to process API response:', error);
     }
   }
 } 
