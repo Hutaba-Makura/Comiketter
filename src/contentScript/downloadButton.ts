@@ -137,8 +137,6 @@ export class DownloadButton {
   private getSampleButton(): HTMLElement | null {
     const selectors = [
       '[data-testid="like"] > div',
-      '[data-testid="reply"] > div',
-      '[data-testid="retweet"] > div',
     ];
 
     for (const selector of selectors) {
