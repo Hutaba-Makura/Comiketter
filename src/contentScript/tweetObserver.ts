@@ -267,6 +267,8 @@ export class TweetObserver {
       if (!seen.has(node)) {
         seen.add(node);
         uniqueNodes.push(node);
+      }else{
+        console.log('Comiketter: Skipping duplicate node:', node);
       }
     }
 
@@ -335,55 +337,10 @@ export class TweetObserver {
     const hasMedia = this.hasMedia(article);
     console.log('Comiketter: Tweet has media:', hasMedia);
     
-    // 追加の検証：実際にメディアが含まれているか最終確認
-    if (hasMedia) {
-      const finalCheck = this.finalMediaCheck(article);
-      if (!finalCheck) {
-        console.log('Comiketter: Final media check failed, skipping tweet');
-        return false;
-      }
-    }
-    
     return hasMedia;
   }
 
-  /**
-   * 最終的なメディアチェック（誤検出を防ぐ）
-   */
-  private finalMediaCheck(article: HTMLElement): boolean {
-    // 1. メディアコンテナの存在確認
-    const mediaContainers = [
-      '[data-testid="tweetPhoto"]',
-      '[data-testid="videoPlayer"]',
-      '[data-testid="videoComponent"]',
-      '[role="img"]',
-      '[role="application"]',
-    ];
 
-    let hasMediaContainer = false;
-    for (const selector of mediaContainers) {
-      const container = article.querySelector(selector);
-      if (container) {
-        hasMediaContainer = true;
-        break;
-      }
-    }
-
-    if (!hasMediaContainer) {
-      console.log('Comiketter: No media container found');
-      return false;
-    }
-
-    // 2. 実際のメディアURLの存在確認
-    const mediaUrls = this.extractMediaUrls(article);
-    if (mediaUrls.length === 0) {
-      console.log('Comiketter: No media URLs found');
-      return false;
-    }
-
-    console.log('Comiketter: Found media URLs:', mediaUrls);
-    return true;
-  }
 
   /**
    * ツイートからメディアURLを抽出
