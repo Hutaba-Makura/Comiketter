@@ -3,11 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  * 
- * Comiketter: Modified and adapted from TwitterMediaHarvest observer.ts and TwitterMediaObserver.ts
+ * Comiketter: 一元的なツイート監視・ボタン管理システム
  */
 
-import { DownloadButton } from './downloadButton';
 import { getTweetInfoFromArticle } from './tweetInfoExtractor';
+import { ButtonFactory } from './buttonManager';
 
 const enum Query {
   Root = '#react-root',
@@ -21,7 +21,7 @@ const enum Query {
 
 export class TweetObserver {
   private observer: MutationObserver | null = null;
-  private downloadButton: DownloadButton;
+  private buttonFactory: ButtonFactory;
   private rootObserver: MutationObserver | null = null;
   private isInitialized = false;
   private processedElements = new WeakSet<HTMLElement>();
@@ -29,7 +29,7 @@ export class TweetObserver {
   private pendingNodes: HTMLElement[] = [];
 
   constructor() {
-    this.downloadButton = new DownloadButton();
+    this.buttonFactory = new ButtonFactory();
   }
 
   async init(): Promise<void> {
@@ -50,7 +50,7 @@ export class TweetObserver {
   }
 
   /**
-   * 既存のツイートにDLボタンを追加
+   * 既存のツイートにボタンを追加
    */
   private initializeExistingTweets(): void {
     // 複数のセレクターを試行
@@ -74,81 +74,16 @@ export class TweetObserver {
 
     console.log('Comiketter: Found', articles?.length || 0, 'existing tweets using selector:', usedSelector);
     
-    // DOM構造の調査
-    this.investigateDOMStructure();
-    
     if (articles && articles.length > 0) {
       articles.forEach((article, index) => {
         console.log('Comiketter: Processing tweet', index + 1, 'of', articles!.length);
-        if (this.shouldAddDownloadButton(article as HTMLElement)) {
-          console.log('Comiketter: Adding download button to tweet', index + 1);
-          this.addDownloadButtonToTweet(article as HTMLElement);
+        if (this.shouldAddButtons(article as HTMLElement)) {
+          console.log('Comiketter: Adding buttons to tweet', index + 1);
+          this.addButtonsToTweet(article as HTMLElement);
         } else {
-          console.log('Comiketter: Skipping tweet', index + 1, '- no media or already has button');
+          console.log('Comiketter: Skipping tweet', index + 1, '- already has buttons');
         }
       });
-    }
-  }
-
-  /**
-   * DOM構造を調査してデバッグ情報を出力
-   */
-  private investigateDOMStructure(): void {
-    console.log('Comiketter: Investigating DOM structure...');
-    
-    // メインコンテンツエリアの調査
-    const mainSelectors = [
-      '[data-testid="primaryColumn"]',
-      '[role="main"]',
-      'main',
-      '[data-testid="main"]',
-    ];
-
-    for (const selector of mainSelectors) {
-      const element = document.querySelector(selector);
-      if (element) {
-        console.log('Comiketter: Found main content with selector:', selector, element);
-        break;
-      }
-    }
-
-    // ツイート関連の要素を調査
-    const tweetRelatedSelectors = [
-      'article[data-testid="tweet"]',
-      'article[role="article"]',
-      '[data-testid="tweet"]',
-      'article',
-      '[role="article"]',
-    ];
-
-    for (const selector of tweetRelatedSelectors) {
-      const elements = document.querySelectorAll(selector);
-      if (elements.length > 0) {
-        console.log('Comiketter: Found', elements.length, 'elements with selector:', selector);
-        if (elements.length <= 5) {
-          elements.forEach((el, index) => {
-            console.log('Comiketter: Element', index + 1, ':', el.tagName, el.className, el.getAttribute('data-testid'));
-          });
-        }
-        break;
-      }
-    }
-
-    // アクションバーの調査
-    const actionBarSelectors = [
-      '[role="group"][aria-label]',
-      '[role="group"]',
-      '[data-testid="like"]',
-      '[data-testid="reply"]',
-      '[data-testid="retweet"]',
-    ];
-
-    for (const selector of actionBarSelectors) {
-      const elements = document.querySelectorAll(selector);
-      if (elements.length > 0) {
-        console.log('Comiketter: Found', elements.length, 'action bar elements with selector:', selector);
-        break;
-      }
     }
   }
 
@@ -256,25 +191,6 @@ export class TweetObserver {
   }
 
   /**
-   * 重複ノードを除去
-   */
-  private deduplicateNodes(nodes: HTMLElement[]): HTMLElement[] {
-    const uniqueNodes: HTMLElement[] = [];
-    const seen = new Set<HTMLElement>();
-
-    for (const node of nodes) {
-      if (!seen.has(node)) {
-        seen.add(node);
-        uniqueNodes.push(node);
-      }else{
-        console.log('Comiketter: Skipping duplicate node:', node);
-      }
-    }
-
-    return uniqueNodes;
-  }
-
-  /**
    * 追加されたノードを処理
    */
   private processAddedNode(node: HTMLElement): void {
@@ -295,9 +211,9 @@ export class TweetObserver {
     for (const selector of tweetSelectors) {
       if (node.matches(selector)) {
         console.log('Comiketter: Processing direct tweet node with selector:', selector);
-        if (this.shouldAddDownloadButton(node)) {
-          console.log('Comiketter: Adding download button to direct tweet');
-          this.addDownloadButtonToTweet(node);
+        if (this.shouldAddButtons(node)) {
+          console.log('Comiketter: Adding buttons to direct tweet');
+          this.addButtonsToTweet(node);
         }
         this.processedElements.add(node);
         return;
@@ -310,9 +226,9 @@ export class TweetObserver {
       if (tweets.length > 0) {
         console.log('Comiketter: Found', tweets.length, 'tweets in node with selector:', selector);
         tweets.forEach((tweet, index) => {
-          if (this.shouldAddDownloadButton(tweet as HTMLElement)) {
-            console.log('Comiketter: Adding download button to tweet', index + 1);
-            this.addDownloadButtonToTweet(tweet as HTMLElement);
+          if (this.shouldAddButtons(tweet as HTMLElement)) {
+            console.log('Comiketter: Adding buttons to tweet', index + 1);
+            this.addButtonsToTweet(tweet as HTMLElement);
           }
         });
         break;
@@ -323,76 +239,18 @@ export class TweetObserver {
   }
 
   /**
-   * ツイートにDLボタンを追加すべきか判定
+   * ツイートにボタンを追加すべきか判定
    */
-  private shouldAddDownloadButton(article: HTMLElement): boolean {
-    // 既にDLボタンが存在する場合は追加しない
-    if (article.querySelector('.comiketter-download-button')) {
-      console.log('Comiketter: Tweet already has download button');
-      return false;
-    }
-
-    // メディア（画像・動画）が存在するかチェック
-    const hasMedia = this.hasMedia(article);
-    console.log('Comiketter: Tweet has media:', hasMedia);
-    
-    return hasMedia;
-  }
-
-
-
-  /**
-   * ツイートからメディアURLを抽出
-   */
-  private extractMediaUrls(article: HTMLElement): string[] {
-    const urls: string[] = [];
-
-    // 画像URLの抽出
-    const images = article.querySelectorAll('img[src*="twimg.com"]');
-    images.forEach(img => {
-      const src = img.getAttribute('src');
-      if (src && (
-        src.includes('pbs.twimg.com/media') ||
-        src.includes('twimg.com/media') ||
-        src.includes('twimg.com/ext_tw_video_thumb')
-      )) {
-        urls.push(src);
-      }
-    });
-
-    // 動画URLの抽出
-    const videos = article.querySelectorAll('video[src*="twimg.com"]');
-    videos.forEach(video => {
-      const src = video.getAttribute('src');
-      if (src && (
-        src.includes('video.twimg.com') ||
-        src.includes('twimg.com/ext_tw_video')
-      )) {
-        urls.push(src);
-      }
-    });
-
-    // 背景画像の抽出
-    const elementsWithBg = article.querySelectorAll('[style*="background-image"]');
-    elementsWithBg.forEach(element => {
-      const style = element.getAttribute('style');
-      if (style) {
-        const bgMatch = style.match(/background-image:\s*url\(['"]?([^'"]*twimg\.com[^'"]*)['"]?\)/);
-        if (bgMatch) {
-          urls.push(bgMatch[1]);
-        }
-      }
-    });
-
-    return urls;
+  private shouldAddButtons(article: HTMLElement): boolean {
+    return this.buttonFactory.shouldAddButtons(article);
   }
 
   /**
-   * ツイートにDLボタンを追加
+   * ツイートにボタンを追加
    */
-  private addDownloadButtonToTweet(article: HTMLElement): void {
+  private addButtonsToTweet(article: HTMLElement): void {
     try {
-      console.log('Comiketter: Starting to add download button to tweet');
+      console.log('Comiketter: Starting to add buttons to tweet');
       
       // ツイート情報を取得
       const tweetInfo = getTweetInfoFromArticle(article);
@@ -410,21 +268,17 @@ export class TweetObserver {
       }
       console.log('Comiketter: Found action bar:', actionBar);
 
-      // DLボタンを作成して挿入
-      const downloadButtonElement = this.downloadButton.createButton(tweetInfo);
-      console.log('Comiketter: Created download button element:', downloadButtonElement);
-      
-      // DLボタンを一番左に挿入
-      if (actionBar.firstChild) {
-        actionBar.insertBefore(downloadButtonElement, actionBar.firstChild);
-      } else {
-        actionBar.appendChild(downloadButtonElement);
-      }
-      console.log('Comiketter: Successfully added download button to action bar');
+      // ボタンを作成
+      const buttons = this.buttonFactory.createButtonsForTweet(tweetInfo);
+      console.log('Comiketter: Created buttons:', buttons.length);
 
-      console.log('Comiketter: Download button added to tweet:', tweetInfo.id);
+      // アクションバーに挿入（順序を制御）
+      this.buttonFactory.insertButtonsToActionBar(actionBar, buttons);
+      console.log('Comiketter: Successfully added buttons to action bar');
+
+      console.log('Comiketter: Buttons added to tweet:', tweetInfo.id);
     } catch (error) {
-      console.error('Comiketter: Failed to add download button:', error);
+      console.error('Comiketter: Failed to add buttons:', error);
     }
   }
 
@@ -453,215 +307,6 @@ export class TweetObserver {
 
     console.warn('Comiketter: No action bar found with any selector');
     return null;
-  }
-
-  /**
-   * ツイートにメディアが含まれているかチェック（厳密版）
-   */
-  private hasMedia(article: HTMLElement): boolean {
-    // 画像の存在チェック（複数のセレクターを試行）
-    const imageSelectors = [
-      '[data-testid="tweetPhoto"]',
-      '[data-testid="tweetPhoto"] img',
-      'img[src*="pbs.twimg.com/media"]',
-      'img[src*="twimg.com/media"]',
-      '[data-testid="tweet"] img[src*="twimg.com"]',
-      'img[alt*="画像"]',
-      'img[alt*="Image"]',
-      '[role="img"]',
-    ];
-
-    let hasImage = false;
-    let foundImageSelector = '';
-    let imageElement: Element | null = null;
-
-    for (const selector of imageSelectors) {
-      imageElement = article.querySelector(selector);
-      if (imageElement) {
-        // 追加の検証：実際に画像URLが含まれているかチェック
-        if (this.isValidImageElement(imageElement)) {
-          hasImage = true;
-          foundImageSelector = selector;
-          break;
-        }
-      }
-    }
-
-    // 動画の存在チェック
-    const videoSelectors = [
-      '[data-testid="videoPlayer"]',
-      '[data-testid="playButton"]',
-      '[data-testid="videoComponent"]',
-      'video',
-      '[role="application"]',
-    ];
-
-    let hasVideo = false;
-    let foundVideoSelector = '';
-    let videoElement: Element | null = null;
-
-    for (const selector of videoSelectors) {
-      videoElement = article.querySelector(selector);
-      if (videoElement) {
-        // 追加の検証：実際に動画要素かチェック
-        if (this.isValidVideoElement(videoElement)) {
-          hasVideo = true;
-          foundVideoSelector = selector;
-          break;
-        }
-      }
-    }
-
-    // 引用ツイート内のメディアは除外
-    const isInQuotedTweet = article.closest('[role="link"]') !== null;
-    
-    const result = (hasImage || hasVideo) && !isInQuotedTweet;
-    
-    // 詳細なデバッグ情報
-    console.log('Comiketter: Media check details:', {
-      hasImage,
-      foundImageSelector,
-      hasVideo,
-      foundVideoSelector,
-      isInQuotedTweet,
-      result,
-      articleClasses: article.className,
-      articleTestId: article.getAttribute('data-testid'),
-    });
-
-    // 画像が見つかった場合、画像要素の詳細をログ出力
-    if (hasImage && imageElement) {
-      console.log('Comiketter: Found image element:', {
-        tagName: imageElement.tagName,
-        src: imageElement.getAttribute('src'),
-        alt: imageElement.getAttribute('alt'),
-        className: imageElement.className,
-        testId: imageElement.getAttribute('data-testid'),
-      });
-    }
-
-    // 動画が見つかった場合、動画要素の詳細をログ出力
-    if (hasVideo && videoElement) {
-      console.log('Comiketter: Found video element:', {
-        tagName: videoElement.tagName,
-        className: videoElement.className,
-        testId: videoElement.getAttribute('data-testid'),
-      });
-    }
-    
-    return result;
-  }
-
-  /**
-   * 有効な画像要素かどうかを検証
-   */
-  private isValidImageElement(element: Element): boolean {
-    // imgタグの場合
-    if (element.tagName === 'IMG') {
-      const src = element.getAttribute('src');
-      const alt = element.getAttribute('alt');
-      
-      // src属性が存在し、Twitterの画像URLパターンに一致するかチェック
-      if (src && (
-        src.includes('pbs.twimg.com/media') ||
-        src.includes('twimg.com/media') ||
-        src.includes('twimg.com/ext_tw_video_thumb')
-      )) {
-        return true;
-      }
-      
-      // alt属性に画像関連のテキストが含まれているかチェック
-      if (alt && (
-        alt.includes('画像') ||
-        alt.includes('Image') ||
-        alt.includes('photo') ||
-        alt.includes('media')
-      )) {
-        return true;
-      }
-    }
-    
-    // data-testid="tweetPhoto"の場合
-    if (element.getAttribute('data-testid') === 'tweetPhoto') {
-      // 子要素にimgタグがあるかチェック
-      const imgChild = element.querySelector('img');
-      if (imgChild) {
-        return this.isValidImageElement(imgChild);
-      }
-      
-      // 背景画像として設定されているかチェック
-      const style = element.getAttribute('style');
-      if (style && style.includes('background-image')) {
-        return true;
-      }
-    }
-    
-    // role="img"の場合
-    if (element.getAttribute('role') === 'img') {
-      // aria-labelに画像関連のテキストが含まれているかチェック
-      const ariaLabel = element.getAttribute('aria-label');
-      if (ariaLabel && (
-        ariaLabel.includes('画像') ||
-        ariaLabel.includes('Image') ||
-        ariaLabel.includes('photo') ||
-        ariaLabel.includes('media')
-      )) {
-        return true;
-      }
-    }
-    
-    return false;
-  }
-
-  /**
-   * 有効な動画要素かどうかを検証
-   */
-  private isValidVideoElement(element: Element): boolean {
-    // videoタグの場合
-    if (element.tagName === 'VIDEO') {
-      const src = element.getAttribute('src');
-      if (src && (
-        src.includes('video.twimg.com') ||
-        src.includes('twimg.com/ext_tw_video')
-      )) {
-        return true;
-      }
-    }
-    
-    // data-testid="videoPlayer"の場合
-    if (element.getAttribute('data-testid') === 'videoPlayer') {
-      // 子要素にvideoタグがあるかチェック
-      const videoChild = element.querySelector('video');
-      if (videoChild) {
-        return this.isValidVideoElement(videoChild);
-      }
-      
-      // プレイボタンがあるかチェック
-      const playButton = element.querySelector('[data-testid="playButton"]');
-      if (playButton) {
-        return true;
-      }
-    }
-    
-    // data-testid="playButton"の場合
-    if (element.getAttribute('data-testid') === 'playButton') {
-      return true;
-    }
-    
-    // role="application"の場合（動画プレイヤー）
-    if (element.getAttribute('role') === 'application') {
-      // aria-labelに動画関連のテキストが含まれているかチェック
-      const ariaLabel = element.getAttribute('aria-label');
-      if (ariaLabel && (
-        ariaLabel.includes('動画') ||
-        ariaLabel.includes('Video') ||
-        ariaLabel.includes('play')
-      )) {
-        return true;
-      }
-    }
-    
-    return false;
   }
 
   /**

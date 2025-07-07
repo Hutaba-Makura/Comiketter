@@ -3,167 +3,120 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  * 
- * Comiketter: Content script main entry point
+ * Comiketter: 新しい構造のメインエントリーポイント
  */
 
 import { TweetObserver } from './tweetObserver';
 import { ApiInterceptor } from './apiInterceptor';
-import { CustomBookmarkManager } from './customBookmarkManager';
+
+// グローバル変数として保持（デバッグ用）
+declare global {
+  interface Window {
+    comiketterObserver?: TweetObserver;
+    comiketterApiInterceptor?: ApiInterceptor;
+  }
+}
 
 class ContentScript {
   private tweetObserver: TweetObserver;
   private apiInterceptor: ApiInterceptor;
-  private customBookmarkManager: CustomBookmarkManager;
   private isInitialized = false;
 
   constructor() {
-    console.log('Comiketter: Content script starting...');
-    
     this.tweetObserver = new TweetObserver();
     this.apiInterceptor = new ApiInterceptor();
-    this.customBookmarkManager = new CustomBookmarkManager();
-    
-    this.initialize();
   }
 
-  private async initialize(): Promise<void> {
+  async init(): Promise<void> {
     if (this.isInitialized) {
-      console.log('Comiketter: Already initialized, skipping');
-      return; // 重複初期化を防ぐ
+      console.log('Comiketter: ContentScript already initialized');
+      return;
     }
 
+    console.log('Comiketter: Initializing ContentScript...');
+
     try {
-      console.log('Comiketter: Starting initialization...');
-      
-      // API傍受機能を初期化
-      console.log('Comiketter: Initializing API interceptor...');
+      // API傍受を開始
       await this.apiInterceptor.init();
-      
-      // APIレスポンスイベントリスナーを設定
-      console.log('Comiketter: Setting up API response listeners...');
-      this.setupApiResponseListener();
-      
-      // ツイート監視を初期化
-      console.log('Comiketter: Initializing tweet observer...');
+      console.log('Comiketter: API interceptor initialized');
+
+      // ツイート監視を開始
       await this.tweetObserver.init();
-      
-      // カスタムブックマーク機能を初期化
-      console.log('Comiketter: Initializing custom bookmark manager...');
-      await this.customBookmarkManager.init();
-      
+      console.log('Comiketter: Tweet observer initialized');
+
+      // グローバル変数に設定（デバッグ用）
+      window.comiketterObserver = this.tweetObserver;
+      window.comiketterApiInterceptor = this.apiInterceptor;
+
       this.isInitialized = true;
-      console.log('Comiketter: Content script initialized successfully');
+      console.log('Comiketter: ContentScript initialization completed');
+
+      // 定期的な再初期化をスケジュール
+      this.schedulePeriodicReinitialization();
+
     } catch (error) {
-      console.error('Comiketter: Failed to initialize content script:', error);
+      console.error('Comiketter: Failed to initialize ContentScript:', error);
     }
   }
 
   /**
-   * APIレスポンスイベントリスナーを設定
+   * 定期的な再初期化をスケジュール
    */
-  private setupApiResponseListener(): void {
-    // API傍受でキャプチャされたレスポンスをバックグラウンドに送信
-    document.addEventListener('comiketter:api-response', (e: Event) => {
-      const event = e as CustomEvent<Comiketter.ApiResponseDetail>;
-      const { path, status, body } = event.detail;
-      
-      if (status === 200) {
-        try {
-          const data = JSON.parse(body);
-          chrome.runtime.sendMessage({
-            type: 'API_RESPONSE_CAPTURED',
-            payload: {
-              path,
-              data,
-              timestamp: Date.now(),
-            },
-          }).catch(error => {
-            console.error('Comiketter: Failed to send API response to background:', error);
-          });
-        } catch (error) {
-          console.error('Comiketter: Failed to parse API response:', error);
+  private schedulePeriodicReinitialization(): void {
+    // 30秒ごとに再初期化をチェック
+    setInterval(async () => {
+      try {
+        if (!this.isInitialized) {
+          console.log('Comiketter: Reinitializing due to lost state');
+          await this.init();
         }
+      } catch (error) {
+        console.error('Comiketter: Failed to reinitialize:', error);
       }
-    });
+    }, 30000);
+  }
 
-    // 処理済みAPIレスポンスイベントリスナー
-    document.addEventListener('comiketter:api-response-processed', (e: Event) => {
-      const event = e as CustomEvent<{
-        path: string;
-        data: unknown;
-        timestamp: number;
-      }>;
-      
-      chrome.runtime.sendMessage({
-        type: 'API_RESPONSE_PROCESSED',
-        payload: event.detail,
-      }).catch(error => {
-        console.error('Comiketter: Failed to send processed API response to background:', error);
-      });
-    });
+  /**
+   * クリーンアップ
+   */
+  destroy(): void {
+    console.log('Comiketter: Destroying ContentScript...');
+    
+    if (this.tweetObserver) {
+      this.tweetObserver.destroy();
+    }
+    
+    this.isInitialized = false;
+    console.log('Comiketter: ContentScript destroyed');
   }
 }
 
-// ページ読み込み完了後にコンテンツスクリプトを開始
-let contentScript: ContentScript | null = null;
+// インスタンスを作成
+const contentScript = new ContentScript();
 
-function initializeContentScript() {
-  if (contentScript) {
-    console.log('Comiketter: Content script already exists, skipping initialization');
-    return;
-  }
-  
-  console.log('Comiketter: Creating new content script instance');
-  contentScript = new ContentScript();
-}
-
-// 遅延初期化関数（複数回実行）
-function delayedInitialization(attempt: number = 1) {
-  const delays = [1000, 2000, 5000, 10000]; // 1秒、2秒、5秒、10秒後に再試行
-  
-  if (attempt <= delays.length) {
-    setTimeout(() => {
-      console.log('Comiketter: Attempting delayed initialization (attempt', attempt, ')');
-      if (!contentScript) {
-        initializeContentScript();
-      } else {
-        // 既に初期化済みの場合は、各機能を再実行
-        console.log('Comiketter: Re-running feature initializations');
-        contentScript['tweetObserver']?.init();
-        contentScript['customBookmarkManager']?.init();
-      }
-      
-      // 次の遅延初期化をスケジュール
-      if (attempt < delays.length) {
-        delayedInitialization(attempt + 1);
-      }
-    }, delays[attempt - 1]);
-  }
-}
-
-// 即座に初期化を試行
-console.log('Comiketter: Attempting immediate initialization');
-initializeContentScript();
-
-// DOMContentLoadedでも初期化
+// DOMContentLoadedまたはloadイベントで初期化
 if (document.readyState === 'loading') {
-  console.log('Comiketter: Document still loading, waiting for DOMContentLoaded');
   document.addEventListener('DOMContentLoaded', () => {
-    console.log('Comiketter: DOMContentLoaded fired, initializing content script');
-    initializeContentScript();
+    contentScript.init();
   });
 } else {
-  console.log('Comiketter: Document already loaded, initializing content script');
-  initializeContentScript();
+  // 既にDOMが読み込まれている場合
+  contentScript.init();
 }
 
-// window.onloadでも初期化（念のため）
-window.addEventListener('load', () => {
-  console.log('Comiketter: Window load fired, ensuring content script is initialized');
-  if (!contentScript) {
-    initializeContentScript();
-  }
+// ページアンロード時のクリーンアップ
+window.addEventListener('beforeunload', () => {
+  contentScript.destroy();
 });
 
-// 遅延初期化も実行
-delayedInitialization(); 
+// エラーハンドリング
+window.addEventListener('error', (event) => {
+  console.error('Comiketter: Global error:', event.error);
+});
+
+// 未処理のPromise拒否をキャッチ
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('Comiketter: Unhandled promise rejection:', event.reason);
+});
+
+export { contentScript }; 
