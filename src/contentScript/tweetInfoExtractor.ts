@@ -57,15 +57,17 @@ function extractTweetId(article: HTMLElement): string | null {
     'a[href*="/status/"]',
     '[data-testid="User-Name"] a[href*="/status/"]',
     'time[datetime]',
+    '[data-testid="tweet"] a[href*="/status/"]',
   ];
 
   for (const selector of selectors) {
-    const element = article.querySelector(selector);
-    if (element) {
+    const elements = article.querySelectorAll(selector);
+    for (const element of elements) {
       const href = element.getAttribute('href');
       if (href) {
         const match = href.match(/\/status\/(\d+)/);
         if (match) {
+          console.log('Comiketter: Found tweet ID:', match[1], 'from selector:', selector);
           return match[1];
         }
       }
@@ -77,10 +79,19 @@ function extractTweetId(article: HTMLElement): string | null {
   if (tweetElement) {
     const dataTweetId = tweetElement.getAttribute('data-tweet-id');
     if (dataTweetId) {
+      console.log('Comiketter: Found tweet ID from data attribute:', dataTweetId);
       return dataTweetId;
     }
   }
 
+  // 記事要素自体の属性から取得を試行
+  const articleTweetId = article.getAttribute('data-tweet-id');
+  if (articleTweetId) {
+    console.log('Comiketter: Found tweet ID from article attribute:', articleTweetId);
+    return articleTweetId;
+  }
+
+  console.log('Comiketter: Could not extract tweet ID');
   return null;
 }
 
@@ -97,6 +108,7 @@ function extractScreenName(article: HTMLElement): string | null {
       if (href && href.startsWith('/')) {
         const match = href.match(/^\/([^\/]+)/);
         if (match) {
+          console.log('Comiketter: Found screen name from User-Name:', match[1]);
           return match[1];
         }
       }
@@ -110,11 +122,26 @@ function extractScreenName(article: HTMLElement): string | null {
     if (href) {
       const match = href.match(/^\/([^\/]+)\/status\//);
       if (match) {
+        console.log('Comiketter: Found screen name from status link:', match[1]);
         return match[1];
       }
     }
   }
 
+  // ユーザーリンクから取得
+  const userLinks = article.querySelectorAll('a[href^="/"]');
+  for (const link of userLinks) {
+    const href = link.getAttribute('href');
+    if (href && href.match(/^\/[^\/]+\/?$/)) {
+      const match = href.match(/^\/([^\/]+)/);
+      if (match && match[1] !== 'status' && match[1] !== 'i' && match[1] !== 'home') {
+        console.log('Comiketter: Found screen name from user link:', match[1]);
+        return match[1];
+      }
+    }
+  }
+
+  console.log('Comiketter: Could not extract screen name');
   return null;
 }
 

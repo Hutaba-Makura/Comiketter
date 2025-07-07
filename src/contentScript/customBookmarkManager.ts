@@ -29,10 +29,6 @@ export class CustomBookmarkManager {
   }
 
   async init(): Promise<void> {
-    if (this.isInitialized) {
-      return; // 重複初期化を防ぐ
-    }
-
     console.log('Comiketter: CustomBookmarkManager initializing...');
     
     // 初期化時に既存のツイートを処理
@@ -43,6 +39,22 @@ export class CustomBookmarkManager {
     
     this.isInitialized = true;
     console.log('Comiketter: CustomBookmarkManager initialized');
+    
+    // 定期的に再初期化を実行（Xの動的コンテンツに対応）
+    this.schedulePeriodicReinitialization();
+  }
+
+  /**
+   * 定期的な再初期化をスケジュール
+   */
+  private schedulePeriodicReinitialization(): void {
+    // 30秒ごとに既存のツイートを再チェック
+    setInterval(() => {
+      if (this.isInitialized) {
+        console.log('Comiketter: Running periodic reinitialization');
+        this.initializeExistingTweets();
+      }
+    }, 30000);
   }
 
   /**
@@ -204,6 +216,7 @@ export class CustomBookmarkManager {
     for (const selector of tweetSelectors) {
       articles = document.querySelectorAll(selector);
       if (articles.length > 0) {
+        console.log(`Comiketter: Found ${articles.length} tweets with selector: ${selector}`);
         break;
       }
     }
@@ -214,6 +227,8 @@ export class CustomBookmarkManager {
           this.addBookmarkButtonToTweet(article as HTMLElement);
         }
       });
+    } else {
+      console.log('Comiketter: No tweets found with any selector');
     }
   }
 
@@ -238,11 +253,12 @@ export class CustomBookmarkManager {
       });
 
       if (addedNodes.length > 0) {
+        console.log('Comiketter: Processing', addedNodes.length, 'added nodes');
         this.processAddedNodes(addedNodes);
       }
     });
 
-    // 監視対象を設定
+    // 監視対象を設定（複数の要素を監視）
     const observeTargets = [
       '[data-testid="primaryColumn"]',
       '[role="main"]',
@@ -250,12 +266,22 @@ export class CustomBookmarkManager {
       'body',
     ];
 
+    let observedCount = 0;
     for (const selector of observeTargets) {
-      const element = document.querySelector(selector);
-      if (element) {
-        this.observer.observe(element, options);
-        break;
+      const elements = document.querySelectorAll(selector);
+      if (elements.length > 0) {
+        elements.forEach(element => {
+          this.observer!.observe(element, options);
+          observedCount++;
+        });
+        console.log(`Comiketter: Observing ${elements.length} elements with selector: ${selector}`);
       }
+    }
+
+    if (observedCount === 0) {
+      // フォールバック: body全体を監視
+      this.observer.observe(document.body, options);
+      console.log('Comiketter: Fallback to observing document.body');
     }
   }
 
@@ -329,6 +355,7 @@ export class CustomBookmarkManager {
       // アクションバーを取得
       const actionBar = this.getActionBar(article);
       if (!actionBar) {
+        console.log('Comiketter: No action bar found, skipping bookmark button addition');
         return;
       }
 
@@ -340,6 +367,8 @@ export class CustomBookmarkManager {
 
       // クリックイベントを設定
       this.setupBookmarkClickHandler(bookmarkButton, article);
+      
+      console.log('Comiketter: Successfully added bookmark button to tweet');
     } catch (error) {
       console.error('Comiketter: Failed to add bookmark button:', error);
     }
@@ -354,15 +383,20 @@ export class CustomBookmarkManager {
       '[data-testid="tweet"] [role="group"][aria-label]',
       '.r-18u37iz[role="group"][id^="id__"]',
       '[data-testid="tweet"] [role="group"]',
+      // Xの新しいUIに対応
+      '[data-testid="tweet"] [role="group"]:last-child',
+      'article [role="group"]:last-child',
     ];
 
     for (const selector of selectors) {
       const actionBar = article.querySelector(selector) as HTMLElement;
       if (actionBar) {
+        console.log('Comiketter: Found action bar with selector:', selector);
         return actionBar;
       }
     }
 
+    console.log('Comiketter: No action bar found for tweet');
     return null;
   }
 
@@ -381,12 +415,21 @@ export class CustomBookmarkManager {
     innerDiv.setAttribute('aria-haspopup', 'true');
     innerDiv.setAttribute('role', 'button');
     innerDiv.setAttribute('data-focusable', 'true');
-    innerDiv.style.cssText = 'display: flex; justify-content: center;';
+    innerDiv.style.cssText = `
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-width: 36px;
+      min-height: 36px;
+      border-radius: 50%;
+      transition: background-color 0.2s ease;
+    `;
     
     // ブックマークアイコン
     const icon = document.createElement('svg');
     icon.setAttribute('viewBox', '0 0 24 24');
     icon.setAttribute('class', 'r-4qtqp9 r-yyyyoo r-1xvli5t r-dnmrzs r-bnwqim r-1plcrui r-lrvibr r-1hdv0qi');
+    icon.style.cssText = 'width: 20px; height: 20px;';
     icon.innerHTML = `
       <g>
         <path d="M4 4.5C4 3.12 5.119 2 6.5 2h11C18.881 2 20 3.12 20 4.5v18.44l-8-5.71-8 5.71V4.5zM6.5 4c-.276 0-.5.22-.5.5v14.56l6-4.29 6 4.29V4.5c0-.28-.224-.5-.5-.5h-11z"/>
@@ -395,6 +438,15 @@ export class CustomBookmarkManager {
     
     innerDiv.appendChild(icon);
     buttonWrapper.appendChild(innerDiv);
+    
+    // ホバー効果を追加
+    buttonWrapper.addEventListener('mouseenter', () => {
+      innerDiv.style.backgroundColor = 'rgba(29, 155, 240, 0.1)';
+    });
+    
+    buttonWrapper.addEventListener('mouseleave', () => {
+      innerDiv.style.backgroundColor = 'transparent';
+    });
     
     return buttonWrapper;
   }

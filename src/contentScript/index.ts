@@ -119,7 +119,7 @@ function initializeContentScript() {
 
 // 遅延初期化関数（複数回実行）
 function delayedInitialization(attempt: number = 1) {
-  const delays = [1000, 2000, 5000]; // 1秒、2秒、5秒後に再試行
+  const delays = [1000, 2000, 5000, 10000]; // 1秒、2秒、5秒、10秒後に再試行
   
   if (attempt <= delays.length) {
     setTimeout(() => {
@@ -127,9 +127,10 @@ function delayedInitialization(attempt: number = 1) {
       if (!contentScript) {
         initializeContentScript();
       } else {
-        // 既に初期化済みの場合は、ツイート監視を再実行
-        console.log('Comiketter: Re-running tweet observer initialization');
+        // 既に初期化済みの場合は、各機能を再実行
+        console.log('Comiketter: Re-running feature initializations');
         contentScript['tweetObserver']?.init();
+        contentScript['customBookmarkManager']?.init();
       }
       
       // 次の遅延初期化をスケジュール
