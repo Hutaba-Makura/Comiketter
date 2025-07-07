@@ -17,9 +17,6 @@ export enum BookmarkButtonStatus {
   Error = 'error',
 }
 
-// カスタムブックマーク専用のクラス名
-const CUSTOM_BOOKMARK_ICON_CLASSES = 'r-comiketter-cb r-yyyyoo r-1xvli5t r-dnmrzs r-bnwqim r-1plcrui r-lrvibr r-1hdv0qi';
-
 export class CustomBookmarkManager {
   private observer: MutationObserver | null = null;
   private isInitialized = false;
@@ -250,20 +247,6 @@ export class CustomBookmarkManager {
         background: rgba(0, 0, 0, 0.5);
         z-index: 9999;
       }
-
-      .r-comiketter-cb {
-        /* カスタムブックマークアイコン専用のスタイル */
-        color: rgb(83, 100, 113) !important;
-      }
-
-      [data-theme="dark"] .r-comiketter-cb,
-      .dark .r-comiketter-cb {
-        color: rgb(231, 233, 234) !important;
-      }
-
-      .r-comiketter-cb:hover {
-        color: rgb(29, 155, 240) !important;
-      }
     `;
     
     document.head.appendChild(style);
@@ -424,8 +407,15 @@ export class CustomBookmarkManager {
       // ブックマークボタンを作成
       const bookmarkButton = this.createBookmarkButton();
       
-      // アクションバーに追加
-      actionBar.appendChild(bookmarkButton);
+      // DLボタンの後に挿入（DLボタンを一番左に固定）
+      const downloadButton = actionBar.querySelector('.comiketter-download-button');
+      if (downloadButton && downloadButton.nextSibling) {
+        // DLボタンの直後に挿入
+        actionBar.insertBefore(bookmarkButton, downloadButton.nextSibling);
+      } else {
+        // DLボタンがない場合は最後に挿入
+        actionBar.appendChild(bookmarkButton);
+      }
 
       // クリックイベントを設定
       this.setupBookmarkClickHandler(bookmarkButton, article);
@@ -560,7 +550,7 @@ export class CustomBookmarkManager {
     // サンプルボタンのアイコンからスタイルを取得
     const sampleIcon = sampleButton.querySelector('svg');
     if (sampleIcon) {
-      icon.setAttribute('class', CUSTOM_BOOKMARK_ICON_CLASSES);
+      icon.setAttribute('class', sampleIcon.className || 'r-4qtqp9 r-yyyyoo r-1xvli5t r-dnmrzs r-bnwqim r-1plcrui r-lrvibr r-1hdv0qi');
     }
     
     return icon;
@@ -855,4 +845,4 @@ export class CustomBookmarkManager {
     this.hideBookmarkSelector();
     console.log('Comiketter: CustomBookmarkManager destroyed');
   }
-} 
+}

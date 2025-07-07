@@ -414,8 +414,12 @@ export class TweetObserver {
       const downloadButtonElement = this.downloadButton.createButton(tweetInfo);
       console.log('Comiketter: Created download button element:', downloadButtonElement);
       
-      // 既存のボタンとの干渉を防ぐため、最後に挿入
-      actionBar.appendChild(downloadButtonElement);
+      // DLボタンを一番左に挿入
+      if (actionBar.firstChild) {
+        actionBar.insertBefore(downloadButtonElement, actionBar.firstChild);
+      } else {
+        actionBar.appendChild(downloadButtonElement);
+      }
       console.log('Comiketter: Successfully added download button to action bar');
 
       console.log('Comiketter: Download button added to tweet:', tweetInfo.id);
