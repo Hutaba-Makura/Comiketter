@@ -33,7 +33,7 @@ export class BookmarkButton extends BaseButton {
           </g>
         </svg>
       `,
-      position: 'right',
+      position: 'left',
     };
     super(config);
   }

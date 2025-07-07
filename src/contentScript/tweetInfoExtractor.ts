@@ -21,12 +21,19 @@ export function getTweetInfoFromArticle(article: HTMLElement): Tweet | null {
     const createdAt = extractCreatedAt(article);
     const text = extractText(article);
 
+    console.log('Comiketter: Extracted tweet info:', {
+      tweetId,
+      screenName,
+      hasMedia,
+      mediaUrls: mediaUrls?.length || 0
+    });
+
     if (!tweetId || !screenName) {
       console.warn('Comiketter: Failed to extract tweet info - missing tweetId or screenName');
       return null;
     }
 
-    return {
+    const result = {
       id: tweetId,
       text: text || '',
       author: {
@@ -42,6 +49,14 @@ export function getTweetInfoFromArticle(article: HTMLElement): Tweet | null {
       })) : undefined,
       url: `https://twitter.com/${screenName}/status/${tweetId}`,
     };
+
+    console.log('Comiketter: Final tweet info:', {
+      id: result.id,
+      hasMedia: !!result.media,
+      mediaLength: result.media?.length || 0
+    });
+
+    return result;
   } catch (error) {
     console.error('Comiketter: Error extracting tweet info:', error);
     return null;
