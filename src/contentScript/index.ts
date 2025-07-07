@@ -8,10 +8,12 @@
 
 import { TweetObserver } from './tweetObserver';
 import { ApiInterceptor } from './apiInterceptor';
+import { CustomBookmarkManager } from './customBookmarkManager';
 
 class ContentScript {
   private tweetObserver: TweetObserver;
   private apiInterceptor: ApiInterceptor;
+  private customBookmarkManager: CustomBookmarkManager;
   private isInitialized = false;
 
   constructor() {
@@ -19,6 +21,7 @@ class ContentScript {
     
     this.tweetObserver = new TweetObserver();
     this.apiInterceptor = new ApiInterceptor();
+    this.customBookmarkManager = new CustomBookmarkManager();
     
     this.initialize();
   }
@@ -43,6 +46,10 @@ class ContentScript {
       // ツイート監視を初期化
       console.log('Comiketter: Initializing tweet observer...');
       await this.tweetObserver.init();
+      
+      // カスタムブックマーク機能を初期化
+      console.log('Comiketter: Initializing custom bookmark manager...');
+      await this.customBookmarkManager.init();
       
       this.isInitialized = true;
       console.log('Comiketter: Content script initialized successfully');
