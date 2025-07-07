@@ -304,13 +304,7 @@ export class DownloadManager {
       url: url,
       filename: filename,
       saveAs: false, // 設定に応じて変更可能
-      conflictAction: 'uniquify',
-      headers: [
-        {
-          name: 'Referer',
-          value: 'https://x.com/'
-        }
-      ]
+      conflictAction: 'uniquify'
     };
 
     // サブディレクトリが設定されている場合

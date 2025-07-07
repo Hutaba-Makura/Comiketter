@@ -245,9 +245,8 @@ export class TweetObserver {
 
     console.log('Comiketter: Processing batch of', this.pendingNodes.length, 'nodes');
 
-    // 重複を除去して処理
-    const uniqueNodes = this.deduplicateNodes(this.pendingNodes);
-    uniqueNodes.forEach(node => {
+    // 各ノードを処理
+    this.pendingNodes.forEach(node => {
       this.processAddedNode(node);
     });
 
