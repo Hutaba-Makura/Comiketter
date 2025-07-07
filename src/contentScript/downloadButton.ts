@@ -6,7 +6,7 @@
  * Comiketter: Modified and adapted from TwitterMediaHarvest button.ts and Harvester.ts
  */
 
-import { TweetInfo } from './tweetInfoExtractor';
+import type { Tweet } from '../types';
 
 export enum ButtonStatus {
   Idle = 'idle',
@@ -101,7 +101,7 @@ export class DownloadButton {
   /**
    * DLボタンを作成
    */
-  createButton(tweetInfo: TweetInfo): HTMLElement {
+  createButton(tweetInfo: Tweet): HTMLElement {
     // サンプルボタン（いいねボタン等）を取得してスタイルをコピー
     const sampleButton = this.getSampleButton();
     if (!sampleButton) {
@@ -218,7 +218,7 @@ export class DownloadButton {
   /**
    * クリックハンドラーを設定
    */
-  private setupClickHandler(button: HTMLElement, tweetInfo: TweetInfo): void {
+  private setupClickHandler(button: HTMLElement, tweetInfo: Tweet): void {
     button.addEventListener('click', (e: MouseEvent) => {
       // Comiketterボタン以外のクリックは無視
       const target = e.target as HTMLElement;
@@ -236,7 +236,7 @@ export class DownloadButton {
   /**
    * ボタンクリック時の処理
    */
-  private async handleButtonClick(button: HTMLElement, tweetInfo: TweetInfo): Promise<void> {
+  private async handleButtonClick(button: HTMLElement, tweetInfo: Tweet): Promise<void> {
     // ダウンロード中は重複クリックを防ぐ
     if (this.getButtonStatus(button) === ButtonStatus.Downloading) {
       return;
@@ -250,9 +250,9 @@ export class DownloadButton {
       const response = await chrome.runtime.sendMessage({
         type: 'DOWNLOAD_TWEET_MEDIA',
         payload: {
-          tweetId: tweetInfo.tweetId,
-          screenName: tweetInfo.screenName,
-          mediaUrls: tweetInfo.mediaUrls,
+          tweetId: tweetInfo.id,
+          screenName: tweetInfo.author.username,
+          mediaUrls: tweetInfo.media?.map(m => m.url) || [],
         },
       });
 

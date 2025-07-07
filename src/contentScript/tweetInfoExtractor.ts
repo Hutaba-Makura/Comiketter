@@ -6,22 +6,20 @@
  * Comiketter: Modified and adapted from TwitterMediaHarvest article.ts
  */
 
-export interface TweetInfo {
-  tweetId: string;
-  screenName: string;
-  hasMedia: boolean;
-  mediaUrls?: string[];
-}
+import type { Tweet } from '../types';
 
 /**
  * ツイート要素からツイート情報を抽出
  */
-export function getTweetInfoFromArticle(article: HTMLElement): TweetInfo | null {
+export function getTweetInfoFromArticle(article: HTMLElement): Tweet | null {
   try {
     const tweetId = extractTweetId(article);
     const screenName = extractScreenName(article);
+    const displayName = extractDisplayName(article);
     const hasMedia = checkHasMedia(article);
     const mediaUrls = hasMedia ? extractMediaUrls(article) : undefined;
+    const createdAt = extractCreatedAt(article);
+    const text = extractText(article);
 
     if (!tweetId || !screenName) {
       console.warn('Comiketter: Failed to extract tweet info - missing tweetId or screenName');
@@ -29,10 +27,20 @@ export function getTweetInfoFromArticle(article: HTMLElement): TweetInfo | null 
     }
 
     return {
-      tweetId,
-      screenName,
-      hasMedia,
-      mediaUrls,
+      id: tweetId,
+      text: text || '',
+      author: {
+        username: screenName,
+        displayName: displayName || screenName,
+        profileImageUrl: undefined,
+      },
+      createdAt: createdAt || new Date().toISOString(),
+      media: mediaUrls ? mediaUrls.map(url => ({
+        type: 'image' as const,
+        url,
+        originalUrl: url,
+      })) : undefined,
+      url: `https://twitter.com/${screenName}/status/${tweetId}`,
     };
   } catch (error) {
     console.error('Comiketter: Error extracting tweet info:', error);
@@ -107,6 +115,45 @@ function extractScreenName(article: HTMLElement): string | null {
     }
   }
 
+  return null;
+}
+
+/**
+ * 表示名を抽出
+ */
+function extractDisplayName(article: HTMLElement): string | null {
+  const userNameElement = article.querySelector('[data-testid="User-Name"]');
+  if (userNameElement) {
+    const displayNameElement = userNameElement.querySelector('span');
+    if (displayNameElement) {
+      return displayNameElement.textContent?.trim() || null;
+    }
+  }
+  return null;
+}
+
+/**
+ * ツイート本文を抽出
+ */
+function extractText(article: HTMLElement): string | null {
+  const textElement = article.querySelector('[data-testid="tweetText"]');
+  if (textElement) {
+    return textElement.textContent?.trim() || null;
+  }
+  return null;
+}
+
+/**
+ * 作成日時を抽出
+ */
+function extractCreatedAt(article: HTMLElement): string | null {
+  const timeElement = article.querySelector('time[datetime]');
+  if (timeElement) {
+    const datetime = timeElement.getAttribute('datetime');
+    if (datetime) {
+      return datetime;
+    }
+  }
   return null;
 }
 

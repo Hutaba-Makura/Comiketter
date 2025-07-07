@@ -37,7 +37,6 @@ export const OptionsApp: React.FC = () => {
 
   const saveSettings = async () => {
     if (!settings) return;
-    
     setSaving(true);
     try {
       await StorageManager.saveSettings(settings);
@@ -79,22 +78,17 @@ export const OptionsApp: React.FC = () => {
     <Container size="md" py="xl">
       <Stack gap="lg">
         <Title order={1}>Comiketter 設定</Title>
-        
         <Stack gap="md">
           <Title order={3} size="h4">基本設定</Title>
-          
           <Switch
             label="タイムライン自動更新を無効化"
             checked={settings.tlAutoUpdateDisabled}
             onChange={(event) => updateSettings({ tlAutoUpdateDisabled: event.currentTarget.checked })}
           />
         </Stack>
-
         <Divider />
-
         <Stack gap="md">
           <Title order={3} size="h4">保存設定</Title>
-          
           <Select
             label="保存形式"
             value={settings.saveFormat}
@@ -105,7 +99,6 @@ export const OptionsApp: React.FC = () => {
               { value: 'mixed', label: '混合' },
             ]}
           />
-
           <Select
             label="ダウンロード方法"
             value={settings.downloadMethod}
@@ -116,27 +109,21 @@ export const OptionsApp: React.FC = () => {
             ]}
           />
         </Stack>
-
         <Divider />
-
         <Stack gap="md">
           <Title order={3} size="h4">ファイル名・パス設定</Title>
           <Text size="sm" c="dimmed">
             TwitterMediaHarvest準拠のファイル名・パス設定機能です。ダウンロードするファイルの命名規則をカスタマイズできます。
           </Text>
-          
           <FilenameSettings
             settings={settings.filenameSettings}
             onSettingsChange={updateFilenameSettings}
             disabled={saving}
           />
         </Stack>
-
         <Divider />
-
         <Stack gap="md">
           <Title order={3} size="h4">自動ダウンロード条件</Title>
-          
           <Switch
             label="リツイート時に自動ダウンロード"
             checked={settings.autoDownloadConditions.retweet}
@@ -147,7 +134,6 @@ export const OptionsApp: React.FC = () => {
               }
             })}
           />
-          
           <Switch
             label="いいね時に自動ダウンロード"
             checked={settings.autoDownloadConditions.like}
@@ -158,7 +144,6 @@ export const OptionsApp: React.FC = () => {
               }
             })}
           />
-          
           <Switch
             label="両方の条件を満たした時のみダウンロード"
             checked={settings.autoDownloadConditions.both}
@@ -170,13 +155,11 @@ export const OptionsApp: React.FC = () => {
             })}
           />
         </Stack>
-
         <Divider />
-
         <Stack gap="md">
           <Group justify="space-between" align="center">
             <Title order={3} size="h4">カスタムブックマーク管理</Title>
-            <Button 
+            <Button
               leftSection={<IconPlus size={16} />}
               onClick={() => {
                 setEditingBookmark(null);
@@ -189,11 +172,9 @@ export const OptionsApp: React.FC = () => {
               新規作成
             </Button>
           </Group>
-          
           <Text size="sm" c="dimmed">
             ツイートを保存するカスタムブックマークを作成・管理できます。
           </Text>
-
           {bookmarks.length === 0 ? (
             <Text c="dimmed" ta="center" py="xl">
               ブックマークがありません。新規作成ボタンからブックマークを作成してください。
@@ -241,20 +222,18 @@ export const OptionsApp: React.FC = () => {
                         <IconTrash size={16} />
                       </ActionIcon>
                     </Group>
-                  </Box>
+                  </Group>
                 </Box>
               ))}
             </Stack>
           )}
         </Stack>
-
         <Group justify="flex-end">
           <Button onClick={saveSettings} loading={saving}>
             設定を保存
           </Button>
         </Group>
       </Stack>
-
       {/* ブックマーク作成・編集モーダル */}
       <Modal
         opened={bookmarkModalOpen}
@@ -270,14 +249,12 @@ export const OptionsApp: React.FC = () => {
             placeholder="例: 1日目、絶対行きたい"
             required
           />
-          
           <TextInput
             label="説明（任意）"
             value={newBookmarkDescription}
             onChange={(e) => setNewBookmarkDescription(e.currentTarget.value)}
             placeholder="ブックマークの説明を入力"
           />
-
           <Group justify="flex-end" gap="sm">
             <Button variant="outline" onClick={() => setBookmarkModalOpen(false)}>
               キャンセル
@@ -285,7 +262,6 @@ export const OptionsApp: React.FC = () => {
             <Button
               onClick={async () => {
                 if (!newBookmarkName.trim()) return;
-                
                 try {
                   if (editingBookmark) {
                     // 編集
@@ -293,8 +269,8 @@ export const OptionsApp: React.FC = () => {
                       name: newBookmarkName.trim(),
                       description: newBookmarkDescription.trim() || undefined,
                     });
-                    setBookmarks(bookmarks.map(b => 
-                      b.id === editingBookmark.id 
+                    setBookmarks(bookmarks.map(b =>
+                      b.id === editingBookmark.id
                         ? { ...b, name: newBookmarkName.trim(), description: newBookmarkDescription.trim() || undefined }
                         : b
                     ));
@@ -307,7 +283,6 @@ export const OptionsApp: React.FC = () => {
                     });
                     setBookmarks([...bookmarks, newBookmark]);
                   }
-                  
                   setBookmarkModalOpen(false);
                   setNewBookmarkName('');
                   setNewBookmarkDescription('');

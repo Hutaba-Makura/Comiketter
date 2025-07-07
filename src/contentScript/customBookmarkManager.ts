@@ -8,7 +8,7 @@
 
 import { StorageManager } from '../utils/storage';
 import { getTweetInfoFromArticle } from './tweetInfoExtractor';
-import type { CustomBookmark, TweetInfo } from '../types';
+import type { CustomBookmark, Tweet } from '../types';
 
 export enum BookmarkButtonStatus {
   Idle = 'idle',
@@ -22,7 +22,7 @@ export class CustomBookmarkManager {
   private isInitialized = false;
   private processedElements = new WeakSet<HTMLElement>();
   private bookmarkSelector: HTMLElement | null = null;
-  private currentTweetInfo: TweetInfo | null = null;
+  private currentTweetInfo: Tweet | null = null;
 
   constructor() {
     this.injectStyles();
@@ -462,7 +462,7 @@ export class CustomBookmarkManager {
       overlay.className = 'comiketter-overlay';
       
       // セレクターを作成
-      const selector = this.createBookmarkSelector();
+      const selector = await this.createBookmarkSelector();
       
       // DOMに追加
       document.body.appendChild(overlay);
@@ -585,7 +585,7 @@ export class CustomBookmarkManager {
   /**
    * ブックマークにツイートを追加
    */
-  private async addTweetToBookmark(bookmarkId: string, tweetInfo: TweetInfo): Promise<void> {
+  private async addTweetToBookmark(bookmarkId: string, tweetInfo: Tweet): Promise<void> {
     try {
       const bookmarks = await StorageManager.getCustomBookmarks();
       const bookmarkIndex = bookmarks.findIndex(b => b.id === bookmarkId);
@@ -597,13 +597,13 @@ export class CustomBookmarkManager {
       const bookmark = bookmarks[bookmarkIndex];
       
       // 既にツイートが含まれているかチェック
-      if (bookmark.tweetIds.includes(tweetInfo.tweetId)) {
-        console.log('Comiketter: Tweet already in bookmark:', tweetInfo.tweetId);
+      if (bookmark.tweetIds.includes(tweetInfo.id)) {
+        console.log('Comiketter: Tweet already in bookmark:', tweetInfo.id);
         return;
       }
 
       // ツイートを追加
-      bookmark.tweetIds.push(tweetInfo.tweetId);
+      bookmark.tweetIds.push(tweetInfo.id);
       bookmark.tweetCount = bookmark.tweetIds.length;
       bookmark.updatedAt = new Date().toISOString();
 

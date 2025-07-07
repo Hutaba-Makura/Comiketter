@@ -418,7 +418,7 @@ export class TweetObserver {
       actionBar.appendChild(downloadButtonElement);
       console.log('Comiketter: Successfully added download button to action bar');
 
-      console.log('Comiketter: Download button added to tweet:', tweetInfo.tweetId);
+      console.log('Comiketter: Download button added to tweet:', tweetInfo.id);
     } catch (error) {
       console.error('Comiketter: Failed to add download button:', error);
     }
