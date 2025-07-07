@@ -54,7 +54,7 @@ export class ButtonFactory {
     const bookmarkButtonElement = this.bookmarkButton.createButton(tweetInfo);
     buttons.push({
       element: bookmarkButtonElement,
-      position: 'left',
+      position: 'right',
     });
 
     console.log('Comiketter: Created buttons:', buttons.length);

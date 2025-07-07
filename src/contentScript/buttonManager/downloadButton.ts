@@ -150,8 +150,12 @@ export class DownloadButton extends BaseButton {
 
       // バックグラウンドスクリプトにダウンロード要求を送信
       const response = await chrome.runtime.sendMessage({
-        type: 'DOWNLOAD_MEDIA',
-        tweetInfo: tweetInfo,
+        type: 'DOWNLOAD_TWEET_MEDIA',
+        payload: {
+          tweetId: tweetInfo.id,
+          screenName: tweetInfo.author.username,
+          mediaUrls: tweetInfo.media?.map(m => m.url) || [],
+        },
       });
 
       if (response.success) {
