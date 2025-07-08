@@ -36,6 +36,14 @@ export class ButtonFactory {
       mediaLength: tweetInfo.media?.length || 0,
       shouldCreateDownload: this.shouldCreateDownloadButton(tweetInfo)
     });
+    
+    // CBボタンを作成（常に作成）
+    console.log('Comiketter: Creating bookmark button');
+    const bookmarkButtonElement = this.bookmarkButton.createButton(tweetInfo);
+    buttons.push({
+      element: bookmarkButtonElement,
+      position: 'right',
+    });
 
     // DLボタンを作成（メディアがある場合のみ）
     if (this.shouldCreateDownloadButton(tweetInfo)) {
@@ -48,14 +56,6 @@ export class ButtonFactory {
     } else {
       console.log('Comiketter: Skipping download button - no media');
     }
-
-    // CBボタンを作成（常に作成）
-    console.log('Comiketter: Creating bookmark button');
-    const bookmarkButtonElement = this.bookmarkButton.createButton(tweetInfo);
-    buttons.push({
-      element: bookmarkButtonElement,
-      position: 'right',
-    });
 
     console.log('Comiketter: Created buttons:', buttons.length);
     return buttons;

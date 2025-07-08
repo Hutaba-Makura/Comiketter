@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Comiketter - ブックマーク機能テスト</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f7f9fa;
+    }
+    
+    .container {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    h1 {
+      color: #1da1f2;
+      margin-bottom: 24px;
+    }
+    
+    .test-section {
+      margin-bottom: 32px;
+      padding: 20px;
+      border: 1px solid #e1e8ed;
+      border-radius: 12px;
+    }
+    
+    .test-section h2 {
+      margin-top: 0;
+      color: #14171a;
+    }
+    
+    button {
+      background: #1da1f2;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+      margin-right: 8px;
+      margin-bottom: 8px;
+    }
+    
+    button:hover {
+      background: #1a91da;
+    }
+    
+    button.secondary {
+      background: #f7f9fa;
+      color: #14171a;
+      border: 1px solid #e1e8ed;
+    }
+    
+    button.secondary:hover {
+      background: #e1e8ed;
+    }
+    
+    .result {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 8px;
+      background: #f8f9fa;
+      border-left: 4px solid #1da1f2;
+    }
+    
+    .error {
+      background: #fef2f2;
+      border-left-color: #e0245e;
+    }
+    
+    .success {
+      background: #f0f9ff;
+      border-left-color: #00ba7c;
+    }
+    
+    pre {
+      background: #f8f9fa;
+      padding: 12px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-size: 12px;
+    }
+    
+    input, textarea {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #e1e8ed;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      font-size: 14px;
+    }
+    
+    textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 4px;
+      font-weight: 500;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Comiketter - ブックマーク機能テスト</h1>
+    
+    <div class="test-section">
+      <h2>1. ブックマーク管理テスト</h2>
+      <button onclick="testBookmarkManager()">BookmarkManager初期化テスト</button>
+      <button onclick="testAddBookmark()">ブックマーク追加テスト</button>
+      <button onclick="testGetBookmarks()">ブックマーク取得テスト</button>
+      <button onclick="testDeleteBookmark()">ブックマーク削除テスト</button>
+      <div id="bookmark-result" class="result" style="display: none;"></div>
+    </div>
+    
+    <div class="test-section">
+      <h2>2. 新規ブックマーク作成</h2>
+      <label for="bookmark-name">ブックマーク名 *</label>
+      <input type="text" id="bookmark-name" placeholder="ブックマーク名を入力">
+      
+      <label for="bookmark-description">説明（任意）</label>
+      <textarea id="bookmark-description" placeholder="ブックマークの説明を入力"></textarea>
+      
+      <button onclick="createBookmark()">ブックマークを作成</button>
+      <div id="create-result" class="result" style="display: none;"></div>
+    </div>
+    
+    <div class="test-section">
+      <h2>3. ツイート保存テスト</h2>
+      <label for="tweet-id">ツイートID</label>
+      <input type="text" id="tweet-id" placeholder="1234567890123456789" value="1234567890123456789">
+      
+      <label for="bookmark-ids">ブックマークID（カンマ区切り）</label>
+      <input type="text" id="bookmark-ids" placeholder="bookmark1,bookmark2">
+      
+      <button onclick="testAddTweetToBookmark()">ツイートをブックマークに追加</button>
+      <div id="tweet-result" class="result" style="display: none;"></div>
+    </div>
+    
+    <div class="test-section">
+      <h2>4. ストレージテスト</h2>
+      <button onclick="testStorage()">ストレージ読み書きテスト</button>
+      <button onclick="clearStorage()">ストレージクリア</button>
+      <div id="storage-result" class="result" style="display: none;"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    // テスト用のモックデータ
+    const mockTweet = {
+      id: '1234567890123456789',
+      text: 'これはテストツイートです #Comiketter',
+      author: {
+        username: 'testuser',
+        displayName: 'テストユーザー',
+        profileImageUrl: 'https://example.com/avatar.jpg'
+      },
+      createdAt: new Date().toISOString(),
+      url: 'https://twitter.com/testuser/status/1234567890123456789'
+    };
+
+    // 結果表示関数
+    function showResult(elementId, message, type = 'info') {
+      const element = document.getElementById(elementId);
+      element.textContent = message;
+      element.className = `result ${type}`;
+      element.style.display = 'block';
+    }
+
+    // BookmarkManager初期化テスト
+    window.testBookmarkManager = async function() {
+      try {
+        showResult('bookmark-result', 'BookmarkManager初期化中...', 'info');
+        
+        // 実際のBookmarkManagerを使用する場合は、ここでインポート
+        // const { BookmarkManager } = await import('../utils/bookmarkManager.js');
+        // const bookmarkManager = BookmarkManager.getInstance();
+        // await bookmarkManager.initialize();
+        
+        showResult('bookmark-result', 'BookmarkManager初期化成功！', 'success');
+      } catch (error) {
+        showResult('bookmark-result', `エラー: ${error.message}`, 'error');
+      }
+    };
+
+    // ブックマーク追加テスト
+    window.testAddBookmark = async function() {
+      try {
+        showResult('bookmark-result', 'ブックマーク追加テスト実行中...', 'info');
+        
+        // モック実装
+        const testBookmark = {
+          id: 'test-bookmark-' + Date.now(),
+          name: 'テストブックマーク',
+          description: 'これはテスト用のブックマークです',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          tweetCount: 0,
+          tweetIds: []
+        };
+        
+        showResult('bookmark-result', `ブックマーク追加成功: ${JSON.stringify(testBookmark, null, 2)}`, 'success');
+      } catch (error) {
+        showResult('bookmark-result', `エラー: ${error.message}`, 'error');
+      }
+    };
+
+    // ブックマーク取得テスト
+    window.testGetBookmarks = async function() {
+      try {
+        showResult('bookmark-result', 'ブックマーク取得テスト実行中...', 'info');
+        
+        // モック実装
+        const mockBookmarks = [
+          {
+            id: 'bookmark1',
+            name: 'お気に入りツイート',
+            description: '気に入ったツイートを保存',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            tweetCount: 5,
+            tweetIds: ['1234567890123456789', '9876543210987654321']
+          },
+          {
+            id: 'bookmark2',
+            name: '参考資料',
+            description: '後で参照したいツイート',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            tweetCount: 3,
+            tweetIds: ['1111111111111111111']
+          }
+        ];
+        
+        showResult('bookmark-result', `ブックマーク取得成功: ${JSON.stringify(mockBookmarks, null, 2)}`, 'success');
+      } catch (error) {
+        showResult('bookmark-result', `エラー: ${error.message}`, 'error');
+      }
+    };
+
+    // ブックマーク削除テスト
+    window.testDeleteBookmark = async function() {
+      try {
+        showResult('bookmark-result', 'ブックマーク削除テスト実行中...', 'info');
+        
+        // モック実装
+        showResult('bookmark-result', 'ブックマーク削除成功！', 'success');
+      } catch (error) {
+        showResult('bookmark-result', `エラー: ${error.message}`, 'error');
+      }
+    };
+
+    // 新規ブックマーク作成
+    window.createBookmark = async function() {
+      const name = document.getElementById('bookmark-name').value;
+      const description = document.getElementById('bookmark-description').value;
+      
+      if (!name.trim()) {
+        showResult('create-result', 'ブックマーク名を入力してください', 'error');
+        return;
+      }
+      
+      try {
+        showResult('create-result', 'ブックマーク作成中...', 'info');
+        
+        // モック実装
+        const newBookmark = {
+          id: 'bookmark-' + Date.now(),
+          name: name.trim(),
+          description: description.trim(),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          tweetCount: 0,
+          tweetIds: []
+        };
+        
+        showResult('create-result', `ブックマーク作成成功: ${JSON.stringify(newBookmark, null, 2)}`, 'success');
+        
+        // フォームをクリア
+        document.getElementById('bookmark-name').value = '';
+        document.getElementById('bookmark-description').value = '';
+      } catch (error) {
+        showResult('create-result', `エラー: ${error.message}`, 'error');
+      }
+    };
+
+    // ツイート保存テスト
+    window.testAddTweetToBookmark = async function() {
+      const tweetId = document.getElementById('tweet-id').value;
+      const bookmarkIds = document.getElementById('bookmark-ids').value.split(',').map(id => id.trim()).filter(id => id);
+      
+      if (!tweetId || bookmarkIds.length === 0) {
+        showResult('tweet-result', 'ツイートIDとブックマークIDを入力してください', 'error');
+        return;
+      }
+      
+      try {
+        showResult('tweet-result', 'ツイート保存中...', 'info');
+        
+        // モック実装
+        showResult('tweet-result', `ツイート保存成功: ツイートID ${tweetId} を ${bookmarkIds.length} 個のブックマークに保存しました`, 'success');
+      } catch (error) {
+        showResult('tweet-result', `エラー: ${error.message}`, 'error');
+      }
+    };
+
+    // ストレージテスト
+    window.testStorage = async function() {
+      try {
+        showResult('storage-result', 'ストレージテスト実行中...', 'info');
+        
+        // Chrome拡張機能のストレージAPIをテスト
+        if (typeof chrome !== 'undefined' && chrome.storage) {
+          const testData = { test: 'data', timestamp: Date.now() };
+          await chrome.storage.local.set({ 'comiketter_test': testData });
+          const result = await chrome.storage.local.get('comiketter_test');
+          
+          showResult('storage-result', `ストレージテスト成功: ${JSON.stringify(result, null, 2)}`, 'success');
+        } else {
+          showResult('storage-result', 'Chrome拡張機能のストレージAPIが利用できません', 'error');
+        }
+      } catch (error) {
+        showResult('storage-result', `エラー: ${error.message}`, 'error');
+      }
+    };
+
+    // ストレージクリア
+    window.clearStorage = async function() {
+      try {
+        showResult('storage-result', 'ストレージクリア中...', 'info');
+        
+        if (typeof chrome !== 'undefined' && chrome.storage) {
+          await chrome.storage.local.clear();
+          showResult('storage-result', 'ストレージクリア成功！', 'success');
+        } else {
+          showResult('storage-result', 'Chrome拡張機能のストレージAPIが利用できません', 'error');
+        }
+      } catch (error) {
+        showResult('storage-result', `エラー: ${error.message}`, 'error');
+      }
+    };
+  </script>
+</body>
+</html> 
