@@ -49,27 +49,21 @@ class ContentScript {
 
   async init(): Promise<void> {
     if (this.isInitialized) {
-      sendLog('ContentScript already initialized');
       return;
     }
-
-    sendLog('Initializing ContentScript...');
 
     try {
       // API傍受を開始
       await this.apiInterceptor.init();
-      sendLog('API interceptor initialized');
 
       // ツイート監視を開始
       await this.tweetObserver.init();
-      sendLog('Tweet observer initialized');
 
       // グローバル変数に設定（デバッグ用）
       window.comiketterObserver = this.tweetObserver;
       window.comiketterApiInterceptor = this.apiInterceptor;
 
       this.isInitialized = true;
-      sendLog('ContentScript initialization completed');
 
       // 定期的な再初期化をスケジュール
       this.schedulePeriodicReinitialization();
@@ -87,7 +81,6 @@ class ContentScript {
     setInterval(async () => {
       try {
         if (!this.isInitialized) {
-          sendLog('Reinitializing due to lost state');
           await this.init();
         }
       } catch (error) {
@@ -100,14 +93,11 @@ class ContentScript {
    * クリーンアップ
    */
   destroy(): void {
-    sendLog('Destroying ContentScript...');
-    
     if (this.tweetObserver) {
       this.tweetObserver.destroy();
     }
     
     this.isInitialized = false;
-    sendLog('ContentScript destroyed');
   }
 }
 

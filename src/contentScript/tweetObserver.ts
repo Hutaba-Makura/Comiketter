@@ -56,8 +56,6 @@ export class TweetObserver {
     if (this.isInitialized) {
       return; // 重複初期化を防ぐ
     }
-
-    sendLog('TweetObserver initializing...');
     
     // 初期化時に既存のツイートを処理
     this.initializeExistingTweets();
@@ -66,7 +64,6 @@ export class TweetObserver {
     this.startObserving();
     
     this.isInitialized = true;
-    sendLog('TweetObserver initialized');
   }
 
   /**
@@ -91,17 +88,11 @@ export class TweetObserver {
         break;
       }
     }
-
-    sendLog(`Found ${articles?.length || 0} existing tweets using selector: ${usedSelector}`);
     
     if (articles && articles.length > 0) {
-      articles.forEach((article, index) => {
-        sendLog(`Processing tweet ${index + 1} of ${articles!.length}`);
+      articles.forEach((article) => {
         if (this.shouldAddButtons(article as HTMLElement)) {
-          sendLog(`Adding buttons to tweet ${index + 1}`);
           this.addButtonsToTweet(article as HTMLElement);
-        } else {
-          sendLog(`Skipping tweet ${index + 1} - already has buttons`);
         }
       });
     }
@@ -146,15 +137,10 @@ export class TweetObserver {
     for (const target of observeTargets) {
       const element = document.querySelector(target.selector);
       if (element) {
-        sendLog(`Observing ${target.name} with selector: ${target.selector}`);
         this.observer.observe(element, options);
         observed = true;
         break;
       }
-    }
-
-    if (!observed) {
-      sendLog('No suitable observation target found');
     }
 
     // モーダル（ツイート詳細）を監視
@@ -167,7 +153,6 @@ export class TweetObserver {
     for (const selector of modalSelectors) {
       const modalWrapper = document.querySelector(selector);
       if (modalWrapper) {
-        sendLog(`Observing modal wrapper with selector: ${selector}`);
         this.observer.observe(modalWrapper, options);
         break;
       }
@@ -198,8 +183,6 @@ export class TweetObserver {
   private processBatchNodes(): void {
     if (this.pendingNodes.length === 0) return;
 
-    sendLog(`Processing batch of ${this.pendingNodes.length} nodes`);
-
     // 各ノードを処理
     this.pendingNodes.forEach(node => {
       this.processAddedNode(node);
@@ -219,23 +202,22 @@ export class TweetObserver {
       return;
     }
 
-    // 複数のツイートセレクターを試行
+    // 処理済みとしてマーク
+    this.processedElements.add(node);
+
+    // ツイートセレクターを試行
     const tweetSelectors = [
       'article[data-testid="tweet"]',
       'article[role="article"]',
       '[data-testid="tweet"]',
-      'article',
     ];
 
-    // 直接追加されたツイート
+    // 直接ツイート要素の場合
     for (const selector of tweetSelectors) {
       if (node.matches(selector)) {
-        sendLog(`Processing direct tweet node with selector: ${selector}`);
         if (this.shouldAddButtons(node)) {
-          sendLog('Adding buttons to direct tweet');
           this.addButtonsToTweet(node);
         }
-        this.processedElements.add(node);
         return;
       }
     }
@@ -244,25 +226,22 @@ export class TweetObserver {
     for (const selector of tweetSelectors) {
       const tweets = node.querySelectorAll(selector);
       if (tweets.length > 0) {
-        sendLog(`Found ${tweets.length} tweets in node with selector: ${selector}`);
-        tweets.forEach((tweet, index) => {
+        tweets.forEach((tweet) => {
           if (this.shouldAddButtons(tweet as HTMLElement)) {
-            sendLog(`Adding buttons to tweet ${index + 1}`);
             this.addButtonsToTweet(tweet as HTMLElement);
           }
         });
-        break;
+        return;
       }
     }
-
-    this.processedElements.add(node);
   }
 
   /**
-   * ツイートにボタンを追加すべきか判定
+   * ボタンを追加すべきかどうかを判定
    */
   private shouldAddButtons(article: HTMLElement): boolean {
-    return this.buttonFactory.shouldAddButtons(article);
+    // 既にボタンが追加されている場合はスキップ
+    return !article.querySelector('.comiketter-bookmark-button');
   }
 
   /**
@@ -270,79 +249,60 @@ export class TweetObserver {
    */
   private addButtonsToTweet(article: HTMLElement): void {
     try {
-      sendLog('Starting to add buttons to tweet');
-      
       // ツイート情報を取得
       const tweetInfo = getTweetInfoFromArticle(article);
       if (!tweetInfo) {
-        sendLog('Failed to extract tweet info');
         return;
       }
-      sendLog('Extracted tweet info:', tweetInfo);
 
       // アクションバー（いいね、RT等のボタン群）を取得
       const actionBar = this.getActionBar(article);
       if (!actionBar) {
-        sendLog('Failed to find action bar');
         return;
       }
-      sendLog('Found action bar:', actionBar);
 
       // ボタンを作成
       const buttons = this.buttonFactory.createButtonsForTweet(tweetInfo);
-      sendLog('Created buttons:', buttons.length);
 
       // アクションバーに挿入（順序を制御）
       this.buttonFactory.insertButtonsToActionBar(actionBar, buttons);
-      sendLog('Successfully added buttons to action bar');
-
-      sendLog('Buttons added to tweet:', tweetInfo.id);
     } catch (error) {
       sendLog('Failed to add buttons:', error);
     }
   }
 
   /**
-   * アクションバー（いいね、RT等のボタン群）を取得
+   * アクションバーを取得
    */
   private getActionBar(article: HTMLElement): HTMLElement | null {
-    sendLog('Searching for action bar in article');
-    
     // 最も確実なセレクターから試行
     const selectors = [
-      '[role="group"][aria-label]',
-      '[data-testid="tweet"] [role="group"][aria-label]',
-      '.r-18u37iz[role="group"][id^="id__"]',
+      '[role="group"]:has([data-testid="like"], [data-testid="retweet"], [data-testid="reply"])',
+      '[role="group"]',
       '[data-testid="tweet"] [role="group"]',
+      'div[role="group"]',
     ];
 
     for (const selector of selectors) {
-      sendLog(`Trying selector: ${selector}`);
       const actionBar = article.querySelector(selector) as HTMLElement;
       if (actionBar) {
-        sendLog(`Found action bar with selector: ${selector}`);
         return actionBar;
       }
     }
 
-    sendLog('No action bar found with any selector');
     return null;
   }
 
   /**
-   * 監視を停止
+   * クリーンアップ
    */
   destroy(): void {
     if (this.observer) {
       this.observer.disconnect();
       this.observer = null;
     }
-    if (this.rootObserver) {
-      this.rootObserver.disconnect();
-      this.rootObserver = null;
-    }
+    
     this.processedElements = new WeakSet<HTMLElement>();
     this.isInitialized = false;
-    sendLog('TweetObserver destroyed');
   }
 } 

@@ -3,14 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  * 
- * Comiketter: ブックマークボタン実装
+ * Comiketter: ブックマークボタン管理
  */
 
 /// <reference lib="dom" />
 
-import type { Tweet } from '../../types';
 import { BaseButton, ButtonConfig } from './baseButton';
 import { BookmarkManager } from '../../utils/bookmarkManager';
+import type { Tweet } from '../../types';
 
 // ログ送信関数
 const sendLog = (message: string, data?: any) => {
@@ -30,6 +30,38 @@ const sendLog = (message: string, data?: any) => {
   } catch (error) {
     // chrome.runtimeが利用できない場合は無視
   }
+};
+
+// テーマ検出関数（BookmarkSelectorから移植）
+const detectTheme = (): 'light' | 'darkBlue' | 'black' => {
+  sendLog('テーマ検出開始');
+  
+  // body要素のbackground-colorを計算されたスタイルから取得
+  const computedStyle = getComputedStyle(document.body);
+  const backgroundColor = computedStyle.backgroundColor;
+  sendLog('body background-color (computed):', backgroundColor);
+  
+  // 直接スタイル属性も確認
+  const inlineStyle = document.body.style.backgroundColor;
+  sendLog('body background-color (inline):', inlineStyle);
+  
+  // 両方の値をチェック
+  const colorToCheck = backgroundColor || inlineStyle;
+  
+  if (colorToCheck === 'rgb(255, 255, 255)') {
+    sendLog('ライトテーマと判定');
+    return 'light';
+  } else if (colorToCheck === 'rgb(21, 32, 43)') {
+    sendLog('ダークブルーテーマと判定');
+    return 'darkBlue';
+  } else if (colorToCheck === 'rgb(0, 0, 0)') {
+    sendLog('ブラックテーマと判定');
+    return 'black';
+  }
+  
+  sendLog('不明なテーマ、デフォルトでライトテーマと判定');
+  sendLog('検出された色:', colorToCheck);
+  return 'light';
 };
 
 export enum BookmarkButtonStatus {
@@ -59,6 +91,47 @@ export class BookmarkButton extends BaseButton {
       position: 'right',
     };
     super(config);
+    
+    // テーマ変更を監視
+    this.observeThemeChanges();
+  }
+
+  /**
+   * テーマ変更を監視
+   */
+  private observeThemeChanges(): void {
+    // MutationObserverでbody要素の属性変更を監視
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+          // テーマが変更された可能性があるため、UIを更新
+          this.updateThemeIfNeeded();
+        }
+      });
+    });
+    
+    // body要素の属性変更を監視開始
+    observer.observe(document.body, {
+      attributes: true,
+      attributeFilter: ['style']
+    });
+    
+    sendLog('テーマ変更監視開始');
+  }
+  
+  /**
+   * 必要に応じてテーマを更新
+   */
+  private updateThemeIfNeeded(): void {
+    if (this.bookmarkSelector) {
+      const currentTheme = this.bookmarkSelector.getAttribute('data-theme');
+      const newTheme = detectTheme();
+      
+      if (currentTheme !== newTheme) {
+        this.bookmarkSelector.setAttribute('data-theme', newTheme);
+        sendLog('テーマ更新:', newTheme);
+      }
+    }
   }
 
   /**
@@ -99,20 +172,20 @@ export class BookmarkButton extends BaseButton {
         height: 100%;
         background: rgba(0, 0, 0, 0.5);
         z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
 
       .comiketter-bookmark-selector {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
+        position: relative;
         background: white;
         border-radius: 16px;
         box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
         width: 400px;
         max-height: 80vh;
-        z-index: 10000;
         overflow: hidden;
+        z-index: 10000;
       }
 
       .comiketter-bookmark-selector-header {
@@ -190,35 +263,77 @@ export class BookmarkButton extends BaseButton {
         color: #14171a;
       }
 
-      /* ダークモード対応 */
-      @media (prefers-color-scheme: dark) {
-        .comiketter-bookmark-selector {
-          background: #15202b;
-          color: white;
-        }
-        
-        .comiketter-bookmark-selector-header {
-          border-bottom-color: #38444d;
-        }
-        
-        .comiketter-bookmark-item {
-          border-bottom-color: #38444d;
-        }
-        
-        .comiketter-bookmark-actions {
-          border-top-color: #38444d;
-        }
-        
-        .comiketter-bookmark-button-secondary {
-          background: #38444d;
-          color: white;
-        }
+      /* テーマ別スタイル */
+      .comiketter-bookmark-selector[data-theme="light"] {
+        background: rgb(255, 255, 255);
+        color: rgb(15, 20, 25);
+      }
+      
+      .comiketter-bookmark-selector[data-theme="light"] .comiketter-bookmark-selector-header {
+        border-bottom-color: #e1e8ed;
+      }
+      
+      .comiketter-bookmark-selector[data-theme="light"] .comiketter-bookmark-item {
+        border-bottom-color: #f7f9fa;
+      }
+      
+      .comiketter-bookmark-selector[data-theme="light"] .comiketter-bookmark-actions {
+        border-top-color: #e1e8ed;
+      }
+      
+      .comiketter-bookmark-selector[data-theme="light"] .comiketter-bookmark-button-secondary {
+        background: #f7f9fa;
+        color: rgb(15, 20, 25);
+      }
+      
+      .comiketter-bookmark-selector[data-theme="darkBlue"] {
+        background: rgb(21, 32, 43);
+        color: rgb(247, 249, 249);
+      }
+      
+      .comiketter-bookmark-selector[data-theme="darkBlue"] .comiketter-bookmark-selector-header {
+        border-bottom-color: #38444d;
+      }
+      
+      .comiketter-bookmark-selector[data-theme="darkBlue"] .comiketter-bookmark-item {
+        border-bottom-color: #38444d;
+      }
+      
+      .comiketter-bookmark-selector[data-theme="darkBlue"] .comiketter-bookmark-actions {
+        border-top-color: #38444d;
+      }
+      
+      .comiketter-bookmark-selector[data-theme="darkBlue"] .comiketter-bookmark-button-secondary {
+        background: #38444d;
+        color: rgb(247, 249, 249);
+      }
+      
+      .comiketter-bookmark-selector[data-theme="black"] {
+        background: rgb(0, 0, 0);
+        color: rgb(231, 233, 234);
+      }
+      
+      .comiketter-bookmark-selector[data-theme="black"] .comiketter-bookmark-selector-header {
+        border-bottom-color: #2f3336;
+      }
+      
+      .comiketter-bookmark-selector[data-theme="black"] .comiketter-bookmark-item {
+        border-bottom-color: #2f3336;
+      }
+      
+      .comiketter-bookmark-selector[data-theme="black"] .comiketter-bookmark-actions {
+        border-top-color: #2f3336;
+      }
+      
+      .comiketter-bookmark-selector[data-theme="black"] .comiketter-bookmark-button-secondary {
+        background: #2f3336;
+        color: rgb(231, 233, 234);
       }
     `;
   }
 
   /**
-   * サンプルボタン（ブックマークボタン）を取得
+   * サンプルボタン（ブックマークボタン等）を取得
    */
   protected getSampleButton(): HTMLElement | null {
     const selectors = [
@@ -281,34 +396,30 @@ export class BookmarkButton extends BaseButton {
    * ブックマークボタンクリック時の処理
    */
   private async handleBookmarkButtonClick(button: HTMLElement, tweetInfo: Tweet): Promise<void> {
-    sendLog('ブックマークボタンクリック開始', { tweetId: tweetInfo.id });
-    
     try {
       // ボタンをローディング状態に変更
       this.setBookmarkButtonStatus(button, BookmarkButtonStatus.Loading);
-      sendLog('ボタンをローディング状態に変更');
       
       this.currentTweetInfo = tweetInfo;
       
       // BookmarkManagerを初期化
       const bookmarkManager = BookmarkManager.getInstance();
-      sendLog('BookmarkManager初期化開始');
       await bookmarkManager.initialize();
-      sendLog('BookmarkManager初期化完了');
+      
+      // テーマ検出を実行（BookmarkSelectorの初期化をシミュレート）
+      sendLog('BookmarkSelector初期化開始');
+      const theme = detectTheme();
+      sendLog('テーマ更新:', theme);
       
       // ブックマーク選択UIを表示
-      sendLog('ブックマーク選択UI表示開始');
       await this.showBookmarkSelector();
-      sendLog('ブックマーク選択UI表示完了');
       
       // 成功状態に変更
       this.setBookmarkButtonStatus(button, BookmarkButtonStatus.Success);
-      sendLog('ボタンを成功状態に変更');
       
       // 3秒後に通常状態に戻す
       setTimeout(() => {
         this.setBookmarkButtonStatus(button, BookmarkButtonStatus.Idle);
-        sendLog('ボタンを通常状態に戻す');
       }, 3000);
     } catch (error) {
       sendLog('ブックマークボタンクリック処理でエラー発生:', error);
@@ -325,30 +436,27 @@ export class BookmarkButton extends BaseButton {
    * ブックマーク選択UIを表示
    */
   private async showBookmarkSelector(): Promise<void> {
-    sendLog('showBookmarkSelector開始');
-    
     // 既存のUIを非表示
     this.hideBookmarkSelector();
-    sendLog('既存のUIを非表示');
 
     // オーバーレイを作成
     const overlay = document.createElement('div');
     overlay.className = 'comiketter-overlay';
-    overlay.addEventListener('click', () => {
-      sendLog('オーバーレイクリック - UIを非表示');
-      this.hideBookmarkSelector();
+    overlay.addEventListener('click', (e) => {
+      // オーバーレイ自体がクリックされた場合のみ閉じる
+      if (e.target === overlay) {
+        this.hideBookmarkSelector();
+      }
     });
-    sendLog('オーバーレイ作成完了');
 
     // セレクターを作成
-    sendLog('BookmarkSelector作成開始');
     this.bookmarkSelector = await this.createBookmarkSelector();
-    sendLog('BookmarkSelector作成完了');
+
+    // セレクターをオーバーレイ内に追加
+    overlay.appendChild(this.bookmarkSelector);
 
     // DOMに追加
     document.body.appendChild(overlay);
-    document.body.appendChild(this.bookmarkSelector);
-    sendLog('DOMにBookmarkSelector追加完了');
   }
 
   /**
@@ -372,6 +480,16 @@ export class BookmarkButton extends BaseButton {
   private async createBookmarkSelector(): Promise<HTMLElement> {
     const selector = document.createElement('div');
     selector.className = 'comiketter-bookmark-selector';
+    
+    // テーマを検出してdata-theme属性を設定
+    const theme = detectTheme();
+    selector.setAttribute('data-theme', theme);
+    sendLog('ブックマーク選択UIにテーマ設定:', theme);
+    
+    // セレクター内のクリックイベントがオーバーレイに伝播しないようにする
+    selector.addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
     
     // ヘッダー
     const header = document.createElement('div');
