@@ -27,7 +27,193 @@ interface BookmarkSelectorState {
   searchQuery: string;
   sortBy: 'name' | 'createdAt' | 'updatedAt' | 'tweetCount';
   sortOrder: 'asc' | 'desc';
+  theme: 'light' | 'darkBlue' | 'black';
 }
+
+// テーマ検出関数
+const detectTheme = (): 'light' | 'darkBlue' | 'black' => {
+  console.log('[Comiketter] テーマ検出開始');
+  
+  // body要素のbackground-colorスタイルを直接取得
+  const bodyStyle = document.body.style.backgroundColor;
+  console.log('[Comiketter] body background-color:', bodyStyle);
+  
+  if (bodyStyle === 'rgb(255, 255, 255)') {
+    console.log('[Comiketter] ライトテーマと判定');
+    return 'light';
+  } else if (bodyStyle === 'rgb(21, 32, 43)') {
+    console.log('[Comiketter] ダークブルーテーマと判定');
+    return 'darkBlue';
+  } else if (bodyStyle === 'rgb(0, 0, 0)') {
+    console.log('[Comiketter] ブラックテーマと判定');
+    return 'black';
+  }
+  
+  console.log('[Comiketter] 不明なテーマ、デフォルトでライトテーマと判定');
+  return 'light';
+};
+
+// テーマに応じたスタイルを取得
+const getThemeStyles = (theme: 'light' | 'darkBlue' | 'black') => {
+  switch (theme) {
+    case 'light':
+      return {
+        overlay: {
+          backgroundColor: 'rgba(0, 0, 0, 0.4)',
+        },
+        container: {
+          backgroundColor: '#ffffff',
+          border: '1px solid #e1e8ed',
+          color: '#14171a',
+        },
+        header: {
+          borderBottom: '1px solid #e1e8ed',
+        },
+        input: {
+          backgroundColor: '#ffffff',
+          border: '1px solid #e1e8ed',
+          color: '#14171a',
+        },
+        select: {
+          backgroundColor: '#ffffff',
+          border: '1px solid #e1e8ed',
+          color: '#14171a',
+        },
+        textarea: {
+          backgroundColor: '#ffffff',
+          border: '1px solid #e1e8ed',
+          color: '#14171a',
+        },
+        divider: {
+          borderColor: '#e1e8ed',
+        },
+        secondaryText: {
+          color: '#657786',
+        },
+        errorText: {
+          color: '#e0245e',
+        },
+        primaryButton: {
+          backgroundColor: '#1da1f2',
+          color: '#ffffff',
+        },
+        secondaryButton: {
+          backgroundColor: 'transparent',
+          border: '1px solid #e1e8ed',
+          color: '#14171a',
+        },
+        createButton: {
+          border: '1px solid #1da1f2',
+          color: '#1da1f2',
+          backgroundColor: 'transparent',
+        },
+      };
+    case 'darkBlue':
+      return {
+        overlay: {
+          backgroundColor: 'rgba(0, 0, 0, 0.65)',
+        },
+        container: {
+          backgroundColor: '#15202b',
+          border: '1px solid #38444d',
+          color: '#ffffff',
+        },
+        header: {
+          borderBottom: '1px solid #38444d',
+        },
+        input: {
+          backgroundColor: '#253341',
+          border: '1px solid #38444d',
+          color: '#ffffff',
+        },
+        select: {
+          backgroundColor: '#253341',
+          border: '1px solid #38444d',
+          color: '#ffffff',
+        },
+        textarea: {
+          backgroundColor: '#253341',
+          border: '1px solid #38444d',
+          color: '#ffffff',
+        },
+        divider: {
+          borderColor: '#38444d',
+        },
+        secondaryText: {
+          color: '#8899a6',
+        },
+        errorText: {
+          color: '#e0245e',
+        },
+        primaryButton: {
+          backgroundColor: '#1da1f2',
+          color: '#ffffff',
+        },
+        secondaryButton: {
+          backgroundColor: 'transparent',
+          border: '1px solid #38444d',
+          color: '#ffffff',
+        },
+        createButton: {
+          border: '1px solid #1da1f2',
+          color: '#1da1f2',
+          backgroundColor: 'transparent',
+        },
+      };
+    case 'black':
+      return {
+        overlay: {
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        },
+        container: {
+          backgroundColor: '#000000',
+          border: '1px solid #2f3336',
+          color: '#ffffff',
+        },
+        header: {
+          borderBottom: '1px solid #2f3336',
+        },
+        input: {
+          backgroundColor: '#000000',
+          border: '1px solid #2f3336',
+          color: '#ffffff',
+        },
+        select: {
+          backgroundColor: '#000000',
+          border: '1px solid #2f3336',
+          color: '#ffffff',
+        },
+        textarea: {
+          backgroundColor: '#000000',
+          border: '1px solid #2f3336',
+          color: '#ffffff',
+        },
+        divider: {
+          borderColor: '#2f3336',
+        },
+        secondaryText: {
+          color: '#6e767d',
+        },
+        errorText: {
+          color: '#e0245e',
+        },
+        primaryButton: {
+          backgroundColor: '#1da1f2',
+          color: '#ffffff',
+        },
+        secondaryButton: {
+          backgroundColor: 'transparent',
+          border: '1px solid #2f3336',
+          color: '#ffffff',
+        },
+        createButton: {
+          border: '1px solid #1da1f2',
+          color: '#1da1f2',
+          backgroundColor: 'transparent',
+        },
+      };
+  }
+};
 
 export const BookmarkSelector: React.FC<BookmarkSelectorProps> = ({
   tweet,
@@ -45,13 +231,43 @@ export const BookmarkSelector: React.FC<BookmarkSelectorProps> = ({
     searchQuery: '',
     sortBy: 'updatedAt',
     sortOrder: 'desc',
+    theme: 'light',
   });
 
   const bookmarkManager = BookmarkManager.getInstance();
+  const themeStyles = getThemeStyles(state.theme);
 
   // 初期化
   useEffect(() => {
     initializeBookmarks();
+    detectAndUpdateTheme();
+    
+    // テーマ変更を監視
+    const observer = new MutationObserver(() => {
+      detectAndUpdateTheme();
+    });
+    
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme', 'class'],
+    });
+    
+    observer.observe(document.body, {
+      attributes: true,
+      attributeFilter: ['class'],
+    });
+    
+    return () => observer.disconnect();
+  }, []);
+
+  // テーマ検出と更新
+  const detectAndUpdateTheme = useCallback(() => {
+    const theme = detectTheme();
+    console.log('[Comiketter] テーマ更新:', theme);
+    setState(prev => ({
+      ...prev,
+      theme,
+    }));
   }, []);
 
   // ブックマーク初期化
@@ -196,10 +412,10 @@ export const BookmarkSelector: React.FC<BookmarkSelectorProps> = ({
 
   if (state.isLoading) {
     return (
-      <div className="comiketter-overlay">
-        <div className="comiketter-bookmark-selector">
+      <div className="comiketter-overlay" style={themeStyles.overlay}>
+        <div className="comiketter-bookmark-selector" style={themeStyles.container}>
           <div className="comiketter-bookmark-selector-content">
-            <div style={{ textAlign: 'center', padding: '20px' }}>
+            <div style={{ textAlign: 'center', padding: '20px', color: themeStyles.container.color }}>
               読み込み中...
             </div>
           </div>
@@ -209,17 +425,18 @@ export const BookmarkSelector: React.FC<BookmarkSelectorProps> = ({
   }
 
   return (
-    <div className="comiketter-overlay" onClick={onClose}>
-      <div className="comiketter-bookmark-selector" onClick={(e) => e.stopPropagation()}>
+    <div className="comiketter-overlay" style={themeStyles.overlay} onClick={onClose}>
+      <div className="comiketter-bookmark-selector" style={themeStyles.container} onClick={(e) => e.stopPropagation()}>
         {/* ヘッダー */}
-        <div className="comiketter-bookmark-selector-header">
-          <div className="comiketter-bookmark-selector-title">
+        <div className="comiketter-bookmark-selector-header" style={themeStyles.header}>
+          <div className="comiketter-bookmark-selector-title" style={{ color: themeStyles.container.color }}>
             ブックマークに追加
           </div>
           <button
             className="comiketter-bookmark-selector-close"
             onClick={onClose}
             aria-label="閉じる"
+            style={{ color: themeStyles.container.color }}
           >
             ×
           </button>
@@ -230,10 +447,10 @@ export const BookmarkSelector: React.FC<BookmarkSelectorProps> = ({
           {/* エラーメッセージ */}
           {state.errorMessage && (
             <div style={{ 
-              color: '#e0245e', 
+              color: themeStyles.errorText.color, 
               padding: '8px 0', 
               fontSize: '14px',
-              borderBottom: '1px solid #e1e8ed',
+              borderBottom: `1px solid ${themeStyles.divider.borderColor}`,
               marginBottom: '12px'
             }}>
               {state.errorMessage}
@@ -250,10 +467,10 @@ export const BookmarkSelector: React.FC<BookmarkSelectorProps> = ({
               style={{
                 width: '100%',
                 padding: '8px 12px',
-                border: '1px solid #e1e8ed',
                 borderRadius: '20px',
                 fontSize: '14px',
                 marginBottom: '8px',
+                ...themeStyles.input,
               }}
             />
             <div style={{ display: 'flex', gap: '8px', fontSize: '12px' }}>
@@ -265,9 +482,9 @@ export const BookmarkSelector: React.FC<BookmarkSelectorProps> = ({
                 }}
                 style={{
                   padding: '4px 8px',
-                  border: '1px solid #e1e8ed',
                   borderRadius: '4px',
                   fontSize: '12px',
+                  ...themeStyles.select,
                 }}
               >
                 <option value="updatedAt-desc">更新日時（新しい順）</option>
@@ -287,7 +504,7 @@ export const BookmarkSelector: React.FC<BookmarkSelectorProps> = ({
             <div style={{ 
               textAlign: 'center', 
               padding: '20px', 
-              color: '#657786',
+              color: themeStyles.secondaryText.color,
               fontSize: '14px'
             }}>
               {state.searchQuery ? '検索結果がありません' : 'ブックマークがありません'}
@@ -307,17 +524,19 @@ export const BookmarkSelector: React.FC<BookmarkSelectorProps> = ({
                     htmlFor={`bookmark-${bookmark.id}`}
                     style={{ flex: 1, cursor: 'pointer' }}
                   >
-                    <div className="comiketter-bookmark-name">{bookmark.name}</div>
+                    <div className="comiketter-bookmark-name" style={{ color: themeStyles.container.color }}>
+                      {bookmark.name}
+                    </div>
                     {bookmark.description && (
                       <div style={{ 
                         fontSize: '12px', 
-                        color: '#657786', 
+                        color: themeStyles.secondaryText.color, 
                         marginTop: '2px' 
                       }}>
                         {bookmark.description}
                       </div>
                     )}
-                    <div className="comiketter-bookmark-count">
+                    <div className="comiketter-bookmark-count" style={{ color: themeStyles.secondaryText.color }}>
                       {bookmark.tweetCount}件のツイート • {formatDate(bookmark.updatedAt)}更新
                     </div>
                   </label>
@@ -329,20 +548,18 @@ export const BookmarkSelector: React.FC<BookmarkSelectorProps> = ({
           {/* 新規ブックマーク作成ボタン */}
           <div style={{ 
             padding: '12px 0', 
-            borderTop: '1px solid #e1e8ed', 
+            borderTop: `1px solid ${themeStyles.divider.borderColor}`, 
             marginTop: '12px' 
           }}>
             <button
               onClick={showCreateBookmarkForm}
               style={{
-                background: 'none',
-                border: '1px solid #1da1f2',
-                color: '#1da1f2',
                 padding: '8px 16px',
                 borderRadius: '20px',
                 cursor: 'pointer',
                 fontSize: '14px',
                 fontWeight: '500',
+                ...themeStyles.createButton,
               }}
             >
               ＋ 新しいブックマークを作成
@@ -355,6 +572,7 @@ export const BookmarkSelector: React.FC<BookmarkSelectorProps> = ({
           <button
             className="comiketter-bookmark-button-secondary"
             onClick={onClose}
+            style={themeStyles.secondaryButton}
           >
             キャンセル
           </button>
@@ -363,6 +581,7 @@ export const BookmarkSelector: React.FC<BookmarkSelectorProps> = ({
             onClick={saveBookmarks}
             disabled={state.selectedBookmarks.length === 0}
             style={{
+              ...themeStyles.primaryButton,
               opacity: state.selectedBookmarks.length === 0 ? 0.5 : 1,
               cursor: state.selectedBookmarks.length === 0 ? 'not-allowed' : 'pointer',
             }}
@@ -373,19 +592,20 @@ export const BookmarkSelector: React.FC<BookmarkSelectorProps> = ({
 
         {/* 新規ブックマーク作成フォーム */}
         {state.showCreateForm && (
-          <div className="comiketter-overlay" style={{ zIndex: 10001 }}>
+          <div className="comiketter-overlay" style={{ ...themeStyles.overlay, zIndex: 10001 }}>
             <div 
               className="comiketter-bookmark-selector" 
-              style={{ width: '350px' }}
+              style={{ width: '350px', ...themeStyles.container }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="comiketter-bookmark-selector-header">
-                <div className="comiketter-bookmark-selector-title">
+              <div className="comiketter-bookmark-selector-header" style={themeStyles.header}>
+                <div className="comiketter-bookmark-selector-title" style={{ color: themeStyles.container.color }}>
                   新しいブックマーク
                 </div>
                 <button
                   className="comiketter-bookmark-selector-close"
                   onClick={hideCreateBookmarkForm}
+                  style={{ color: themeStyles.container.color }}
                 >
                   ×
                 </button>
@@ -393,7 +613,13 @@ export const BookmarkSelector: React.FC<BookmarkSelectorProps> = ({
               
               <div className="comiketter-bookmark-selector-content">
                 <div style={{ marginBottom: '16px' }}>
-                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '14px', fontWeight: '500' }}>
+                  <label style={{ 
+                    display: 'block', 
+                    marginBottom: '4px', 
+                    fontSize: '14px', 
+                    fontWeight: '500',
+                    color: themeStyles.container.color
+                  }}>
                     名前 *
                   </label>
                   <input
@@ -404,16 +630,22 @@ export const BookmarkSelector: React.FC<BookmarkSelectorProps> = ({
                     style={{
                       width: '100%',
                       padding: '8px 12px',
-                      border: '1px solid #e1e8ed',
                       borderRadius: '8px',
                       fontSize: '14px',
+                      ...themeStyles.input,
                     }}
                     maxLength={50}
                   />
                 </div>
                 
                 <div style={{ marginBottom: '16px' }}>
-                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '14px', fontWeight: '500' }}>
+                  <label style={{ 
+                    display: 'block', 
+                    marginBottom: '4px', 
+                    fontSize: '14px', 
+                    fontWeight: '500',
+                    color: themeStyles.container.color
+                  }}>
                     説明（任意）
                   </label>
                   <textarea
@@ -423,11 +655,11 @@ export const BookmarkSelector: React.FC<BookmarkSelectorProps> = ({
                     style={{
                       width: '100%',
                       padding: '8px 12px',
-                      border: '1px solid #e1e8ed',
                       borderRadius: '8px',
                       fontSize: '14px',
                       minHeight: '80px',
                       resize: 'vertical',
+                      ...themeStyles.textarea,
                     }}
                     maxLength={200}
                   />
@@ -438,6 +670,7 @@ export const BookmarkSelector: React.FC<BookmarkSelectorProps> = ({
                 <button
                   className="comiketter-bookmark-button-secondary"
                   onClick={hideCreateBookmarkForm}
+                  style={themeStyles.secondaryButton}
                 >
                   キャンセル
                 </button>
@@ -446,6 +679,7 @@ export const BookmarkSelector: React.FC<BookmarkSelectorProps> = ({
                   onClick={createBookmark}
                   disabled={!state.newBookmarkName.trim()}
                   style={{
+                    ...themeStyles.primaryButton,
                     opacity: !state.newBookmarkName.trim() ? 0.5 : 1,
                     cursor: !state.newBookmarkName.trim() ? 'not-allowed' : 'pointer',
                   }}
