@@ -10,6 +10,26 @@ import React, { useState, useEffect, useCallback } from 'react';
 import type { CustomBookmark, Tweet } from '../types';
 import { BookmarkManager } from '../utils/bookmarkManager';
 
+// ログ送信関数
+const sendLog = (message: string, data?: any) => {
+  const logMessage = `[Comiketter] ${message}`;
+  console.log(logMessage, data);
+  
+  // バックグラウンドスクリプトにログを送信
+  try {
+    chrome.runtime.sendMessage({
+      type: 'LOG',
+      message: logMessage,
+      data: data,
+      timestamp: new Date().toISOString(),
+    }).catch(() => {
+      // 送信に失敗しても無視（バックグラウンドが利用できない場合など）
+    });
+  } catch (error) {
+    // chrome.runtimeが利用できない場合は無視
+  }
+};
+
 interface BookmarkSelectorProps {
   tweet: Tweet;
   onClose: () => void;
@@ -32,24 +52,33 @@ interface BookmarkSelectorState {
 
 // テーマ検出関数
 const detectTheme = (): 'light' | 'darkBlue' | 'black' => {
-  console.log('[Comiketter] テーマ検出開始');
+  sendLog('テーマ検出開始');
   
-  // body要素のbackground-colorスタイルを直接取得
-  const bodyStyle = document.body.style.backgroundColor;
-  console.log('[Comiketter] body background-color:', bodyStyle);
+  // body要素のbackground-colorを計算されたスタイルから取得
+  const computedStyle = getComputedStyle(document.body);
+  const backgroundColor = computedStyle.backgroundColor;
+  sendLog('body background-color (computed):', backgroundColor);
   
-  if (bodyStyle === 'rgb(255, 255, 255)') {
-    console.log('[Comiketter] ライトテーマと判定');
+  // 直接スタイル属性も確認
+  const inlineStyle = document.body.style.backgroundColor;
+  sendLog('body background-color (inline):', inlineStyle);
+  
+  // 両方の値をチェック
+  const colorToCheck = backgroundColor || inlineStyle;
+  
+  if (colorToCheck === 'rgb(255, 255, 255)') {
+    sendLog('ライトテーマと判定');
     return 'light';
-  } else if (bodyStyle === 'rgb(21, 32, 43)') {
-    console.log('[Comiketter] ダークブルーテーマと判定');
+  } else if (colorToCheck === 'rgb(21, 32, 43)') {
+    sendLog('ダークブルーテーマと判定');
     return 'darkBlue';
-  } else if (bodyStyle === 'rgb(0, 0, 0)') {
-    console.log('[Comiketter] ブラックテーマと判定');
+  } else if (colorToCheck === 'rgb(0, 0, 0)') {
+    sendLog('ブラックテーマと判定');
     return 'black';
   }
   
-  console.log('[Comiketter] 不明なテーマ、デフォルトでライトテーマと判定');
+  sendLog('不明なテーマ、デフォルトでライトテーマと判定');
+  sendLog('検出された色:', colorToCheck);
   return 'light';
 };
 
@@ -239,11 +268,13 @@ export const BookmarkSelector: React.FC<BookmarkSelectorProps> = ({
 
   // 初期化
   useEffect(() => {
+    sendLog('BookmarkSelector初期化開始');
     initializeBookmarks();
     detectAndUpdateTheme();
     
     // テーマ変更を監視
-    const observer = new MutationObserver(() => {
+    const observer = new MutationObserver((mutations) => {
+      sendLog(`DOM変更を検出: ${mutations.length}件`);
       detectAndUpdateTheme();
     });
     
@@ -254,7 +285,7 @@ export const BookmarkSelector: React.FC<BookmarkSelectorProps> = ({
     
     observer.observe(document.body, {
       attributes: true,
-      attributeFilter: ['class'],
+      attributeFilter: ['class', 'style'],
     });
     
     return () => observer.disconnect();
@@ -263,7 +294,7 @@ export const BookmarkSelector: React.FC<BookmarkSelectorProps> = ({
   // テーマ検出と更新
   const detectAndUpdateTheme = useCallback(() => {
     const theme = detectTheme();
-    console.log('[Comiketter] テーマ更新:', theme);
+    sendLog('テーマ更新:', theme);
     setState(prev => ({
       ...prev,
       theme,

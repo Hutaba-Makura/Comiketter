@@ -44,6 +44,12 @@ export class MessageHandler {
       console.log('Comiketter: Received message:', message);
 
       switch (message.type) {
+        case 'LOG':
+          // ログメッセージは既にバックグラウンドスクリプトで処理されているため、
+          // ここでは何もしない（警告を出さない）
+          sendResponse({ success: true });
+          break;
+
         case 'DOWNLOAD_TWEET_MEDIA':
           await this.handleDownloadTweetMedia(message.payload, sendResponse);
           break;

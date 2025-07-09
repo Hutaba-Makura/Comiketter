@@ -9,6 +9,26 @@
 import { getTweetInfoFromArticle } from './tweetInfoExtractor';
 import { ButtonFactory } from './buttonManager';
 
+// ログ送信関数
+const sendLog = (message: string, data?: any) => {
+  const logMessage = `[Comiketter] ${message}`;
+  console.log(logMessage, data);
+  
+  // バックグラウンドスクリプトにログを送信
+  try {
+    chrome.runtime.sendMessage({
+      type: 'LOG',
+      message: logMessage,
+      data: data,
+      timestamp: new Date().toISOString(),
+    }).catch(() => {
+      // 送信に失敗しても無視（バックグラウンドが利用できない場合など）
+    });
+  } catch (error) {
+    // chrome.runtimeが利用できない場合は無視
+  }
+};
+
 const enum Query {
   Root = '#react-root',
   Stream = 'section[role="region"] > div[aria-label] > div',
@@ -37,7 +57,7 @@ export class TweetObserver {
       return; // 重複初期化を防ぐ
     }
 
-    console.log('Comiketter: TweetObserver initializing...');
+    sendLog('TweetObserver initializing...');
     
     // 初期化時に既存のツイートを処理
     this.initializeExistingTweets();
@@ -46,7 +66,7 @@ export class TweetObserver {
     this.startObserving();
     
     this.isInitialized = true;
-    console.log('Comiketter: TweetObserver initialized');
+    sendLog('TweetObserver initialized');
   }
 
   /**
@@ -72,16 +92,16 @@ export class TweetObserver {
       }
     }
 
-    console.log('Comiketter: Found', articles?.length || 0, 'existing tweets using selector:', usedSelector);
+    sendLog(`Found ${articles?.length || 0} existing tweets using selector: ${usedSelector}`);
     
     if (articles && articles.length > 0) {
       articles.forEach((article, index) => {
-        console.log('Comiketter: Processing tweet', index + 1, 'of', articles!.length);
+        sendLog(`Processing tweet ${index + 1} of ${articles!.length}`);
         if (this.shouldAddButtons(article as HTMLElement)) {
-          console.log('Comiketter: Adding buttons to tweet', index + 1);
+          sendLog(`Adding buttons to tweet ${index + 1}`);
           this.addButtonsToTweet(article as HTMLElement);
         } else {
-          console.log('Comiketter: Skipping tweet', index + 1, '- already has buttons');
+          sendLog(`Skipping tweet ${index + 1} - already has buttons`);
         }
       });
     }
@@ -126,7 +146,7 @@ export class TweetObserver {
     for (const target of observeTargets) {
       const element = document.querySelector(target.selector);
       if (element) {
-        console.log('Comiketter: Observing', target.name, 'with selector:', target.selector);
+        sendLog(`Observing ${target.name} with selector: ${target.selector}`);
         this.observer.observe(element, options);
         observed = true;
         break;
@@ -134,7 +154,7 @@ export class TweetObserver {
     }
 
     if (!observed) {
-      console.warn('Comiketter: No suitable observation target found');
+      sendLog('No suitable observation target found');
     }
 
     // モーダル（ツイート詳細）を監視
@@ -147,7 +167,7 @@ export class TweetObserver {
     for (const selector of modalSelectors) {
       const modalWrapper = document.querySelector(selector);
       if (modalWrapper) {
-        console.log('Comiketter: Observing modal wrapper with selector:', selector);
+        sendLog(`Observing modal wrapper with selector: ${selector}`);
         this.observer.observe(modalWrapper, options);
         break;
       }
@@ -178,7 +198,7 @@ export class TweetObserver {
   private processBatchNodes(): void {
     if (this.pendingNodes.length === 0) return;
 
-    console.log('Comiketter: Processing batch of', this.pendingNodes.length, 'nodes');
+    sendLog(`Processing batch of ${this.pendingNodes.length} nodes`);
 
     // 各ノードを処理
     this.pendingNodes.forEach(node => {
@@ -210,9 +230,9 @@ export class TweetObserver {
     // 直接追加されたツイート
     for (const selector of tweetSelectors) {
       if (node.matches(selector)) {
-        console.log('Comiketter: Processing direct tweet node with selector:', selector);
+        sendLog(`Processing direct tweet node with selector: ${selector}`);
         if (this.shouldAddButtons(node)) {
-          console.log('Comiketter: Adding buttons to direct tweet');
+          sendLog('Adding buttons to direct tweet');
           this.addButtonsToTweet(node);
         }
         this.processedElements.add(node);
@@ -224,10 +244,10 @@ export class TweetObserver {
     for (const selector of tweetSelectors) {
       const tweets = node.querySelectorAll(selector);
       if (tweets.length > 0) {
-        console.log('Comiketter: Found', tweets.length, 'tweets in node with selector:', selector);
+        sendLog(`Found ${tweets.length} tweets in node with selector: ${selector}`);
         tweets.forEach((tweet, index) => {
           if (this.shouldAddButtons(tweet as HTMLElement)) {
-            console.log('Comiketter: Adding buttons to tweet', index + 1);
+            sendLog(`Adding buttons to tweet ${index + 1}`);
             this.addButtonsToTweet(tweet as HTMLElement);
           }
         });
@@ -250,35 +270,35 @@ export class TweetObserver {
    */
   private addButtonsToTweet(article: HTMLElement): void {
     try {
-      console.log('Comiketter: Starting to add buttons to tweet');
+      sendLog('Starting to add buttons to tweet');
       
       // ツイート情報を取得
       const tweetInfo = getTweetInfoFromArticle(article);
       if (!tweetInfo) {
-        console.warn('Comiketter: Failed to extract tweet info');
+        sendLog('Failed to extract tweet info');
         return;
       }
-      console.log('Comiketter: Extracted tweet info:', tweetInfo);
+      sendLog('Extracted tweet info:', tweetInfo);
 
       // アクションバー（いいね、RT等のボタン群）を取得
       const actionBar = this.getActionBar(article);
       if (!actionBar) {
-        console.warn('Comiketter: Failed to find action bar');
+        sendLog('Failed to find action bar');
         return;
       }
-      console.log('Comiketter: Found action bar:', actionBar);
+      sendLog('Found action bar:', actionBar);
 
       // ボタンを作成
       const buttons = this.buttonFactory.createButtonsForTweet(tweetInfo);
-      console.log('Comiketter: Created buttons:', buttons.length);
+      sendLog('Created buttons:', buttons.length);
 
       // アクションバーに挿入（順序を制御）
       this.buttonFactory.insertButtonsToActionBar(actionBar, buttons);
-      console.log('Comiketter: Successfully added buttons to action bar');
+      sendLog('Successfully added buttons to action bar');
 
-      console.log('Comiketter: Buttons added to tweet:', tweetInfo.id);
+      sendLog('Buttons added to tweet:', tweetInfo.id);
     } catch (error) {
-      console.error('Comiketter: Failed to add buttons:', error);
+      sendLog('Failed to add buttons:', error);
     }
   }
 
@@ -286,7 +306,7 @@ export class TweetObserver {
    * アクションバー（いいね、RT等のボタン群）を取得
    */
   private getActionBar(article: HTMLElement): HTMLElement | null {
-    console.log('Comiketter: Searching for action bar in article');
+    sendLog('Searching for action bar in article');
     
     // 最も確実なセレクターから試行
     const selectors = [
@@ -297,15 +317,15 @@ export class TweetObserver {
     ];
 
     for (const selector of selectors) {
-      console.log('Comiketter: Trying selector:', selector);
+      sendLog(`Trying selector: ${selector}`);
       const actionBar = article.querySelector(selector) as HTMLElement;
       if (actionBar) {
-        console.log('Comiketter: Found action bar with selector:', selector);
+        sendLog(`Found action bar with selector: ${selector}`);
         return actionBar;
       }
     }
 
-    console.warn('Comiketter: No action bar found with any selector');
+    sendLog('No action bar found with any selector');
     return null;
   }
 
@@ -323,6 +343,6 @@ export class TweetObserver {
     }
     this.processedElements = new WeakSet<HTMLElement>();
     this.isInitialized = false;
-    console.log('Comiketter: TweetObserver destroyed');
+    sendLog('TweetObserver destroyed');
   }
 } 

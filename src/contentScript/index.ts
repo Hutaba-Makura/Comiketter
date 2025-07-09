@@ -9,6 +9,26 @@
 import { TweetObserver } from './tweetObserver';
 import { ApiInterceptor } from './apiInterceptor';
 
+// ログ送信関数
+const sendLog = (message: string, data?: any) => {
+  const logMessage = `[Comiketter] ${message}`;
+  console.log(logMessage, data);
+  
+  // バックグラウンドスクリプトにログを送信
+  try {
+    chrome.runtime.sendMessage({
+      type: 'LOG',
+      message: logMessage,
+      data: data,
+      timestamp: new Date().toISOString(),
+    }).catch(() => {
+      // 送信に失敗しても無視（バックグラウンドが利用できない場合など）
+    });
+  } catch (error) {
+    // chrome.runtimeが利用できない場合は無視
+  }
+};
+
 // グローバル変数として保持（デバッグ用）
 declare global {
   interface Window {
@@ -29,33 +49,33 @@ class ContentScript {
 
   async init(): Promise<void> {
     if (this.isInitialized) {
-      console.log('Comiketter: ContentScript already initialized');
+      sendLog('ContentScript already initialized');
       return;
     }
 
-    console.log('Comiketter: Initializing ContentScript...');
+    sendLog('Initializing ContentScript...');
 
     try {
       // API傍受を開始
       await this.apiInterceptor.init();
-      console.log('Comiketter: API interceptor initialized');
+      sendLog('API interceptor initialized');
 
       // ツイート監視を開始
       await this.tweetObserver.init();
-      console.log('Comiketter: Tweet observer initialized');
+      sendLog('Tweet observer initialized');
 
       // グローバル変数に設定（デバッグ用）
       window.comiketterObserver = this.tweetObserver;
       window.comiketterApiInterceptor = this.apiInterceptor;
 
       this.isInitialized = true;
-      console.log('Comiketter: ContentScript initialization completed');
+      sendLog('ContentScript initialization completed');
 
       // 定期的な再初期化をスケジュール
       this.schedulePeriodicReinitialization();
 
     } catch (error) {
-      console.error('Comiketter: Failed to initialize ContentScript:', error);
+      sendLog('Failed to initialize ContentScript:', error);
     }
   }
 
@@ -67,11 +87,11 @@ class ContentScript {
     setInterval(async () => {
       try {
         if (!this.isInitialized) {
-          console.log('Comiketter: Reinitializing due to lost state');
+          sendLog('Reinitializing due to lost state');
           await this.init();
         }
       } catch (error) {
-        console.error('Comiketter: Failed to reinitialize:', error);
+        sendLog('Failed to reinitialize:', error);
       }
     }, 30000);
   }
@@ -80,14 +100,14 @@ class ContentScript {
    * クリーンアップ
    */
   destroy(): void {
-    console.log('Comiketter: Destroying ContentScript...');
+    sendLog('Destroying ContentScript...');
     
     if (this.tweetObserver) {
       this.tweetObserver.destroy();
     }
     
     this.isInitialized = false;
-    console.log('Comiketter: ContentScript destroyed');
+    sendLog('ContentScript destroyed');
   }
 }
 
@@ -111,12 +131,12 @@ window.addEventListener('beforeunload', () => {
 
 // エラーハンドリング
 window.addEventListener('error', (event) => {
-  console.error('Comiketter: Global error:', event.error);
+  sendLog('Global error:', event.error);
 });
 
 // 未処理のPromise拒否をキャッチ
 window.addEventListener('unhandledrejection', (event) => {
-  console.error('Comiketter: Unhandled promise rejection:', event.reason);
+  sendLog('Unhandled promise rejection:', event.reason);
 });
 
 export { contentScript }; 

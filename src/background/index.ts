@@ -45,4 +45,15 @@ chrome.runtime.onInstalled.addListener((details) => {
     // Extension updated
     console.log('Comiketter: Extension updated');
   }
+});
+
+// コンテンツスクリプトからのログメッセージを受信
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === 'LOG') {
+    console.log(`${message.message}`, message.data || '');
+    console.log(`[${message.timestamp}] From: ${sender.tab?.url || 'unknown'}`);
+  }
+  
+  // 他のメッセージはMessageHandlerに委譲
+  return false; // 非同期処理を示す
 }); 

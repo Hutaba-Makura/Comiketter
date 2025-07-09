@@ -12,6 +12,26 @@ import type { Tweet } from '../../types';
 import { BaseButton, ButtonConfig } from './baseButton';
 import { BookmarkManager } from '../../utils/bookmarkManager';
 
+// ログ送信関数
+const sendLog = (message: string, data?: any) => {
+  const logMessage = `[Comiketter] ${message}`;
+  console.log(logMessage, data);
+  
+  // バックグラウンドスクリプトにログを送信
+  try {
+    chrome.runtime.sendMessage({
+      type: 'LOG',
+      message: logMessage,
+      data: data,
+      timestamp: new Date().toISOString(),
+    }).catch(() => {
+      // 送信に失敗しても無視（バックグラウンドが利用できない場合など）
+    });
+  } catch (error) {
+    // chrome.runtimeが利用できない場合は無視
+  }
+};
+
 export enum BookmarkButtonStatus {
   Idle = 'idle',
   Loading = 'loading',
@@ -261,28 +281,37 @@ export class BookmarkButton extends BaseButton {
    * ブックマークボタンクリック時の処理
    */
   private async handleBookmarkButtonClick(button: HTMLElement, tweetInfo: Tweet): Promise<void> {
+    sendLog('ブックマークボタンクリック開始', { tweetId: tweetInfo.id });
+    
     try {
       // ボタンをローディング状態に変更
       this.setBookmarkButtonStatus(button, BookmarkButtonStatus.Loading);
+      sendLog('ボタンをローディング状態に変更');
       
       this.currentTweetInfo = tweetInfo;
       
       // BookmarkManagerを初期化
       const bookmarkManager = BookmarkManager.getInstance();
+      sendLog('BookmarkManager初期化開始');
       await bookmarkManager.initialize();
+      sendLog('BookmarkManager初期化完了');
       
       // ブックマーク選択UIを表示
+      sendLog('ブックマーク選択UI表示開始');
       await this.showBookmarkSelector();
+      sendLog('ブックマーク選択UI表示完了');
       
       // 成功状態に変更
       this.setBookmarkButtonStatus(button, BookmarkButtonStatus.Success);
+      sendLog('ボタンを成功状態に変更');
       
       // 3秒後に通常状態に戻す
       setTimeout(() => {
         this.setBookmarkButtonStatus(button, BookmarkButtonStatus.Idle);
+        sendLog('ボタンを通常状態に戻す');
       }, 3000);
     } catch (error) {
-      console.error('Comiketter: Failed to handle bookmark button click:', error);
+      sendLog('ブックマークボタンクリック処理でエラー発生:', error);
       this.setBookmarkButtonStatus(button, BookmarkButtonStatus.Error);
       
       // 3秒後に通常状態に戻す
@@ -296,22 +325,30 @@ export class BookmarkButton extends BaseButton {
    * ブックマーク選択UIを表示
    */
   private async showBookmarkSelector(): Promise<void> {
+    sendLog('showBookmarkSelector開始');
+    
     // 既存のUIを非表示
     this.hideBookmarkSelector();
+    sendLog('既存のUIを非表示');
 
     // オーバーレイを作成
     const overlay = document.createElement('div');
     overlay.className = 'comiketter-overlay';
     overlay.addEventListener('click', () => {
+      sendLog('オーバーレイクリック - UIを非表示');
       this.hideBookmarkSelector();
     });
+    sendLog('オーバーレイ作成完了');
 
     // セレクターを作成
+    sendLog('BookmarkSelector作成開始');
     this.bookmarkSelector = await this.createBookmarkSelector();
+    sendLog('BookmarkSelector作成完了');
 
     // DOMに追加
     document.body.appendChild(overlay);
     document.body.appendChild(this.bookmarkSelector);
+    sendLog('DOMにBookmarkSelector追加完了');
   }
 
   /**
