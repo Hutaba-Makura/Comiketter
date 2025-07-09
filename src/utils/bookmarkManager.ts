@@ -149,6 +149,37 @@ export class BookmarkManager {
   }
 
   /**
+   * ブックマークに保存されたツイート一覧を取得
+   */
+  async getBookmarkedTweets(bookmarkId: string): Promise<BookmarkedTweet[]> {
+    const bookmark = this.bookmarks.find(b => b.id === bookmarkId);
+    if (!bookmark) {
+      return [];
+    }
+
+    // TODO: 実際のツイートデータを取得する実装
+    // 現在は仮のデータを返す
+    return bookmark.tweetIds.map((tweetId, index) => ({
+      id: `bookmarked-${tweetId}-${index}`,
+      tweetId,
+      bookmarkId,
+      savedAt: new Date().toISOString(),
+      tweet: {
+        id: tweetId,
+        text: `ツイート ${tweetId} の内容`,
+        author: {
+          username: 'username',
+          displayName: 'ユーザー名',
+        },
+        createdAt: new Date().toISOString(),
+        media: [],
+        url: `https://twitter.com/i/status/${tweetId}`,
+      },
+      saveType: 'url' as const,
+    }));
+  }
+
+  /**
    * ブックマーク内のツイート数を取得
    */
   getBookmarkTweetCount(bookmarkId: string): number {

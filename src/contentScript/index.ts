@@ -8,6 +8,7 @@
 
 import { TweetObserver } from './tweetObserver';
 import { ApiInterceptor } from './apiInterceptor';
+import { SidebarButton } from './sidebarButton';
 
 // ログ送信関数
 const sendLog = (message: string, data?: any) => {
@@ -40,11 +41,13 @@ declare global {
 class ContentScript {
   private tweetObserver: TweetObserver;
   private apiInterceptor: ApiInterceptor;
+  private sidebarButton: SidebarButton;
   private isInitialized = false;
 
   constructor() {
     this.tweetObserver = new TweetObserver();
     this.apiInterceptor = new ApiInterceptor();
+    this.sidebarButton = SidebarButton.getInstance();
   }
 
   async init(): Promise<void> {
@@ -58,6 +61,9 @@ class ContentScript {
 
       // ツイート監視を開始
       await this.tweetObserver.init();
+
+      // サイドバーボタンを初期化
+      await this.sidebarButton.initialize();
 
       // グローバル変数に設定（デバッグ用）
       window.comiketterObserver = this.tweetObserver;
@@ -95,6 +101,10 @@ class ContentScript {
   destroy(): void {
     if (this.tweetObserver) {
       this.tweetObserver.destroy();
+    }
+    
+    if (this.sidebarButton) {
+      this.sidebarButton.destroy();
     }
     
     this.isInitialized = false;

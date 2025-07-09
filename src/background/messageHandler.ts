@@ -76,6 +76,10 @@ export class MessageHandler {
           await this.handleGetDownloadHistory(sendResponse);
           break;
 
+        case 'OPEN_BOOKMARK_PAGE':
+          await this.handleOpenBookmarkPage(sendResponse);
+          break;
+
         default:
           console.warn('Comiketter: Unknown message type:', message.type);
           sendResponse({ success: false, error: 'Unknown message type' });
@@ -220,6 +224,23 @@ export class MessageHandler {
       this.downloadManager.processApiResponse(payload);
     } catch (error) {
       console.error('Comiketter: Failed to process API response:', error);
+    }
+  }
+
+  /**
+   * ブックマークページを開く要求を処理
+   */
+  private async handleOpenBookmarkPage(sendResponse: (response: any) => void): Promise<void> {
+    try {
+      const url = chrome.runtime.getURL('bookmarks.html');
+      await chrome.tabs.create({ url });
+      sendResponse({ success: true });
+    } catch (error) {
+      console.error('Comiketter: Failed to open bookmark page:', error);
+      sendResponse({ 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to open bookmark page' 
+      });
     }
   }
 } 
