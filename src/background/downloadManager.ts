@@ -9,7 +9,12 @@
 // Download Manager for media download functionality
 import { FilenameGenerator } from '../utils/filenameGenerator';
 import { StorageManager } from '../utils/storage';
-import type { TweetMediaFileProps, DownloadHistory, AppSettings } from '../types';
+import { 
+  DownloadHistory, 
+  DownloadHistoryStats, 
+  TweetMediaFileProps, 
+  AppSettings 
+} from '../types';
 
 export enum DownloadStatus {
   Pending = 'pending',
@@ -268,14 +273,20 @@ export class DownloadManager {
       // ダウンロード履歴を作成
       const downloadHistory: Omit<DownloadHistory, 'id'> = {
         tweetId: mediaFile.tweetId,
-        fileName: filename,
-        filePath: filename, // 実際のパスはChromeが管理
-        downloadUrl: mediaFile.source,
-        downloadedAt: new Date().toISOString(),
+        authorUsername: mediaFile.tweetUser.screenName,
+        authorDisplayName: mediaFile.tweetUser.displayName,
+        authorId: mediaFile.tweetUser.id,
+        filename: filename,
+        filepath: filename, // 実際のパスはChromeが管理
+        originalUrl: mediaFile.source,
         downloadMethod: currentSettings.downloadMethod,
-        accountName: mediaFile.tweetUser.screenName,
-        mediaUrl: mediaFile.source,
-        status: DownloadStatus.Pending,
+        fileType: this.getFileTypeFromUrl(mediaFile.source),
+        downloadedAt: new Date().toISOString(),
+        status: 'pending',
+        tweetContent: mediaFile.tweetContent,
+        mediaUrls: mediaFile.mediaUrls,
+        mediaTypes: mediaFile.mediaTypes,
+        tweetDate: mediaFile.tweetDate,
       };
 
       // 履歴を保存
@@ -376,6 +387,32 @@ export class DownloadManager {
   }
 
   /**
+   * URLからファイルタイプを取得
+   */
+  private getFileTypeFromUrl(url: string): string {
+    const extension = url.split('.').pop()?.toLowerCase();
+    switch (extension) {
+      case 'jpg':
+      case 'jpeg':
+        return 'image/jpeg';
+      case 'png':
+        return 'image/png';
+      case 'gif':
+        return 'image/gif';
+      case 'webp':
+        return 'image/webp';
+      case 'mp4':
+        return 'video/mp4';
+      case 'mov':
+        return 'video/quicktime';
+      case 'avi':
+        return 'video/x-msvideo';
+      default:
+        return 'application/octet-stream';
+    }
+  }
+
+  /**
    * ハッシュ値を生成
    */
   private generateHash(url: string): string {
@@ -430,12 +467,31 @@ export class DownloadManager {
     if (history) {
       const statusString = status === DownloadStatus.Complete ? 'success' : 
                           status === DownloadStatus.Failed ? 'failed' : 'pending';
-      history.status = statusString;
-      await StorageManager.updateDownloadHistory(history.id, { status: statusString });
+      
+      // 履歴を更新
+      await StorageManager.updateDownloadHistory(history.id, { 
+        status: statusString,
+        ...(status === DownloadStatus.Complete && { 
+          fileSize: await this.getDownloadedFileSize(downloadId) 
+        })
+      });
       
       if (status === DownloadStatus.Complete || status === DownloadStatus.Failed) {
         this.downloadHistory.delete(downloadId);
       }
+    }
+  }
+
+  /**
+   * ダウンロードされたファイルのサイズを取得
+   */
+  private async getDownloadedFileSize(downloadId: number): Promise<number | undefined> {
+    try {
+      const downloadItem = await chrome.downloads.search({ id: downloadId });
+      return downloadItem[0]?.fileSize;
+    } catch (error) {
+      console.error('Comiketter: Failed to get download file size:', error);
+      return undefined;
     }
   }
 
@@ -447,12 +503,52 @@ export class DownloadManager {
   }
 
   /**
+   * ダウンロード履歴統計を取得
+   */
+  async getDownloadHistoryStats(): Promise<DownloadHistoryStats> {
+    return await StorageManager.getDownloadHistoryStats();
+  }
+
+  /**
+   * ツイートIDでダウンロード履歴を検索
+   */
+  async getDownloadHistoryByTweetId(tweetId: string): Promise<DownloadHistory[]> {
+    return await StorageManager.getDownloadHistoryByTweetId(tweetId);
+  }
+
+  /**
+   * ユーザー名でダウンロード履歴を検索
+   */
+  async getDownloadHistoryByUsername(username: string): Promise<DownloadHistory[]> {
+    return await StorageManager.getDownloadHistoryByUsername(username);
+  }
+
+  /**
+   * ステータスでダウンロード履歴を検索
+   */
+  async getDownloadHistoryByStatus(status: 'success' | 'failed' | 'pending'): Promise<DownloadHistory[]> {
+    return await StorageManager.getDownloadHistoryByStatus(status);
+  }
+
+  /**
+   * 日付範囲でダウンロード履歴を検索
+   */
+  async getDownloadHistoryByDateRange(startDate: string, endDate: string): Promise<DownloadHistory[]> {
+    return await StorageManager.getDownloadHistoryByDateRange(startDate, endDate);
+  }
+
+  /**
+   * ダウンロード履歴を削除
+   */
+  async deleteDownloadHistory(id: string): Promise<void> {
+    return await StorageManager.deleteDownloadHistory(id);
+  }
+
+  /**
    * ダウンロード履歴をクリア
    */
   async clearDownloadHistory(): Promise<void> {
-    // TODO: StorageManagerにclearDownloadHistoryメソッドを追加予定
-    console.warn('Comiketter: clearDownloadHistory not implemented yet');
-    this.downloadHistory.clear();
+    return await StorageManager.clearDownloadHistory();
   }
 
   /**

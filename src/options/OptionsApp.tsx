@@ -96,10 +96,10 @@ export const OptionsApp: React.FC = () => {
           <Select
             label="ダウンロード方法"
             value={settings.downloadMethod}
-            onChange={(value) => updateSettings({ downloadMethod: value as 'chrome-api' | 'native-messaging' })}
+            onChange={(value) => updateSettings({ downloadMethod: value as 'chrome_downloads' | 'native_messaging' })}
             data={[
-              { value: 'chrome-api', label: 'Chrome Downloads API' },
-              { value: 'native-messaging', label: 'Native Messaging (curl)' },
+              { value: 'chrome_downloads', label: 'Chrome Downloads API' },
+              { value: 'native_messaging', label: 'Native Messaging (curl)' },
             ]}
           />
         </Stack>

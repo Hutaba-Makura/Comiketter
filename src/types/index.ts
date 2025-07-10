@@ -69,6 +69,7 @@ export interface TweetMediaFileProps {
     userId: string
     displayName: string
     isProtected: boolean
+    id?: string // オプショナルに修正
   }
   createdAt: Date
   serial: number
@@ -76,6 +77,10 @@ export interface TweetMediaFileProps {
   source: string
   type: 'image' | 'video'
   ext: string
+  tweetContent?: string
+  mediaUrls?: string[]
+  mediaTypes?: string[]
+  tweetDate?: string
 }
 
 export interface DownloadConfig {
@@ -125,19 +130,45 @@ export interface BookmarkTweet {
 
 // ダウンロード履歴関連の型定義
 export interface DownloadHistory {
-  id: string
-  tweetId: string
-  fileName: string;
-  filePath: string;
-  downloadUrl: string;
+  id: string;
+  tweetId: string;
+  authorUsername: string;
+  authorDisplayName?: string;
+  authorId?: string;
+  filename: string;
+  filepath: string;
+  originalUrl: string;
+  downloadMethod: 'chrome_downloads' | 'native_messaging';
+  fileSize?: number;
+  fileType: string;
   downloadedAt: string;
-  downloadMethod: 'chrome-api' | 'native-messaging';
-  accountName: string;
-  mediaUrl?: string
-  filename?: string
-  downloadPath?: string
-  fileSize?: number
-  status?: 'success' | 'failed' | 'pending'
+  status: 'success' | 'failed' | 'pending';
+  errorMessage?: string;
+  tweetContent?: string;
+  mediaUrls?: string[];
+  mediaTypes?: string[];
+  tweetDate?: string;
+}
+
+// ダウンロード履歴統計情報
+export interface DownloadHistoryStats {
+  total: number;
+  success: number;
+  failed: number;
+  pending: number;
+  totalSize: number;
+}
+
+// ダウンロード履歴検索条件
+export interface DownloadHistorySearchParams {
+  tweetId?: string;
+  authorUsername?: string;
+  status?: 'success' | 'failed' | 'pending';
+  downloadMethod?: 'chrome_downloads' | 'native_messaging';
+  startDate?: string;
+  endDate?: string;
+  limit?: number;
+  offset?: number;
 }
 
 // 設定関連の型定義（統一版）
@@ -146,7 +177,7 @@ export interface AppSettings {
   tlAutoUpdateDisabled: boolean;
   
   // ダウンロード設定
-  downloadMethod: 'chrome-api' | 'native-messaging'
+  downloadMethod: 'chrome_downloads' | 'native_messaging'
   saveFormat: 'url' | 'blob' | 'mixed'
   saveDirectory: string
   

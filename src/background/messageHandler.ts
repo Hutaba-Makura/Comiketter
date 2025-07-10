@@ -76,6 +76,34 @@ export class MessageHandler {
           await this.handleGetDownloadHistory(sendResponse);
           break;
 
+        case 'GET_DOWNLOAD_HISTORY_STATS':
+          await this.handleGetDownloadHistoryStats(sendResponse);
+          break;
+
+        case 'GET_DOWNLOAD_HISTORY_BY_TWEET_ID':
+          await this.handleGetDownloadHistoryByTweetId(message.payload, sendResponse);
+          break;
+
+        case 'GET_DOWNLOAD_HISTORY_BY_USERNAME':
+          await this.handleGetDownloadHistoryByUsername(message.payload, sendResponse);
+          break;
+
+        case 'GET_DOWNLOAD_HISTORY_BY_STATUS':
+          await this.handleGetDownloadHistoryByStatus(message.payload, sendResponse);
+          break;
+
+        case 'GET_DOWNLOAD_HISTORY_BY_DATE_RANGE':
+          await this.handleGetDownloadHistoryByDateRange(message.payload, sendResponse);
+          break;
+
+        case 'DELETE_DOWNLOAD_HISTORY':
+          await this.handleDeleteDownloadHistory(message.payload, sendResponse);
+          break;
+
+        case 'CLEAR_DOWNLOAD_HISTORY':
+          await this.handleClearDownloadHistory(sendResponse);
+          break;
+
         case 'OPEN_BOOKMARK_PAGE':
           await this.handleOpenBookmarkPage(sendResponse);
           break;
@@ -159,6 +187,136 @@ export class MessageHandler {
       sendResponse({ 
         success: false, 
         error: error instanceof Error ? error.message : 'Failed to get download history' 
+      });
+    }
+  }
+
+  /**
+   * ダウンロード履歴統計取得要求を処理
+   */
+  private async handleGetDownloadHistoryStats(sendResponse: (response: any) => void): Promise<void> {
+    try {
+      const stats = await this.downloadManager.getDownloadHistoryStats();
+      sendResponse({ success: true, data: stats });
+    } catch (error) {
+      console.error('Comiketter: Failed to get download history stats:', error);
+      sendResponse({ 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to get download history stats' 
+      });
+    }
+  }
+
+  /**
+   * ツイートIDでダウンロード履歴検索要求を処理
+   */
+  private async handleGetDownloadHistoryByTweetId(
+    message: { tweetId: string }, 
+    sendResponse: (response: any) => void
+  ): Promise<void> {
+    try {
+      const history = await this.downloadManager.getDownloadHistoryByTweetId(message.tweetId);
+      sendResponse({ success: true, data: history });
+    } catch (error) {
+      console.error('Comiketter: Failed to get download history by tweet ID:', error);
+      sendResponse({ 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to get download history by tweet ID' 
+      });
+    }
+  }
+
+  /**
+   * ユーザー名でダウンロード履歴検索要求を処理
+   */
+  private async handleGetDownloadHistoryByUsername(
+    message: { username: string }, 
+    sendResponse: (response: any) => void
+  ): Promise<void> {
+    try {
+      const history = await this.downloadManager.getDownloadHistoryByUsername(message.username);
+      sendResponse({ success: true, data: history });
+    } catch (error) {
+      console.error('Comiketter: Failed to get download history by username:', error);
+      sendResponse({ 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to get download history by username' 
+      });
+    }
+  }
+
+  /**
+   * ステータスでダウンロード履歴検索要求を処理
+   */
+  private async handleGetDownloadHistoryByStatus(
+    message: { status: 'success' | 'failed' | 'pending' }, 
+    sendResponse: (response: any) => void
+  ): Promise<void> {
+    try {
+      const history = await this.downloadManager.getDownloadHistoryByStatus(message.status);
+      sendResponse({ success: true, data: history });
+    } catch (error) {
+      console.error('Comiketter: Failed to get download history by status:', error);
+      sendResponse({ 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to get download history by status' 
+      });
+    }
+  }
+
+  /**
+   * 日付範囲でダウンロード履歴検索要求を処理
+   */
+  private async handleGetDownloadHistoryByDateRange(
+    message: { startDate: string; endDate: string }, 
+    sendResponse: (response: any) => void
+  ): Promise<void> {
+    try {
+      const history = await this.downloadManager.getDownloadHistoryByDateRange(
+        message.startDate, 
+        message.endDate
+      );
+      sendResponse({ success: true, data: history });
+    } catch (error) {
+      console.error('Comiketter: Failed to get download history by date range:', error);
+      sendResponse({ 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to get download history by date range' 
+      });
+    }
+  }
+
+  /**
+   * ダウンロード履歴削除要求を処理
+   */
+  private async handleDeleteDownloadHistory(
+    message: { id: string }, 
+    sendResponse: (response: any) => void
+  ): Promise<void> {
+    try {
+      await this.downloadManager.deleteDownloadHistory(message.id);
+      sendResponse({ success: true });
+    } catch (error) {
+      console.error('Comiketter: Failed to delete download history:', error);
+      sendResponse({ 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to delete download history' 
+      });
+    }
+  }
+
+  /**
+   * ダウンロード履歴クリア要求を処理
+   */
+  private async handleClearDownloadHistory(sendResponse: (response: any) => void): Promise<void> {
+    try {
+      await this.downloadManager.clearDownloadHistory();
+      sendResponse({ success: true });
+    } catch (error) {
+      console.error('Comiketter: Failed to clear download history:', error);
+      sendResponse({ 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to clear download history' 
       });
     }
   }

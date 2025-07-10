@@ -1,7 +1,8 @@
 // Chrome extension storage utility functions
 import type { Settings, CustomBookmark, BookmarkedTweet, DownloadHistory } from '@/types';
-import { FilenameSettingProps, AppSettings } from '../types';
+import { FilenameSettingProps, AppSettings, PatternToken, AggregationToken } from '../types';
 import { FilenameGenerator } from './filenameGenerator';
+import { downloadHistoryDB, type DownloadHistoryDB, type DownloadHistoryStats } from './downloadHistoryDB';
 
 // ストレージキー定数
 const STORAGE_KEYS = {
@@ -13,33 +14,28 @@ const STORAGE_KEYS = {
 
 // デフォルト設定
 const DEFAULT_SETTINGS: AppSettings = {
-  // 基本設定
   tlAutoUpdateDisabled: false,
-  
-  // ダウンロード設定
-  downloadMethod: 'chrome-api',
-  saveFormat: 'mixed',
+  downloadMethod: 'chrome_downloads',
+  saveFormat: 'url',
   saveDirectory: 'comiketter',
-  
-  // 自動ダウンロード条件
   autoDownloadConditions: {
     retweet: false,
     like: false,
     both: false,
   },
-  
-  // 自動保存トリガー
   autoSaveTriggers: {
     retweet: false,
     like: false,
     retweetAndLike: false,
   },
-  
-  // ファイル名・パス設定
-  filenameSettings: FilenameGenerator.getDefaultFilenameSettings(),
-  
-  // UI設定
-  timelineAutoUpdate: false,
+  filenameSettings: {
+    directory: 'comiketter',
+    noSubDirectory: false,
+    filenamePattern: [PatternToken.Account, PatternToken.TweetDate, PatternToken.TweetId, PatternToken.Serial],
+    fileAggregation: false,
+    groupBy: AggregationToken.Account,
+  },
+  timelineAutoUpdate: true,
   showCustomBookmarks: true,
 };
 
@@ -210,8 +206,8 @@ export class StorageManager {
    */
   static async getDownloadHistory(): Promise<DownloadHistory[]> {
     try {
-      const result = await chrome.storage.local.get(STORAGE_KEYS.DOWNLOAD_HISTORY);
-      return result[STORAGE_KEYS.DOWNLOAD_HISTORY] || [];
+      const histories = await downloadHistoryDB.getAllDownloadHistory();
+      return histories;
     } catch (error) {
       console.error('Failed to get download history:', error);
       return [];
@@ -221,9 +217,10 @@ export class StorageManager {
   /**
    * ダウンロード履歴を保存
    */
-  static async saveDownloadHistory(history: DownloadHistory[]): Promise<void> {
+  static async saveDownloadHistory(history: Omit<DownloadHistory, 'id'>): Promise<DownloadHistory> {
     try {
-      await chrome.storage.local.set({ [STORAGE_KEYS.DOWNLOAD_HISTORY]: history });
+      const savedHistory = await downloadHistoryDB.addDownloadHistory(history);
+      return savedHistory;
     } catch (error) {
       console.error('Failed to save download history:', error);
       throw error;
@@ -235,15 +232,8 @@ export class StorageManager {
    */
   static async addDownloadHistory(history: Omit<DownloadHistory, 'id'>): Promise<DownloadHistory> {
     try {
-      const histories = await this.getDownloadHistory();
-      const newHistory: DownloadHistory = {
-        ...history,
-        id: this.generateId(),
-      };
-      
-      histories.push(newHistory);
-      await this.saveDownloadHistory(histories);
-      return newHistory;
+      const savedHistory = await downloadHistoryDB.addDownloadHistory(history);
+      return savedHistory;
     } catch (error) {
       console.error('Failed to add download history:', error);
       throw error;
@@ -255,18 +245,7 @@ export class StorageManager {
    */
   static async updateDownloadHistory(id: string, updates: Partial<DownloadHistory>): Promise<void> {
     try {
-      const histories = await this.getDownloadHistory();
-      const index = histories.findIndex(h => h.id === id);
-      if (index === -1) {
-        throw new Error(`Download history with id ${id} not found`);
-      }
-
-      histories[index] = {
-        ...histories[index],
-        ...updates,
-      };
-
-      await this.saveDownloadHistory(histories);
+      await downloadHistoryDB.updateDownloadHistory(id, updates);
     } catch (error) {
       console.error('Failed to update download history:', error);
       throw error;
@@ -278,11 +257,87 @@ export class StorageManager {
    */
   static async deleteDownloadHistory(id: string): Promise<void> {
     try {
-      const histories = await this.getDownloadHistory();
-      const filteredHistories = histories.filter(h => h.id !== id);
-      await this.saveDownloadHistory(filteredHistories);
+      await downloadHistoryDB.deleteDownloadHistory(id);
     } catch (error) {
       console.error('Failed to delete download history:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * ダウンロード履歴統計を取得
+   */
+  static async getDownloadHistoryStats(): Promise<DownloadHistoryStats> {
+    try {
+      return await downloadHistoryDB.getDownloadHistoryStats();
+    } catch (error) {
+      console.error('Failed to get download history stats:', error);
+      return {
+        total: 0,
+        success: 0,
+        failed: 0,
+        pending: 0,
+        totalSize: 0,
+      };
+    }
+  }
+
+  /**
+   * ツイートIDでダウンロード履歴を検索
+   */
+  static async getDownloadHistoryByTweetId(tweetId: string): Promise<DownloadHistory[]> {
+    try {
+      return await downloadHistoryDB.getDownloadHistoryByTweetId(tweetId);
+    } catch (error) {
+      console.error('Failed to get download history by tweet ID:', error);
+      return [];
+    }
+  }
+
+  /**
+   * ユーザー名でダウンロード履歴を検索
+   */
+  static async getDownloadHistoryByUsername(username: string): Promise<DownloadHistory[]> {
+    try {
+      return await downloadHistoryDB.getDownloadHistoryByUsername(username);
+    } catch (error) {
+      console.error('Failed to get download history by username:', error);
+      return [];
+    }
+  }
+
+  /**
+   * ステータスでダウンロード履歴を検索
+   */
+  static async getDownloadHistoryByStatus(status: 'success' | 'failed' | 'pending'): Promise<DownloadHistory[]> {
+    try {
+      return await downloadHistoryDB.getDownloadHistoryByStatus(status);
+    } catch (error) {
+      console.error('Failed to get download history by status:', error);
+      return [];
+    }
+  }
+
+  /**
+   * 日付範囲でダウンロード履歴を検索
+   */
+  static async getDownloadHistoryByDateRange(startDate: string, endDate: string): Promise<DownloadHistory[]> {
+    try {
+      return await downloadHistoryDB.getDownloadHistoryByDateRange(startDate, endDate);
+    } catch (error) {
+      console.error('Failed to get download history by date range:', error);
+      return [];
+    }
+  }
+
+  /**
+   * ダウンロード履歴データベースをクリア
+   */
+  static async clearDownloadHistory(): Promise<void> {
+    try {
+      await downloadHistoryDB.clearAllData();
+    } catch (error) {
+      console.error('Failed to clear download history:', error);
       throw error;
     }
   }
