@@ -86,11 +86,11 @@ export class SidebarButton {
    * 既存のサイドバーにボタンを追加
    */
   private initializeExistingSidebar(): void {
-    sendLog('既存サイドバーの初期化開始');
+    sendLog('既存ナビゲーションの初期化開始');
     
     const sidebar = this.findSidebar();
     if (sidebar) {
-      sendLog('サイドバー要素を発見、ボタン追加を試行');
+      sendLog('ナビゲーション要素を発見、ボタン追加を試行');
       if (this.shouldAddButton(sidebar)) {
         sendLog('ボタン追加条件を満たしたため、createSidebarButtonを実行');
         this.createSidebarButton();
@@ -98,7 +98,7 @@ export class SidebarButton {
         sendLog('ボタン追加条件を満たさないため、スキップ');
       }
     } else {
-      sendLog('サイドバー要素が見つからないため、スキップ');
+      sendLog('ナビゲーション要素が見つからないため、スキップ');
     }
   }
 
@@ -129,11 +129,10 @@ export class SidebarButton {
       }
     });
 
-    // 複数の監視対象を試行
+    // ナビゲーション要素を監視
     const observeTargets = [
-      { selector: '[data-testid="sidebarColumn"]', name: 'sidebar column' },
+      { selector: 'nav[role="navigation"]', name: 'navigation' },
       { selector: '[role="banner"]', name: 'banner' },
-      { selector: '[role="complementary"]', name: 'complementary' },
       { selector: 'body', name: 'body' },
     ];
 
@@ -193,16 +192,14 @@ export class SidebarButton {
     // 処理済みとしてマーク
     this.processedElements.add(node);
 
-    // サイドバーセレクターを試行
-    const sidebarSelectors = [
-      '[data-testid="sidebarColumn"]',
-      '[role="complementary"]',
+    // ナビゲーションセレクターを試行
+    const navigationSelectors = [
       'nav[role="navigation"]',
       '[role="banner"] nav',
     ];
 
-    // 直接サイドバー要素の場合
-    for (const selector of sidebarSelectors) {
+    // 直接ナビゲーション要素の場合
+    for (const selector of navigationSelectors) {
       if (node.matches(selector)) {
         if (this.shouldAddButton(node)) {
           this.createSidebarButton();
@@ -211,12 +208,12 @@ export class SidebarButton {
       }
     }
 
-    // 子要素にサイドバーが含まれている場合
-    for (const selector of sidebarSelectors) {
-      const sidebars = node.querySelectorAll(selector);
-      if (sidebars.length > 0) {
-        sidebars.forEach((sidebar) => {
-          if (this.shouldAddButton(sidebar as HTMLElement)) {
+    // 子要素にナビゲーションが含まれている場合
+    for (const selector of navigationSelectors) {
+      const navigations = node.querySelectorAll(selector);
+      if (navigations.length > 0) {
+        navigations.forEach((navigation) => {
+          if (this.shouldAddButton(navigation as HTMLElement)) {
             this.createSidebarButton();
           }
         });
@@ -253,27 +250,11 @@ export class SidebarButton {
     const currentUrl = window.location.href;
     sendLog('現在のURL:', currentUrl);
     
-    // 複数のセレクターでサイドバーを検索（優先順位順）
+    // 直接ナビゲーション要素を検索
     const selectors = [
-      // メインのナビゲーション
-      '[data-testid="sidebarColumn"]',
-      '[role="complementary"]',
       'nav[role="navigation"]',
-      
-      // Xの新しいUI構造
       '[role="banner"] nav',
       '[role="banner"] [role="navigation"]',
-      '[data-testid="sidebarColumn"] nav',
-      '[data-testid="sidebarColumn"] [role="navigation"]',
-      
-      // より具体的なセレクター
-      '[data-testid="sidebarColumn"] > div',
-      '[data-testid="sidebarColumn"] > nav',
-      '[data-testid="sidebarColumn"] > [role="navigation"]',
-      
-      // フォールバック
-      '[data-testid="primaryColumn"] + div',
-      '[data-testid="primaryColumn"] ~ div',
     ];
 
     for (const selector of selectors) {
@@ -285,45 +266,26 @@ export class SidebarButton {
         sendLog(`要素 ${i + 1}:`, {
           tagName: element.tagName,
           role: element.getAttribute('role'),
-          testId: element.getAttribute('data-testid'),
           className: element.className,
           childrenCount: element.children.length
         });
         
-        // サイドバーとして適切かチェック
-        if (this.isValidSidebar(element)) {
-          sendLog(`有効なサイドバー要素を発見: ${selector} (${i + 1}番目)`);
+        // ナビゲーション要素として適切かチェック
+        if (this.isValidNavigation(element)) {
+          sendLog(`有効なナビゲーション要素を発見: ${selector} (${i + 1}番目)`);
           return element;
         }
       }
     }
 
-    // より詳細な検索
-    const banner = document.querySelector('[role="banner"]');
-    if (banner) {
-      sendLog('banner要素を発見、詳細検索を実行');
-      const navInBanner = banner.querySelector('nav, [role="navigation"]');
-      if (navInBanner && this.isValidSidebar(navInBanner as HTMLElement)) {
-        sendLog('banner内の有効なナビゲーション要素を発見');
-        return navInBanner as HTMLElement;
-      }
-    }
-
-    // サイドバーカラムを直接検索
-    const sidebarColumn = document.querySelector('[data-testid="sidebarColumn"]');
-    if (sidebarColumn) {
-      sendLog('サイドバーカラムを発見');
-      return sidebarColumn as HTMLElement;
-    }
-
-    sendLog('有効なサイドバー要素が見つかりません');
+    sendLog('有効なナビゲーション要素が見つかりません');
     return null;
   }
 
   /**
-   * 要素が有効なサイドバーかどうかを判定
+   * 要素が有効なナビゲーションかどうかを判定
    */
-  private isValidSidebar(element: HTMLElement): boolean {
+  private isValidNavigation(element: HTMLElement): boolean {
     // 要素が表示されているかチェック
     const style = window.getComputedStyle(element);
     if (style.display === 'none' || style.visibility === 'hidden') {
@@ -353,11 +315,11 @@ export class SidebarButton {
     
     const sidebar = this.findSidebar();
     if (!sidebar) {
-      sendLog('サイドバーが見つかりません');
+      sendLog('ナビゲーション要素が見つかりません');
       return;
     }
 
-    sendLog('サイドバー要素を発見、ボタン作成を開始');
+    sendLog('ナビゲーション要素を発見、ボタン作成を開始');
 
     // 既存のボタンを削除
     this.removeSidebarButton();
@@ -421,10 +383,9 @@ export class SidebarButton {
   private insertIntoSidebar(sidebar: HTMLElement): void {
     sendLog('insertIntoSidebar開始');
     
-    sendLog('サイドバーへの挿入開始', { 
+    sendLog('ナビゲーション要素への挿入開始', { 
       sidebarTagName: sidebar.tagName, 
       sidebarRole: sidebar.getAttribute('role'),
-      sidebarTestId: sidebar.getAttribute('data-testid'),
       sidebarChildrenCount: sidebar.children.length
     });
     
