@@ -1,8 +1,9 @@
 // Chrome extension storage utility functions
-import type { Settings, CustomBookmark, BookmarkedTweet, DownloadHistory } from '@/types';
+import type { Settings, CustomBookmark, BookmarkedTweet, DownloadHistory, BookmarkStats } from '@/types';
 import { FilenameSettingProps, AppSettings, PatternToken, AggregationToken } from '../types';
 import { FilenameGenerator } from './filenameGenerator';
 import { downloadHistoryDB, type DownloadHistoryDB, type DownloadHistoryStats } from './downloadHistoryDB';
+import { bookmarkDB, type BookmarkDB, type BookmarkedTweetDB } from './bookmarkDB';
 
 // ストレージキー定数
 const STORAGE_KEYS = {
@@ -120,8 +121,8 @@ export class StorageManager {
    */
   static async getCustomBookmarks(): Promise<CustomBookmark[]> {
     try {
-      const result = await chrome.storage.local.get(STORAGE_KEYS.CUSTOM_BOOKMARKS);
-      return result[STORAGE_KEYS.CUSTOM_BOOKMARKS] || [];
+      const bookmarks = await bookmarkDB.getActiveBookmarks();
+      return bookmarks;
     } catch (error) {
       console.error('Failed to get custom bookmarks:', error);
       return [];
@@ -131,11 +132,12 @@ export class StorageManager {
   /**
    * カスタムブックマークを保存
    */
-  static async saveCustomBookmarks(bookmarks: CustomBookmark[]): Promise<void> {
+  static async saveCustomBookmark(bookmark: Omit<CustomBookmark, 'id' | 'createdAt' | 'updatedAt'>): Promise<CustomBookmark> {
     try {
-      await chrome.storage.local.set({ [STORAGE_KEYS.CUSTOM_BOOKMARKS]: bookmarks });
+      const savedBookmark = await bookmarkDB.addBookmark(bookmark);
+      return savedBookmark;
     } catch (error) {
-      console.error('Failed to save custom bookmarks:', error);
+      console.error('Failed to save custom bookmark:', error);
       throw error;
     }
   }
@@ -143,20 +145,10 @@ export class StorageManager {
   /**
    * カスタムブックマークを追加
    */
-  static async addCustomBookmark(bookmark: Omit<CustomBookmark, 'id' | 'createdAt' | 'updatedAt' | 'tweetCount'>): Promise<CustomBookmark> {
+  static async addCustomBookmark(bookmark: Omit<CustomBookmark, 'id' | 'createdAt' | 'updatedAt'>): Promise<CustomBookmark> {
     try {
-      const bookmarks = await this.getCustomBookmarks();
-      const newBookmark: CustomBookmark = {
-        ...bookmark,
-        id: this.generateId(),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        tweetCount: 0,
-      };
-      
-      bookmarks.push(newBookmark);
-      await this.saveCustomBookmarks(bookmarks);
-      return newBookmark;
+      const savedBookmark = await bookmarkDB.addBookmark(bookmark);
+      return savedBookmark;
     } catch (error) {
       console.error('Failed to add custom bookmark:', error);
       throw error;
@@ -168,19 +160,7 @@ export class StorageManager {
    */
   static async updateCustomBookmark(id: string, updates: Partial<CustomBookmark>): Promise<void> {
     try {
-      const bookmarks = await this.getCustomBookmarks();
-      const index = bookmarks.findIndex(b => b.id === id);
-      if (index === -1) {
-        throw new Error(`Bookmark with id ${id} not found`);
-      }
-
-      bookmarks[index] = {
-        ...bookmarks[index],
-        ...updates,
-        updatedAt: new Date().toISOString(),
-      };
-
-      await this.saveCustomBookmarks(bookmarks);
+      await bookmarkDB.updateBookmark(id, updates);
     } catch (error) {
       console.error('Failed to update custom bookmark:', error);
       throw error;
@@ -192,11 +172,111 @@ export class StorageManager {
    */
   static async deleteCustomBookmark(id: string): Promise<void> {
     try {
-      const bookmarks = await this.getCustomBookmarks();
-      const filteredBookmarks = bookmarks.filter(b => b.id !== id);
-      await this.saveCustomBookmarks(filteredBookmarks);
+      await bookmarkDB.deleteBookmark(id);
     } catch (error) {
       console.error('Failed to delete custom bookmark:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * ブックマーク統計を取得
+   */
+  static async getBookmarkStats(): Promise<BookmarkStats> {
+    try {
+      return await bookmarkDB.getBookmarkStats();
+    } catch (error) {
+      console.error('Failed to get bookmark stats:', error);
+      return {
+        totalBookmarks: 0,
+        totalTweets: 0,
+        activeBookmarks: 0,
+        tweetsByBookmark: {},
+      };
+    }
+  }
+
+  /**
+   * ブックマーク済みツイートを追加
+   */
+  static async addBookmarkedTweet(tweet: Omit<BookmarkedTweet, 'id' | 'savedAt'>): Promise<BookmarkedTweet> {
+    try {
+      const savedTweet = await bookmarkDB.addBookmarkedTweet(tweet);
+      return savedTweet;
+    } catch (error) {
+      console.error('Failed to add bookmarked tweet:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * ブックマークIDでツイートを取得
+   */
+  static async getBookmarkedTweetsByBookmarkId(bookmarkId: string): Promise<BookmarkedTweet[]> {
+    try {
+      return await bookmarkDB.getBookmarkedTweetsByBookmarkId(bookmarkId);
+    } catch (error) {
+      console.error('Failed to get bookmarked tweets by bookmark ID:', error);
+      return [];
+    }
+  }
+
+  /**
+   * ツイートIDでブックマーク済みツイートを取得
+   */
+  static async getBookmarkedTweetByTweetId(tweetId: string): Promise<BookmarkedTweet[]> {
+    try {
+      return await bookmarkDB.getBookmarkedTweetByTweetId(tweetId);
+    } catch (error) {
+      console.error('Failed to get bookmarked tweet by tweet ID:', error);
+      return [];
+    }
+  }
+
+  /**
+   * ユーザー名でブックマーク済みツイートを検索
+   */
+  static async getBookmarkedTweetsByUsername(username: string): Promise<BookmarkedTweet[]> {
+    try {
+      return await bookmarkDB.getBookmarkedTweetsByUsername(username);
+    } catch (error) {
+      console.error('Failed to get bookmarked tweets by username:', error);
+      return [];
+    }
+  }
+
+  /**
+   * ブックマーク済みツイートを更新
+   */
+  static async updateBookmarkedTweet(id: string, updates: Partial<BookmarkedTweet>): Promise<void> {
+    try {
+      await bookmarkDB.updateBookmarkedTweet(id, updates);
+    } catch (error) {
+      console.error('Failed to update bookmarked tweet:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * ブックマーク済みツイートを削除
+   */
+  static async deleteBookmarkedTweet(id: string): Promise<void> {
+    try {
+      await bookmarkDB.deleteBookmarkedTweet(id);
+    } catch (error) {
+      console.error('Failed to delete bookmarked tweet:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * ブックマークデータベースをクリア
+   */
+  static async clearBookmarkData(): Promise<void> {
+    try {
+      await bookmarkDB.clearAllData();
+    } catch (error) {
+      console.error('Failed to clear bookmark data:', error);
       throw error;
     }
   }

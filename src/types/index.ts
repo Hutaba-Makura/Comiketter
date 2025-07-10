@@ -92,40 +92,53 @@ export interface DownloadConfig {
 
 // カスタムブックマーク関連の型定義
 export interface CustomBookmark {
-  id: string
-  name: string
-  description?: string
+  id: string;
+  name: string;
+  description?: string;
+  color?: string;
   createdAt: string;
   updatedAt: string;
-  tweetCount: number;
-  tweetIds: string[]
+  isActive: boolean;
 }
 
 export interface BookmarkedTweet {
   id: string;
-  tweetId: string;
   bookmarkId: string;
+  tweetId: string;
+  authorUsername: string;
+  authorDisplayName?: string;
+  authorId?: string;
+  content: string;
+  mediaUrls?: string[];
+  mediaTypes?: string[];
+  tweetDate: string;
   savedAt: string;
-  tweet: Tweet;
+  isRetweet: boolean;
+  isReply: boolean;
+  replyToTweetId?: string;
+  replyToUsername?: string;
   saveType: 'url' | 'blob' | 'mixed';
 }
 
-export interface BookmarkTweet {
-  id: string
-  bookmarkId: string
-  tweetId: string
-  tweetData: {
-    text: string
-    author: {
-      screenName: string
-      displayName: string
-      profileImageUrl: string
-    }
-    mediaUrls: string[]
-    createdAt: string
-  }
-  savedAt: string
-  saveFormat: 'url' | 'file' | 'mixed'
+// ブックマーク統計情報
+export interface BookmarkStats {
+  totalBookmarks: number;
+  totalTweets: number;
+  activeBookmarks: number;
+  tweetsByBookmark: { [bookmarkId: string]: number };
+}
+
+// ブックマーク検索条件
+export interface BookmarkSearchParams {
+  name?: string;
+  isActive?: boolean;
+  authorUsername?: string;
+  isRetweet?: boolean;
+  isReply?: boolean;
+  startDate?: string;
+  endDate?: string;
+  limit?: number;
+  offset?: number;
 }
 
 // ダウンロード履歴関連の型定義

@@ -108,6 +108,10 @@ export class MessageHandler {
           await this.handleOpenBookmarkPage(sendResponse);
           break;
 
+        case 'BOOKMARK_ACTION':
+          sendResponse(await this.handleBookmarkMessage(message.payload));
+          break;
+
         default:
           console.warn('Comiketter: Unknown message type:', message.type);
           sendResponse({ success: false, error: 'Unknown message type' });
@@ -318,6 +322,59 @@ export class MessageHandler {
         success: false, 
         error: error instanceof Error ? error.message : 'Failed to clear download history' 
       });
+    }
+  }
+
+  /**
+   * ブックマーク関連のメッセージを処理
+   */
+  private async handleBookmarkMessage(message: any): Promise<any> {
+    const { action, data } = message;
+
+    try {
+      switch (action) {
+        case 'getBookmarks':
+          return await StorageManager.getCustomBookmarks();
+
+        case 'addBookmark':
+          return await StorageManager.addCustomBookmark(data);
+
+        case 'updateBookmark':
+          return await StorageManager.updateCustomBookmark(data.id, data.updates);
+
+        case 'deleteBookmark':
+          return await StorageManager.deleteCustomBookmark(data.id);
+
+        case 'getBookmarkStats':
+          return await StorageManager.getBookmarkStats();
+
+        case 'addBookmarkedTweet':
+          return await StorageManager.addBookmarkedTweet(data);
+
+        case 'getBookmarkedTweetsByBookmarkId':
+          return await StorageManager.getBookmarkedTweetsByBookmarkId(data.bookmarkId);
+
+        case 'getBookmarkedTweetByTweetId':
+          return await StorageManager.getBookmarkedTweetByTweetId(data.tweetId);
+
+        case 'getBookmarkedTweetsByUsername':
+          return await StorageManager.getBookmarkedTweetsByUsername(data.username);
+
+        case 'updateBookmarkedTweet':
+          return await StorageManager.updateBookmarkedTweet(data.id, data.updates);
+
+        case 'deleteBookmarkedTweet':
+          return await StorageManager.deleteBookmarkedTweet(data.id);
+
+        case 'clearBookmarkData':
+          return await StorageManager.clearBookmarkData();
+
+        default:
+          throw new Error(`Unknown bookmark action: ${action}`);
+      }
+    } catch (error) {
+      console.error('Bookmark message handler error:', error);
+      throw error;
     }
   }
 

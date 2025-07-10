@@ -6,7 +6,7 @@
  * Comiketter: カスタムブックマーク管理サービス
  */
 
-import type { CustomBookmark, BookmarkedTweet, Tweet } from '../types';
+import type { CustomBookmark, BookmarkedTweet, BookmarkStats } from '../types';
 import { StorageManager } from './storage';
 
 /**
@@ -35,7 +35,6 @@ export class BookmarkManager {
   async initialize(): Promise<void> {
     try {
       this.bookmarks = await StorageManager.getCustomBookmarks();
-      // TODO: ブックマークされたツイートの読み込み機能を実装
       console.log('BookmarkManager initialized with', this.bookmarks.length, 'bookmarks');
     } catch (error) {
       console.error('Failed to initialize BookmarkManager:', error);
@@ -43,7 +42,7 @@ export class BookmarkManager {
   }
 
   /**
-   * カスタムブックマーク一覧を取得
+   * 全ブックマークを取得
    */
   async getBookmarks(): Promise<CustomBookmark[]> {
     return this.bookmarks;
@@ -52,11 +51,12 @@ export class BookmarkManager {
   /**
    * カスタムブックマークを追加
    */
-  async addBookmark(name: string, description?: string): Promise<CustomBookmark> {
+  async addBookmark(name: string, description?: string, color?: string): Promise<CustomBookmark> {
     const newBookmark = await StorageManager.addCustomBookmark({
       name,
       description,
-      tweetIds: [],
+      color,
+      isActive: true,
     });
 
     this.bookmarks.push(newBookmark);
@@ -84,190 +84,112 @@ export class BookmarkManager {
   }
 
   /**
-   * ツイートをブックマークに追加
+   * ブックマーク統計を取得
    */
-  async addTweetToBookmark(tweet: Tweet, bookmarkIds: string[]): Promise<void> {
-    const tweetId = tweet.id;
-    const now = new Date().toISOString();
-
-    // 各ブックマークにツイートを追加
-    for (const bookmarkId of bookmarkIds) {
-      const bookmark = this.bookmarks.find(b => b.id === bookmarkId);
-      if (!bookmark) continue;
-
-      // 既に追加済みでないかチェック
-      if (!bookmark.tweetIds.includes(tweetId)) {
-        bookmark.tweetIds.push(tweetId);
-        bookmark.tweetCount = bookmark.tweetIds.length;
-        bookmark.updatedAt = now;
-
-        await this.updateBookmark(bookmarkId, {
-          tweetIds: bookmark.tweetIds,
-          tweetCount: bookmark.tweetCount,
-          updatedAt: bookmark.updatedAt,
-        });
-      }
-    }
+  async getBookmarkStats(): Promise<BookmarkStats> {
+    return await StorageManager.getBookmarkStats();
   }
 
   /**
-   * ツイートをブックマークから削除
+   * ブックマーク済みツイートを追加
    */
-  async removeTweetFromBookmark(tweetId: string, bookmarkId: string): Promise<void> {
-    const bookmark = this.bookmarks.find(b => b.id === bookmarkId);
-    if (!bookmark) return;
-
-    const index = bookmark.tweetIds.indexOf(tweetId);
-    if (index !== -1) {
-      bookmark.tweetIds.splice(index, 1);
-      bookmark.tweetCount = bookmark.tweetIds.length;
-      bookmark.updatedAt = new Date().toISOString();
-
-      await this.updateBookmark(bookmarkId, {
-        tweetIds: bookmark.tweetIds,
-        tweetCount: bookmark.tweetCount,
-        updatedAt: bookmark.updatedAt,
-      });
-    }
-  }
-
-  /**
-   * ツイートがブックマークされているかチェック
-   */
-  isTweetBookmarked(tweetId: string, bookmarkId: string): boolean {
-    const bookmark = this.bookmarks.find(b => b.id === bookmarkId);
-    return bookmark ? bookmark.tweetIds.includes(tweetId) : false;
-  }
-
-  /**
-   * ツイートがどのブックマークに保存されているか取得
-   */
-  getBookmarksForTweet(tweetId: string): CustomBookmark[] {
-    return this.bookmarks.filter(bookmark => 
-      bookmark.tweetIds.includes(tweetId)
-    );
-  }
-
-  /**
-   * ブックマークに保存されたツイート一覧を取得
-   */
-  async getBookmarkedTweets(bookmarkId: string): Promise<BookmarkedTweet[]> {
-    const bookmark = this.bookmarks.find(b => b.id === bookmarkId);
-    if (!bookmark) {
-      return [];
-    }
-
-    // TODO: 実際のツイートデータを取得する実装
-    // 現在は仮のデータを返す
-    return bookmark.tweetIds.map((tweetId, index) => ({
-      id: `bookmarked-${tweetId}-${index}`,
-      tweetId,
+  async addBookmarkedTweet(
+    bookmarkId: string,
+    tweetId: string,
+    authorUsername: string,
+    authorDisplayName: string,
+    authorId: string,
+    content: string,
+    tweetDate: string,
+    isRetweet: boolean = false,
+    isReply: boolean = false,
+    mediaUrls?: string[],
+    mediaTypes?: string[],
+    replyToTweetId?: string,
+    replyToUsername?: string,
+    saveType: 'url' | 'blob' | 'mixed' = 'url'
+  ): Promise<BookmarkedTweet> {
+    const newTweet = await StorageManager.addBookmarkedTweet({
       bookmarkId,
-      savedAt: new Date().toISOString(),
-      tweet: {
-        id: tweetId,
-        text: `ツイート ${tweetId} の内容`,
-        author: {
-          username: 'username',
-          displayName: 'ユーザー名',
-        },
-        createdAt: new Date().toISOString(),
-        media: [],
-        url: `https://twitter.com/i/status/${tweetId}`,
-      },
-      saveType: 'url' as const,
-    }));
-  }
-
-  /**
-   * ブックマーク内のツイート数を取得
-   */
-  getBookmarkTweetCount(bookmarkId: string): number {
-    const bookmark = this.bookmarks.find(b => b.id === bookmarkId);
-    return bookmark ? bookmark.tweetCount : 0;
-  }
-
-  /**
-   * ブックマーク名で検索
-   */
-  searchBookmarks(query: string): CustomBookmark[] {
-    const lowerQuery = query.toLowerCase();
-    return this.bookmarks.filter(bookmark =>
-      bookmark.name.toLowerCase().includes(lowerQuery) ||
-      (bookmark.description && bookmark.description.toLowerCase().includes(lowerQuery))
-    );
-  }
-
-  /**
-   * ブックマークを並び替え
-   */
-  sortBookmarks(sortBy: 'name' | 'createdAt' | 'updatedAt' | 'tweetCount', order: 'asc' | 'desc' = 'desc'): CustomBookmark[] {
-    return [...this.bookmarks].sort((a, b) => {
-      let aValue: any;
-      let bValue: any;
-
-      switch (sortBy) {
-        case 'name':
-          aValue = a.name.toLowerCase();
-          bValue = b.name.toLowerCase();
-          break;
-        case 'createdAt':
-          aValue = new Date(a.createdAt).getTime();
-          bValue = new Date(b.createdAt).getTime();
-          break;
-        case 'updatedAt':
-          aValue = new Date(a.updatedAt).getTime();
-          bValue = new Date(b.updatedAt).getTime();
-          break;
-        case 'tweetCount':
-          aValue = a.tweetCount;
-          bValue = b.tweetCount;
-          break;
-        default:
-          return 0;
-      }
-
-      if (order === 'asc') {
-        return aValue > bValue ? 1 : -1;
-      } else {
-        return aValue < bValue ? 1 : -1;
-      }
+      tweetId,
+      authorUsername,
+      authorDisplayName,
+      authorId,
+      content,
+      mediaUrls,
+      mediaTypes,
+      tweetDate,
+      isRetweet,
+      isReply,
+      replyToTweetId,
+      replyToUsername,
+      saveType,
     });
+
+    this.bookmarkedTweets.push(newTweet);
+    return newTweet;
   }
 
   /**
-   * ブックマークの重複チェック
+   * ブックマークIDでツイートを取得
    */
-  isBookmarkNameDuplicate(name: string, excludeId?: string): boolean {
-    return this.bookmarks.some(bookmark => 
-      bookmark.name.toLowerCase() === name.toLowerCase() && 
-      bookmark.id !== excludeId
-    );
+  async getBookmarkedTweetsByBookmarkId(bookmarkId: string): Promise<BookmarkedTweet[]> {
+    return await StorageManager.getBookmarkedTweetsByBookmarkId(bookmarkId);
   }
 
   /**
-   * ブックマークの検証
+   * ツイートIDでブックマーク済みツイートを取得
    */
-  validateBookmark(name: string, description?: string): { isValid: boolean; errors: string[] } {
-    const errors: string[] = [];
+  async getBookmarkedTweetByTweetId(tweetId: string): Promise<BookmarkedTweet[]> {
+    return await StorageManager.getBookmarkedTweetByTweetId(tweetId);
+  }
 
-    if (!name || name.trim().length === 0) {
-      errors.push('ブックマーク名は必須です');
-    } else if (name.trim().length > 50) {
-      errors.push('ブックマーク名は50文字以内で入力してください');
+  /**
+   * ユーザー名でブックマーク済みツイートを検索
+   */
+  async getBookmarkedTweetsByUsername(username: string): Promise<BookmarkedTweet[]> {
+    return await StorageManager.getBookmarkedTweetsByUsername(username);
+  }
+
+  /**
+   * ブックマーク済みツイートを更新
+   */
+  async updateBookmarkedTweet(id: string, updates: Partial<BookmarkedTweet>): Promise<void> {
+    await StorageManager.updateBookmarkedTweet(id, updates);
+    
+    const index = this.bookmarkedTweets.findIndex(t => t.id === id);
+    if (index !== -1) {
+      this.bookmarkedTweets[index] = { ...this.bookmarkedTweets[index], ...updates };
     }
+  }
 
-    if (description && description.length > 200) {
-      errors.push('説明は200文字以内で入力してください');
+  /**
+   * ブックマーク済みツイートを削除
+   */
+  async deleteBookmarkedTweet(id: string): Promise<void> {
+    await StorageManager.deleteBookmarkedTweet(id);
+    this.bookmarkedTweets = this.bookmarkedTweets.filter(t => t.id !== id);
+  }
+
+  /**
+   * ツイートが既にブックマークされているかチェック
+   */
+  async isTweetBookmarked(tweetId: string, bookmarkId?: string): Promise<boolean> {
+    const bookmarkedTweets = await this.getBookmarkedTweetByTweetId(tweetId);
+    
+    if (bookmarkId) {
+      return bookmarkedTweets.some(tweet => tweet.bookmarkId === bookmarkId);
     }
+    
+    return bookmarkedTweets.length > 0;
+  }
 
-    if (this.isBookmarkNameDuplicate(name)) {
-      errors.push('同じ名前のブックマークが既に存在します');
-    }
-
-    return {
-      isValid: errors.length === 0,
-      errors,
-    };
+  /**
+   * ブックマークデータをクリア
+   */
+  async clearAllData(): Promise<void> {
+    await StorageManager.clearBookmarkData();
+    this.bookmarks = [];
+    this.bookmarkedTweets = [];
   }
 } 
