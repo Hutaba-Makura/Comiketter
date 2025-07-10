@@ -99,6 +99,7 @@ export interface CustomBookmark {
   createdAt: string;
   updatedAt: string;
   isActive: boolean;
+  tweetCount?: number; // ツイート数を追加
 }
 
 export interface BookmarkedTweet {

@@ -7,25 +7,45 @@
  */
 
 import { BookmarkManager } from '../utils/bookmarkManager';
-import type { Tweet, CustomBookmark } from '../types';
+import type { CustomBookmark } from '../types';
+
+jest.setTimeout(10000);
+
+// chrome.storage.localの完全なメモリモック
+beforeAll(() => {
+  const storage: Record<string, any> = {};
+  global.chrome = {
+    storage: {
+      local: {
+        get: jest.fn((keys) => Promise.resolve(typeof keys === 'string' ? { [keys]: storage[keys] } : storage)),
+        set: jest.fn((items) => {
+          Object.assign(storage, items);
+          return Promise.resolve();
+        }),
+        remove: jest.fn((keys) => {
+          if (Array.isArray(keys)) {
+            keys.forEach((k) => delete storage[k]);
+          } else {
+            delete storage[keys];
+          }
+          return Promise.resolve();
+        }),
+      },
+    },
+  } as any;
+});
+
+// 各テストでIndexedDBを無効化
+beforeEach(() => {
+  const { bookmarkDB } = require('../utils/bookmarkDB');
+  bookmarkDB.setUseIndexedDBForTest(false);
+});
 
 // モックデータ
-const mockTweet: Tweet = {
-  id: '1234567890123456789',
-  text: 'これはテストツイートです #Comiketter',
-  author: {
-    username: 'testuser',
-    displayName: 'テストユーザー',
-    profileImageUrl: 'https://example.com/avatar.jpg',
-  },
-  createdAt: new Date().toISOString(),
-  url: 'https://twitter.com/testuser/status/1234567890123456789',
-};
-
-const mockBookmark: Omit<CustomBookmark, 'id' | 'createdAt' | 'updatedAt' | 'tweetCount'> = {
+const mockBookmark: Omit<CustomBookmark, 'id' | 'createdAt' | 'updatedAt'> = {
   name: 'テストブックマーク',
   description: 'これはテスト用のブックマークです',
-  tweetIds: [],
+  isActive: true,
 };
 
 describe('BookmarkManager', () => {
@@ -37,7 +57,7 @@ describe('BookmarkManager', () => {
 
   afterEach(async () => {
     // テスト後にストレージをクリア
-    await chrome.storage.local.clear();
+    await chrome.storage.local.remove(['comiketter_bookmarks', 'comiketter_bookmarked_tweets']);
   });
 
   describe('初期化', () => {
@@ -66,8 +86,7 @@ describe('BookmarkManager', () => {
       expect(newBookmark).toMatchObject({
         name: mockBookmark.name,
         description: mockBookmark.description,
-        tweetCount: 0,
-        tweetIds: [],
+        isActive: true,
       });
       expect(newBookmark.id).toBeDefined();
       expect(newBookmark.createdAt).toBeDefined();
@@ -118,51 +137,123 @@ describe('BookmarkManager', () => {
     });
 
     it('ツイートをブックマークに追加できる', async () => {
-      await bookmarkManager.addTweetToBookmark(mockTweet, [bookmark.id]);
-
-      const updatedBookmark = (await bookmarkManager.getBookmarks()).find(
-        b => b.id === bookmark.id
+      // まずブックマーク済みツイートを作成
+      await bookmarkManager.addBookmarkedTweet(
+        bookmark.id,
+        '1234567890123456789',
+        'testuser',
+        'テストユーザー',
+        '123456789',
+        'これはテストツイートです',
+        new Date().toISOString()
       );
-      expect(updatedBookmark?.tweetIds).toContain(mockTweet.id);
-      expect(updatedBookmark?.tweetCount).toBe(1);
+
+      // ツイートがブックマークされているかチェック
+      const isBookmarked = await bookmarkManager.isTweetBookmarked('1234567890123456789', bookmark.id);
+      expect(isBookmarked).toBe(true);
     });
 
     it('同じツイートを重複して追加しない', async () => {
-      await bookmarkManager.addTweetToBookmark(mockTweet, [bookmark.id]);
-      await bookmarkManager.addTweetToBookmark(mockTweet, [bookmark.id]);
-
-      const updatedBookmark = (await bookmarkManager.getBookmarks()).find(
-        b => b.id === bookmark.id
+      const tweetId = '1234567890123456789';
+      
+      // 最初の追加
+      await bookmarkManager.addBookmarkedTweet(
+        bookmark.id,
+        tweetId,
+        'testuser',
+        'テストユーザー',
+        '123456789',
+        'これはテストツイートです',
+        new Date().toISOString()
       );
-      expect(updatedBookmark?.tweetIds).toHaveLength(1);
-      expect(updatedBookmark?.tweetCount).toBe(1);
+
+      // 同じツイートを再度追加しようとする
+      await bookmarkManager.addBookmarkedTweet(
+        bookmark.id,
+        tweetId,
+        'testuser',
+        'テストユーザー',
+        '123456789',
+        'これはテストツイートです',
+        new Date().toISOString()
+      );
+
+      // ツイートが1つだけ存在することを確認
+      const bookmarkedTweets = await bookmarkManager.getBookmarkedTweetByTweetId(tweetId);
+      expect(bookmarkedTweets).toHaveLength(1);
     });
 
     it('ツイートがブックマークされているかチェックできる', async () => {
-      expect(bookmarkManager.isTweetBookmarked(mockTweet.id, bookmark.id)).toBe(false);
-
-      await bookmarkManager.addTweetToBookmark(mockTweet, [bookmark.id]);
+      const tweetId = '1234567890123456789';
       
-      expect(bookmarkManager.isTweetBookmarked(mockTweet.id, bookmark.id)).toBe(true);
+      // 最初はブックマークされていない
+      const isBookmarkedBefore = await bookmarkManager.isTweetBookmarked(tweetId, bookmark.id);
+      expect(isBookmarkedBefore).toBe(false);
+
+      // ブックマークに追加
+      await bookmarkManager.addBookmarkedTweet(
+        bookmark.id,
+        tweetId,
+        'testuser',
+        'テストユーザー',
+        '123456789',
+        'これはテストツイートです',
+        new Date().toISOString()
+      );
+      
+      // ブックマークされていることを確認
+      const isBookmarkedAfter = await bookmarkManager.isTweetBookmarked(tweetId, bookmark.id);
+      expect(isBookmarkedAfter).toBe(true);
     });
 
     it('ツイートをブックマークから削除できる', async () => {
-      await bookmarkManager.addTweetToBookmark(mockTweet, [bookmark.id]);
-      await bookmarkManager.removeTweetFromBookmark(mockTweet.id, bookmark.id);
-
-      const updatedBookmark = (await bookmarkManager.getBookmarks()).find(
-        b => b.id === bookmark.id
+      const tweetId = '1234567890123456789';
+      
+      // ブックマークに追加
+      const bookmarkedTweet = await bookmarkManager.addBookmarkedTweet(
+        bookmark.id,
+        tweetId,
+        'testuser',
+        'テストユーザー',
+        '123456789',
+        'これはテストツイートです',
+        new Date().toISOString()
       );
-      expect(updatedBookmark?.tweetIds).not.toContain(mockTweet.id);
-      expect(updatedBookmark?.tweetCount).toBe(0);
+
+      // 削除
+      await bookmarkManager.deleteBookmarkedTweet(bookmarkedTweet.id);
+
+      // 削除されたことを確認
+      const isBookmarked = await bookmarkManager.isTweetBookmarked(tweetId, bookmark.id);
+      expect(isBookmarked).toBe(false);
     });
 
     it('ツイートがどのブックマークに保存されているか取得できる', async () => {
+      const tweetId = '1234567890123456789';
       const bookmark2 = await bookmarkManager.addBookmark('ブックマーク2', '説明2');
       
-      await bookmarkManager.addTweetToBookmark(mockTweet, [bookmark.id, bookmark2.id]);
+      // 両方のブックマークに追加
+      await bookmarkManager.addBookmarkedTweet(
+        bookmark.id,
+        tweetId,
+        'testuser',
+        'テストユーザー',
+        '123456789',
+        'これはテストツイートです',
+        new Date().toISOString()
+      );
       
-      const bookmarksForTweet = bookmarkManager.getBookmarksForTweet(mockTweet.id);
+      await bookmarkManager.addBookmarkedTweet(
+        bookmark2.id,
+        tweetId,
+        'testuser',
+        'テストユーザー',
+        '123456789',
+        'これはテストツイートです',
+        new Date().toISOString()
+      );
+      
+      const bookmarksForTweet = await bookmarkManager.getBookmarksForTweet(tweetId);
       expect(bookmarksForTweet).toHaveLength(2);
       expect(bookmarksForTweet.map(b => b.id)).toContain(bookmark.id);
       expect(bookmarksForTweet.map(b => b.id)).toContain(bookmark2.id);
@@ -177,72 +268,78 @@ describe('BookmarkManager', () => {
       await bookmarkManager.addBookmark('ガンマブックマーク', '説明C');
     });
 
-    it('ブックマーク名で検索できる', () => {
-      const results = bookmarkManager.searchBookmarks('アルファ');
+    it('ブックマーク名で検索できる', async () => {
+      const results = await bookmarkManager.searchBookmarks('アルファ');
       expect(results).toHaveLength(1);
       expect(results[0].name).toBe('アルファブックマーク');
     });
 
-    it('説明文で検索できる', () => {
-      const results = bookmarkManager.searchBookmarks('説明B');
+    it('説明文で検索できる', async () => {
+      const results = await bookmarkManager.searchBookmarks('説明B');
       expect(results).toHaveLength(1);
       expect(results[0].name).toBe('ベータブックマーク');
     });
 
-    it('大文字小文字を区別しない検索', () => {
-      const results = bookmarkManager.searchBookmarks('アルファ');
+    it('大文字小文字を区別しない検索', async () => {
+      const results = await bookmarkManager.searchBookmarks('アルファ');
       expect(results).toHaveLength(1);
     });
 
-    it('名前で並び替えできる（昇順）', () => {
-      const sorted = bookmarkManager.sortBookmarks('name', 'asc');
+    it('名前で並び替えできる', async () => {
+      const bookmarks = await bookmarkManager.getBookmarks();
+      const sorted = await bookmarkManager.sortBookmarks(bookmarks, 'name');
       expect(sorted[0].name).toBe('アルファブックマーク');
       expect(sorted[1].name).toBe('ガンマブックマーク');
       expect(sorted[2].name).toBe('ベータブックマーク');
     });
 
-    it('名前で並び替えできる（降順）', () => {
-      const sorted = bookmarkManager.sortBookmarks('name', 'desc');
-      expect(sorted[0].name).toBe('ベータブックマーク');
-      expect(sorted[1].name).toBe('ガンマブックマーク');
-      expect(sorted[2].name).toBe('アルファブックマーク');
+    it('作成日で並び替えできる', async () => {
+      const bookmarks = await bookmarkManager.getBookmarks();
+      const sorted = await bookmarkManager.sortBookmarks(bookmarks, 'createdAt');
+      expect(sorted.length).toBe(3);
     });
   });
 
   describe('バリデーション', () => {
-    it('空の名前は無効', () => {
-      const validation = bookmarkManager.validateBookmark('');
+    it('空の名前は無効', async () => {
+      const validation = await bookmarkManager.validateBookmark('');
       expect(validation.isValid).toBe(false);
-      expect(validation.errors).toContain('ブックマーク名は必須です');
+      expect(validation.error).toBe('ブックマーク名は必須です');
     });
 
-    it('長すぎる名前は無効', () => {
+    it('長すぎる名前は無効', async () => {
       const longName = 'a'.repeat(51);
-      const validation = bookmarkManager.validateBookmark(longName);
+      const validation = await bookmarkManager.validateBookmark(longName);
       expect(validation.isValid).toBe(false);
-      expect(validation.errors).toContain('ブックマーク名は50文字以内で入力してください');
-    });
-
-    it('長すぎる説明は無効', () => {
-      const longDescription = 'a'.repeat(201);
-      const validation = bookmarkManager.validateBookmark('テスト', longDescription);
-      expect(validation.isValid).toBe(false);
-      expect(validation.errors).toContain('説明は200文字以内で入力してください');
+      expect(validation.error).toBe('ブックマーク名は50文字以内で入力してください');
     });
 
     it('重複する名前は無効', async () => {
       await bookmarkManager.initialize();
-      await bookmarkManager.addBookmark('重複テスト', '説明');
+      await bookmarkManager.addBookmark('テストブックマーク', '説明');
       
-      const validation = bookmarkManager.validateBookmark('重複テスト');
+      const validation = await bookmarkManager.validateBookmark('テストブックマーク');
       expect(validation.isValid).toBe(false);
-      expect(validation.errors).toContain('同じ名前のブックマークが既に存在します');
+      expect(validation.error).toBe('同じ名前のブックマークが既に存在します');
     });
 
-    it('有効なブックマークは検証を通過', () => {
-      const validation = bookmarkManager.validateBookmark('有効な名前', '有効な説明');
+    it('有効な名前は検証を通過する', async () => {
+      const validation = await bookmarkManager.validateBookmark('有効なブックマーク名');
       expect(validation.isValid).toBe(true);
-      expect(validation.errors).toHaveLength(0);
+    });
+  });
+
+  describe('統計情報', () => {
+    beforeEach(async () => {
+      await bookmarkManager.initialize();
+    });
+
+    it('ブックマーク統計を取得できる', async () => {
+      const stats = await bookmarkManager.getBookmarkStats();
+      expect(stats).toHaveProperty('totalBookmarks');
+      expect(stats).toHaveProperty('totalTweets');
+      expect(stats).toHaveProperty('activeBookmarks');
+      expect(stats).toHaveProperty('tweetsByBookmark');
     });
   });
 }); 

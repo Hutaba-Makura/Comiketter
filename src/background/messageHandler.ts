@@ -109,7 +109,16 @@ export class MessageHandler {
           break;
 
         case 'BOOKMARK_ACTION':
-          sendResponse(await this.handleBookmarkMessage(message.payload));
+          try {
+            const result = await this.handleBookmarkMessage(message.payload);
+            sendResponse({ success: true, data: result });
+          } catch (error) {
+            console.error('Bookmark action failed:', error);
+            sendResponse({ 
+              success: false, 
+              error: error instanceof Error ? error.message : 'Unknown error' 
+            });
+          }
           break;
 
         default:

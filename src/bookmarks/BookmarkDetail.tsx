@@ -161,7 +161,7 @@ export const BookmarkDetail: React.FC<BookmarkDetailProps> = ({
                 <Group justify="space-between" align="flex-start">
                   <div style={{ flex: 1 }}>
                     <Text size="sm" mb="xs">
-                      {bookmarkedTweet.tweet.text}
+                      {bookmarkedTweet.content}
                     </Text>
                     <Text size="xs" color="dimmed">
                       保存日: {formatDate(bookmarkedTweet.savedAt)}

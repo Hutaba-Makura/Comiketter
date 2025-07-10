@@ -45,7 +45,7 @@ interface BookmarkSelectorState {
   newBookmarkDescription: string;
   errorMessage: string;
   searchQuery: string;
-  sortBy: 'name' | 'createdAt' | 'updatedAt' | 'tweetCount';
+  sortBy: 'name' | 'createdAt' | 'updatedAt';
   sortOrder: 'asc' | 'desc';
   theme: 'light' | 'darkBlue' | 'black';
 }
@@ -306,10 +306,10 @@ export const BookmarkSelector: React.FC<BookmarkSelectorProps> = ({
     try {
       await bookmarkManager.initialize();
       const bookmarks = await bookmarkManager.getBookmarks();
-      const sortedBookmarks = bookmarkManager.sortBookmarks(state.sortBy, state.sortOrder);
+      const sortedBookmarks = await bookmarkManager.sortBookmarks(bookmarks, state.sortBy);
       
       // 既にブックマークされているものを選択状態にする
-      const bookmarkedIds = bookmarkManager.getBookmarksForTweet(tweet.id).map(b => b.id);
+      const bookmarkedIds = (await bookmarkManager.getBookmarksForTweet(tweet.id)).map(b => b.id);
       
       setState(prev => ({
         ...prev,
@@ -362,11 +362,11 @@ export const BookmarkSelector: React.FC<BookmarkSelectorProps> = ({
     const { newBookmarkName, newBookmarkDescription } = state;
     
     // バリデーション
-    const validation = bookmarkManager.validateBookmark(newBookmarkName, newBookmarkDescription);
+    const validation = await bookmarkManager.validateBookmark(newBookmarkName);
     if (!validation.isValid) {
       setState(prev => ({
         ...prev,
-        errorMessage: validation.errors.join(', '),
+        errorMessage: validation.error || 'バリデーションエラー',
       }));
       return;
     }
@@ -395,7 +395,10 @@ export const BookmarkSelector: React.FC<BookmarkSelectorProps> = ({
   // ブックマークを保存
   const saveBookmarks = async () => {
     try {
-      await bookmarkManager.addTweetToBookmark(tweet, state.selectedBookmarks);
+      // 各ブックマークにツイートを追加
+      for (const bookmarkId of state.selectedBookmarks) {
+        await bookmarkManager.addTweetToBookmark(bookmarkId, tweet.id);
+      }
       onBookmarkAdded(state.selectedBookmarks);
       onClose();
     } catch (error) {
@@ -416,14 +419,15 @@ export const BookmarkSelector: React.FC<BookmarkSelectorProps> = ({
   }, []);
 
   // 並び替えを更新
-  const updateSort = useCallback((sortBy: 'name' | 'createdAt' | 'updatedAt' | 'tweetCount', order: 'asc' | 'desc') => {
+  const updateSort = useCallback(async (sortBy: 'name' | 'createdAt' | 'updatedAt', order: 'asc' | 'desc') => {
+    const sortedBookmarks = await bookmarkManager.sortBookmarks(state.bookmarks, sortBy);
     setState(prev => ({
       ...prev,
       sortBy,
       sortOrder: order,
-      bookmarks: bookmarkManager.sortBookmarks(sortBy, order),
+      bookmarks: sortedBookmarks,
     }));
-  }, [bookmarkManager]);
+  }, [bookmarkManager, state.bookmarks]);
 
   // フィルタリングされたブックマークを取得
   const filteredBookmarks = state.bookmarks.filter(bookmark =>
@@ -508,7 +512,7 @@ export const BookmarkSelector: React.FC<BookmarkSelectorProps> = ({
               <select
                 value={`${state.sortBy}-${state.sortOrder}`}
                 onChange={(e) => {
-                  const [sortBy, sortOrder] = e.target.value.split('-') as ['name' | 'createdAt' | 'updatedAt' | 'tweetCount', 'asc' | 'desc'];
+                  const [sortBy, sortOrder] = e.target.value.split('-') as ['name' | 'createdAt' | 'updatedAt', 'asc' | 'desc'];
                   updateSort(sortBy, sortOrder);
                 }}
                 style={{
@@ -522,8 +526,7 @@ export const BookmarkSelector: React.FC<BookmarkSelectorProps> = ({
                 <option value="updatedAt-asc">更新日時（古い順）</option>
                 <option value="name-asc">名前（A-Z）</option>
                 <option value="name-desc">名前（Z-A）</option>
-                <option value="tweetCount-desc">ツイート数（多い順）</option>
-                <option value="tweetCount-asc">ツイート数（少ない順）</option>
+
                 <option value="createdAt-desc">作成日時（新しい順）</option>
                 <option value="createdAt-asc">作成日時（古い順）</option>
               </select>
@@ -568,7 +571,7 @@ export const BookmarkSelector: React.FC<BookmarkSelectorProps> = ({
                       </div>
                     )}
                     <div className="comiketter-bookmark-count" style={{ color: themeStyles.secondaryText.color }}>
-                      {bookmark.tweetCount}件のツイート • {formatDate(bookmark.updatedAt)}更新
+                      {formatDate(bookmark.updatedAt)}更新
                     </div>
                   </label>
                 </div>

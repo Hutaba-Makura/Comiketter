@@ -9,7 +9,7 @@
 /// <reference lib="dom" />
 
 import { BaseButton, ButtonConfig } from './baseButton';
-import { BookmarkManager } from '../../utils/bookmarkManager';
+import { BookmarkApiClient } from '../../utils/bookmarkApiClient';
 import type { Tweet } from '../../types';
 
 // ログ送信関数
@@ -402,9 +402,8 @@ export class BookmarkButton extends BaseButton {
       
       this.currentTweetInfo = tweetInfo;
       
-      // BookmarkManagerを初期化
-      const bookmarkManager = BookmarkManager.getInstance();
-      await bookmarkManager.initialize();
+      // BookmarkApiClientを初期化
+      const bookmarkManager = BookmarkApiClient.getInstance();
       
       // テーマ検出を実行（BookmarkSelectorの初期化をシミュレート）
       sendLog('BookmarkSelector初期化開始');
@@ -513,9 +512,9 @@ export class BookmarkButton extends BaseButton {
     const content = document.createElement('div');
     content.className = 'comiketter-bookmark-selector-content';
     
-    // BookmarkManagerからブックマーク一覧を取得
-    const bookmarkManager = BookmarkManager.getInstance();
-    const bookmarks = await bookmarkManager.getBookmarks();
+          // BookmarkApiClientからブックマーク一覧を取得
+      const bookmarkManager = BookmarkApiClient.getInstance();
+      const bookmarks = await bookmarkManager.getBookmarks();
     
     if (bookmarks.length === 0) {
       // ブックマークがない場合
@@ -562,7 +561,7 @@ export class BookmarkButton extends BaseButton {
         
         const count = document.createElement('div');
         count.className = 'comiketter-bookmark-count';
-        count.textContent = `${bookmark.tweetCount}件のツイート`;
+        count.textContent = `更新: ${new Date(bookmark.updatedAt).toLocaleDateString('ja-JP')}`;
         
         label.appendChild(name);
         label.appendChild(count);
@@ -713,7 +712,7 @@ export class BookmarkButton extends BaseButton {
     }
     
     try {
-      const bookmarkManager = BookmarkManager.getInstance();
+      const bookmarkManager = BookmarkApiClient.getInstance();
       const newBookmark = await bookmarkManager.addBookmark(name.trim(), description.trim());
       
       // ブックマーク選択UIを再表示
@@ -737,7 +736,7 @@ export class BookmarkButton extends BaseButton {
     }
     
     try {
-      const bookmarkManager = BookmarkManager.getInstance();
+      const bookmarkManager = BookmarkApiClient.getInstance();
       const selectedBookmarks = this.getSelectedBookmarks();
       
       if (selectedBookmarks.length === 0) {
@@ -745,7 +744,10 @@ export class BookmarkButton extends BaseButton {
         return;
       }
       
-      await bookmarkManager.addTweetToBookmark(this.currentTweetInfo, selectedBookmarks);
+      // 各ブックマークにツイートを追加
+      for (const bookmarkId of selectedBookmarks) {
+        await bookmarkManager.addTweetToBookmark(bookmarkId, this.currentTweetInfo.id, this.currentTweetInfo);
+      }
       
       console.log('Comiketter: Saved tweet to bookmarks:', selectedBookmarks);
       this.hideBookmarkSelector();

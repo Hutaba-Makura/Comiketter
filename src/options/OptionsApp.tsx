@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Title, Text, Switch, Select, Button, Stack, Group, Divider } from '@mantine/core';
 import { StorageManager } from '@/utils/storage';
 import { FilenameSettings } from '@/components/FilenameSettings';
-import { BookmarkManagerComponent } from '@/components/BookmarkManager';
+import { BookmarkManager } from '@/components/BookmarkManager';
 import type { Settings } from '@/types';
 
 export const OptionsApp: React.FC = () => {
@@ -161,7 +161,7 @@ export const OptionsApp: React.FC = () => {
           <Text size="sm" c="dimmed">
             ツイートを保存するカスタムブックマークを作成・管理できます。
           </Text>
-          <BookmarkManagerComponent />
+          <BookmarkManager />
         </Stack>
         
         <Group justify="flex-end">

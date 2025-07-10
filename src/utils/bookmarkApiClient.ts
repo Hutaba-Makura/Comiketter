@@ -3,41 +3,47 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  * 
- * Comiketter: カスタムブックマーク管理サービス
+ * Comiketter: ブックマークAPIクライアント（コンテンツスクリプト用）
  */
 
 import type { CustomBookmark, BookmarkedTweet, BookmarkStats } from '../types';
-import { StorageManager } from './storage';
 
 /**
- * カスタムブックマーク管理クラス
+ * コンテンツスクリプトからbackground scriptを経由してブックマーク機能にアクセスするクライアント
  */
-export class BookmarkManager {
-  private static instance: BookmarkManager;
-  private bookmarks: CustomBookmark[] = [];
-  private bookmarkedTweets: BookmarkedTweet[] = [];
+export class BookmarkApiClient {
+  private static instance: BookmarkApiClient;
 
   private constructor() {}
 
   /**
    * シングルトンインスタンスを取得
    */
-  static getInstance(): BookmarkManager {
-    if (!BookmarkManager.instance) {
-      BookmarkManager.instance = new BookmarkManager();
+  static getInstance(): BookmarkApiClient {
+    if (!BookmarkApiClient.instance) {
+      BookmarkApiClient.instance = new BookmarkApiClient();
     }
-    return BookmarkManager.instance;
+    return BookmarkApiClient.instance;
   }
 
   /**
-   * 初期化
+   * background scriptにメッセージを送信
    */
-  async initialize(): Promise<void> {
+  private async sendMessage(action: string, data?: any): Promise<any> {
     try {
-      this.bookmarks = await StorageManager.getCustomBookmarks();
-      console.log('BookmarkManager initialized with', this.bookmarks.length, 'bookmarks');
+      const response = await chrome.runtime.sendMessage({
+        type: 'BOOKMARK_ACTION',
+        payload: { action, data }
+      });
+      
+      if (response && response.success === false) {
+        throw new Error(response.error || 'Unknown error');
+      }
+      
+      return response.data || response;
     } catch (error) {
-      console.error('Failed to initialize BookmarkManager:', error);
+      console.error('BookmarkApiClient: Failed to send message:', error);
+      throw error;
     }
   }
 
@@ -45,49 +51,40 @@ export class BookmarkManager {
    * 全ブックマークを取得
    */
   async getBookmarks(): Promise<CustomBookmark[]> {
-    return this.bookmarks;
+    return await this.sendMessage('getBookmarks');
   }
 
   /**
    * カスタムブックマークを追加
    */
   async addBookmark(name: string, description?: string, color?: string): Promise<CustomBookmark> {
-    const newBookmark = await StorageManager.addCustomBookmark({
+    return await this.sendMessage('addBookmark', {
       name,
       description,
       color,
       isActive: true,
     });
-
-    this.bookmarks.push(newBookmark);
-    return newBookmark;
   }
 
   /**
    * カスタムブックマークを更新
    */
   async updateBookmark(id: string, updates: Partial<CustomBookmark>): Promise<void> {
-    await StorageManager.updateCustomBookmark(id, updates);
-    
-    const index = this.bookmarks.findIndex(b => b.id === id);
-    if (index !== -1) {
-      this.bookmarks[index] = { ...this.bookmarks[index], ...updates };
-    }
+    return await this.sendMessage('updateBookmark', { id, updates });
   }
 
   /**
    * カスタムブックマークを削除
    */
   async deleteBookmark(id: string): Promise<void> {
-    await StorageManager.deleteCustomBookmark(id);
-    this.bookmarks = this.bookmarks.filter(b => b.id !== id);
+    return await this.sendMessage('deleteBookmark', { id });
   }
 
   /**
    * ブックマーク統計を取得
    */
   async getBookmarkStats(): Promise<BookmarkStats> {
-    return await StorageManager.getBookmarkStats();
+    return await this.sendMessage('getBookmarkStats');
   }
 
   /**
@@ -109,19 +106,7 @@ export class BookmarkManager {
     replyToUsername?: string,
     saveType: 'url' | 'blob' | 'mixed' = 'url'
   ): Promise<BookmarkedTweet> {
-    // 重複チェック：同じツイートIDとブックマークIDの組み合わせが既に存在するかチェック
-    const existingTweets = await this.getBookmarkedTweetByTweetId(tweetId);
-    const isDuplicate = existingTweets.some(tweet => tweet.bookmarkId === bookmarkId);
-    
-    if (isDuplicate) {
-      // 既に存在する場合は、既存のツイートを返す
-      const existingTweet = existingTweets.find(tweet => tweet.bookmarkId === bookmarkId);
-      if (existingTweet) {
-        return existingTweet;
-      }
-    }
-
-    const newTweet = await StorageManager.addBookmarkedTweet({
+    return await this.sendMessage('addBookmarkedTweet', {
       bookmarkId,
       tweetId,
       authorUsername,
@@ -137,50 +122,41 @@ export class BookmarkManager {
       replyToUsername,
       saveType,
     });
-
-    this.bookmarkedTweets.push(newTweet);
-    return newTweet;
   }
 
   /**
    * ブックマークIDでツイートを取得
    */
   async getBookmarkedTweetsByBookmarkId(bookmarkId: string): Promise<BookmarkedTweet[]> {
-    return await StorageManager.getBookmarkedTweetsByBookmarkId(bookmarkId);
+    return await this.sendMessage('getBookmarkedTweetsByBookmarkId', { bookmarkId });
   }
 
   /**
    * ツイートIDでブックマーク済みツイートを取得
    */
   async getBookmarkedTweetByTweetId(tweetId: string): Promise<BookmarkedTweet[]> {
-    return await StorageManager.getBookmarkedTweetByTweetId(tweetId);
+    return await this.sendMessage('getBookmarkedTweetByTweetId', { tweetId });
   }
 
   /**
    * ユーザー名でブックマーク済みツイートを検索
    */
   async getBookmarkedTweetsByUsername(username: string): Promise<BookmarkedTweet[]> {
-    return await StorageManager.getBookmarkedTweetsByUsername(username);
+    return await this.sendMessage('getBookmarkedTweetsByUsername', { username });
   }
 
   /**
    * ブックマーク済みツイートを更新
    */
   async updateBookmarkedTweet(id: string, updates: Partial<BookmarkedTweet>): Promise<void> {
-    await StorageManager.updateBookmarkedTweet(id, updates);
-    
-    const index = this.bookmarkedTweets.findIndex(t => t.id === id);
-    if (index !== -1) {
-      this.bookmarkedTweets[index] = { ...this.bookmarkedTweets[index], ...updates };
-    }
+    return await this.sendMessage('updateBookmarkedTweet', { id, updates });
   }
 
   /**
    * ブックマーク済みツイートを削除
    */
   async deleteBookmarkedTweet(id: string): Promise<void> {
-    await StorageManager.deleteBookmarkedTweet(id);
-    this.bookmarkedTweets = this.bookmarkedTweets.filter(t => t.id !== id);
+    return await this.sendMessage('deleteBookmarkedTweet', { id });
   }
 
   /**
@@ -197,48 +173,74 @@ export class BookmarkManager {
   }
 
   /**
-   * ブックマークデータをクリア
-   */
-  async clearAllData(): Promise<void> {
-    await StorageManager.clearBookmarkData();
-    this.bookmarks = [];
-    this.bookmarkedTweets = [];
-  }
-
-  /**
    * ツイートをブックマークに追加（簡易版）
    */
-  async addTweetToBookmark(bookmarkId: string, tweetId: string): Promise<void> {
-    // 既存のツイート情報を取得してブックマークに追加
-    // 実際の実装では、ツイートの詳細情報も必要
-    const tweet = await this.getBookmarkedTweetByTweetId(tweetId);
-    if (tweet.length === 0) {
-      throw new Error('Tweet not found');
-    }
-    
+  async addTweetToBookmark(bookmarkId: string, tweetId: string, tweetInfo?: any): Promise<void> {
     // 既にブックマークされているかチェック
     const isAlreadyBookmarked = await this.isTweetBookmarked(tweetId, bookmarkId);
     if (isAlreadyBookmarked) {
       return; // 既にブックマーク済み
     }
     
-    // 新しいブックマーク済みツイートとして追加
-    await this.addBookmarkedTweet(
-      bookmarkId,
-      tweetId,
-      tweet[0].authorUsername,
-      tweet[0].authorDisplayName || '',
-      tweet[0].authorId || '',
-      tweet[0].content,
-      tweet[0].tweetDate,
-      tweet[0].isRetweet,
-      tweet[0].isReply,
-      tweet[0].mediaUrls,
-      tweet[0].mediaTypes,
-      tweet[0].replyToTweetId,
-      tweet[0].replyToUsername,
-      tweet[0].saveType
-    );
+    // 既存のツイート情報を取得
+    const existingTweets = await this.getBookmarkedTweetByTweetId(tweetId);
+    
+    if (existingTweets.length > 0) {
+      // 既存のツイート情報がある場合は、それをコピーして新しいブックマークに追加
+      const existingTweet = existingTweets[0];
+      await this.addBookmarkedTweet(
+        bookmarkId,
+        tweetId,
+        existingTweet.authorUsername,
+        existingTweet.authorDisplayName || '',
+        existingTweet.authorId || '',
+        existingTweet.content,
+        existingTweet.tweetDate,
+        existingTweet.isRetweet,
+        existingTweet.isReply,
+        existingTweet.mediaUrls,
+        existingTweet.mediaTypes,
+        existingTweet.replyToTweetId,
+        existingTweet.replyToUsername,
+        existingTweet.saveType
+      );
+    } else if (tweetInfo) {
+      // ツイート情報が提供されている場合は、それを使用して新しいブックマーク済みツイートを作成
+      await this.addBookmarkedTweet(
+        bookmarkId,
+        tweetId,
+        tweetInfo.author?.username || 'unknown',
+        tweetInfo.author?.displayName || '',
+        tweetInfo.author?.id || '',
+        tweetInfo.text || '',
+        tweetInfo.createdAt || new Date().toISOString(),
+        false, // isRetweet
+        false, // isReply
+        tweetInfo.media?.map((m: any) => m.url) || [],
+        tweetInfo.media?.map((m: any) => m.type) || [],
+        undefined, // replyToTweetId
+        undefined, // replyToUsername
+        'url' // saveType
+      );
+    } else {
+      // ツイート情報がない場合は、最小限の情報で作成
+      await this.addBookmarkedTweet(
+        bookmarkId,
+        tweetId,
+        'unknown',
+        '',
+        '',
+        `Tweet ID: ${tweetId}`,
+        new Date().toISOString(),
+        false,
+        false,
+        [],
+        [],
+        undefined,
+        undefined,
+        'url'
+      );
+    }
   }
 
   /**
@@ -260,15 +262,17 @@ export class BookmarkManager {
     const bookmarkedTweets = await this.getBookmarkedTweetByTweetId(tweetId);
     const bookmarkIds = [...new Set(bookmarkedTweets.map(tweet => tweet.bookmarkId))];
     
-    return this.bookmarks.filter(bookmark => bookmarkIds.includes(bookmark.id));
+    const allBookmarks = await this.getBookmarks();
+    return allBookmarks.filter(bookmark => bookmarkIds.includes(bookmark.id));
   }
 
   /**
    * ブックマークを検索
    */
   async searchBookmarks(query: string): Promise<CustomBookmark[]> {
+    const bookmarks = await this.getBookmarks();
     const lowerQuery = query.toLowerCase();
-    return this.bookmarks.filter(bookmark => 
+    return bookmarks.filter(bookmark => 
       bookmark.name.toLowerCase().includes(lowerQuery) ||
       (bookmark.description && bookmark.description.toLowerCase().includes(lowerQuery))
     );
@@ -305,7 +309,8 @@ export class BookmarkManager {
     }
     
     // 重複チェック
-    const existingBookmark = this.bookmarks.find(b => 
+    const bookmarks = await this.getBookmarks();
+    const existingBookmark = bookmarks.find(b => 
       b.name.toLowerCase() === name.toLowerCase() && b.id !== excludeId
     );
     
@@ -314,5 +319,12 @@ export class BookmarkManager {
     }
     
     return { isValid: true };
+  }
+
+  /**
+   * ブックマークデータをクリア
+   */
+  async clearAllData(): Promise<void> {
+    return await this.sendMessage('clearBookmarkData');
   }
 } 
