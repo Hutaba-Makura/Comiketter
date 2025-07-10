@@ -33,7 +33,10 @@ export class SidebarButton {
   private static instance: SidebarButton;
   private button: HTMLElement | null = null;
   private isInitialized = false;
-  private reinitInterval: NodeJS.Timeout | null = null;
+  private observer: MutationObserver | null = null;
+  private processedElements = new WeakSet<HTMLElement>();
+  private processingTimeout: number | null = null;
+  private pendingNodes: HTMLElement[] = [];
 
   private constructor() {}
 
@@ -66,88 +69,242 @@ export class SidebarButton {
       // 少し待機してからサイドバーの検出を開始
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // サイドバーの検出を待機
-      await this.waitForSidebar();
+      // 既存のサイドバーにボタンを追加
+      this.initializeExistingSidebar();
       
-      // ボタンを作成・追加
-      this.createSidebarButton();
+      // 動的コンテンツの監視を開始
+      this.startObserving();
       
       this.isInitialized = true;
       sendLog('サイドバーボタン初期化完了');
-      
-      // 定期的な再初期化を開始
-      this.startPeriodicReinitialization();
     } catch (error) {
       sendLog('サイドバーボタン初期化エラー:', error);
     }
   }
 
   /**
-   * 定期的な再初期化を開始
+   * 既存のサイドバーにボタンを追加
    */
-  private startPeriodicReinitialization(): void {
-    if (this.reinitInterval) {
-      clearInterval(this.reinitInterval);
-    }
+  private initializeExistingSidebar(): void {
+    sendLog('既存サイドバーの初期化開始');
     
-    this.reinitInterval = setInterval(() => {
-      // ボタンが存在するかチェック
-      const existingButton = document.querySelector('[data-testid="comiketter-sidebar-button"]');
-      if (!existingButton && this.isInitialized) {
-        sendLog('ボタンが見つからないため再作成');
+    const sidebar = this.findSidebar();
+    if (sidebar) {
+      sendLog('サイドバー要素を発見、ボタン追加を試行');
+      if (this.shouldAddButton(sidebar)) {
+        sendLog('ボタン追加条件を満たしたため、createSidebarButtonを実行');
         this.createSidebarButton();
+      } else {
+        sendLog('ボタン追加条件を満たさないため、スキップ');
       }
-    }, 5000); // 5秒ごとにチェック
+    } else {
+      sendLog('サイドバー要素が見つからないため、スキップ');
+    }
   }
 
   /**
-   * サイドバーの検出を待機
+   * MutationObserverを開始して動的コンテンツを監視
    */
-  private async waitForSidebar(): Promise<void> {
-    return new Promise((resolve) => {
-      const checkSidebar = () => {
-        const sidebar = this.findSidebar();
-        if (sidebar) {
-          resolve();
-        } else {
-          setTimeout(checkSidebar, 1000);
-        }
-      };
-      checkSidebar();
+  private startObserving(): void {
+    const options: MutationObserverInit = {
+      childList: true,
+      subtree: true,
+    };
+
+    this.observer = new MutationObserver((mutations) => {
+      // パフォーマンス向上のため、バッチ処理
+      const addedNodes: HTMLElement[] = [];
+      
+      mutations.forEach((mutation) => {
+        mutation.addedNodes.forEach((node) => {
+          if (node instanceof HTMLElement) {
+            addedNodes.push(node);
+          }
+        });
+      });
+
+      if (addedNodes.length > 0) {
+        // デバウンス処理でパフォーマンスを改善
+        this.debouncedProcessNodes(addedNodes);
+      }
     });
+
+    // 複数の監視対象を試行
+    const observeTargets = [
+      { selector: '[data-testid="sidebarColumn"]', name: 'sidebar column' },
+      { selector: '[role="banner"]', name: 'banner' },
+      { selector: '[role="complementary"]', name: 'complementary' },
+      { selector: 'body', name: 'body' },
+    ];
+
+    for (const target of observeTargets) {
+      const element = document.querySelector(target.selector);
+      if (element) {
+        this.observer.observe(element, options);
+        sendLog(`監視開始: ${target.name}`);
+        break;
+      }
+    }
+  }
+
+  /**
+   * デバウンス処理でノードを処理
+   */
+  private debouncedProcessNodes(nodes: HTMLElement[]): void {
+    // 既存のタイムアウトをクリア
+    if (this.processingTimeout) {
+      clearTimeout(this.processingTimeout);
+    }
+
+    // 新しいノードを追加
+    this.pendingNodes.push(...nodes);
+
+    // 100ms後にバッチ処理を実行
+    this.processingTimeout = window.setTimeout(() => {
+      this.processBatchNodes();
+    }, 100);
+  }
+
+  /**
+   * バッチでノードを処理
+   */
+  private processBatchNodes(): void {
+    if (this.pendingNodes.length === 0) return;
+
+    // 各ノードを処理
+    this.pendingNodes.forEach(node => {
+      this.processAddedNode(node);
+    });
+
+    // 処理済みノードをクリア
+    this.pendingNodes = [];
+    this.processingTimeout = null;
+  }
+
+  /**
+   * 追加されたノードを処理
+   */
+  private processAddedNode(node: HTMLElement): void {
+    // 既に処理済みの場合はスキップ
+    if (this.processedElements.has(node)) {
+      return;
+    }
+
+    // 処理済みとしてマーク
+    this.processedElements.add(node);
+
+    // サイドバーセレクターを試行
+    const sidebarSelectors = [
+      '[data-testid="sidebarColumn"]',
+      '[role="complementary"]',
+      'nav[role="navigation"]',
+      '[role="banner"] nav',
+    ];
+
+    // 直接サイドバー要素の場合
+    for (const selector of sidebarSelectors) {
+      if (node.matches(selector)) {
+        if (this.shouldAddButton(node)) {
+          this.createSidebarButton();
+        }
+        return;
+      }
+    }
+
+    // 子要素にサイドバーが含まれている場合
+    for (const selector of sidebarSelectors) {
+      const sidebars = node.querySelectorAll(selector);
+      if (sidebars.length > 0) {
+        sidebars.forEach((sidebar) => {
+          if (this.shouldAddButton(sidebar as HTMLElement)) {
+            this.createSidebarButton();
+          }
+        });
+        return;
+      }
+    }
+  }
+
+  /**
+   * ボタンを追加すべきかどうかを判定
+   */
+  private shouldAddButton(sidebar: HTMLElement): boolean {
+    // 既にボタンが追加されている場合はスキップ
+    const existingButton = sidebar.querySelector('[data-testid="comiketter-sidebar-button"]');
+    const shouldAdd = !existingButton;
+    
+    sendLog('shouldAddButton判定:', {
+      sidebarTagName: sidebar.tagName,
+      sidebarRole: sidebar.getAttribute('role'),
+      existingButton: !!existingButton,
+      shouldAdd: shouldAdd
+    });
+    
+    return shouldAdd;
   }
 
   /**
    * サイドバー要素を検索
    */
   private findSidebar(): HTMLElement | null {
-    // 複数のセレクターでサイドバーを検索
+    sendLog('サイドバー要素の検索開始');
+    
+    // 現在のページのURLを確認
+    const currentUrl = window.location.href;
+    sendLog('現在のURL:', currentUrl);
+    
+    // 複数のセレクターでサイドバーを検索（優先順位順）
     const selectors = [
+      // メインのナビゲーション
       '[data-testid="sidebarColumn"]',
       '[role="complementary"]',
       'nav[role="navigation"]',
-      '[data-testid="primaryColumn"] + div',
-      // Xの新しいUI構造に対応
+      
+      // Xの新しいUI構造
       '[role="banner"] nav',
       '[role="banner"] [role="navigation"]',
       '[data-testid="sidebarColumn"] nav',
       '[data-testid="sidebarColumn"] [role="navigation"]',
+      
+      // より具体的なセレクター
+      '[data-testid="sidebarColumn"] > div',
+      '[data-testid="sidebarColumn"] > nav',
+      '[data-testid="sidebarColumn"] > [role="navigation"]',
+      
+      // フォールバック
+      '[data-testid="primaryColumn"] + div',
+      '[data-testid="primaryColumn"] ~ div',
     ];
 
     for (const selector of selectors) {
-      const element = document.querySelector(selector) as HTMLElement;
-      if (element) {
-        sendLog(`サイドバー要素を発見: ${selector}`);
-        return element;
+      const elements = document.querySelectorAll(selector);
+      sendLog(`セレクター "${selector}" で ${elements.length} 個の要素を発見`);
+      
+      for (let i = 0; i < elements.length; i++) {
+        const element = elements[i] as HTMLElement;
+        sendLog(`要素 ${i + 1}:`, {
+          tagName: element.tagName,
+          role: element.getAttribute('role'),
+          testId: element.getAttribute('data-testid'),
+          className: element.className,
+          childrenCount: element.children.length
+        });
+        
+        // サイドバーとして適切かチェック
+        if (this.isValidSidebar(element)) {
+          sendLog(`有効なサイドバー要素を発見: ${selector} (${i + 1}番目)`);
+          return element;
+        }
       }
     }
 
     // より詳細な検索
     const banner = document.querySelector('[role="banner"]');
     if (banner) {
+      sendLog('banner要素を発見、詳細検索を実行');
       const navInBanner = banner.querySelector('nav, [role="navigation"]');
-      if (navInBanner) {
-        sendLog('banner内のナビゲーション要素を発見');
+      if (navInBanner && this.isValidSidebar(navInBanner as HTMLElement)) {
+        sendLog('banner内の有効なナビゲーション要素を発見');
         return navInBanner as HTMLElement;
       }
     }
@@ -159,19 +316,48 @@ export class SidebarButton {
       return sidebarColumn as HTMLElement;
     }
 
-    sendLog('サイドバー要素が見つかりません');
+    sendLog('有効なサイドバー要素が見つかりません');
     return null;
+  }
+
+  /**
+   * 要素が有効なサイドバーかどうかを判定
+   */
+  private isValidSidebar(element: HTMLElement): boolean {
+    // 要素が表示されているかチェック
+    const style = window.getComputedStyle(element);
+    if (style.display === 'none' || style.visibility === 'hidden') {
+      return false;
+    }
+    
+    // サイズが適切かチェック
+    const rect = element.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) {
+      return false;
+    }
+    
+    // ナビゲーション要素を含んでいるかチェック
+    const hasNavElements = element.querySelector('a[role="tab"], a[href], nav, [role="navigation"]');
+    if (!hasNavElements) {
+      return false;
+    }
+    
+    return true;
   }
 
   /**
    * サイドバーボタンを作成
    */
   private createSidebarButton(): void {
+    sendLog('createSidebarButton開始');
+    
     const sidebar = this.findSidebar();
     if (!sidebar) {
       sendLog('サイドバーが見つかりません');
       return;
     }
+
+    sendLog('サイドバー要素を発見、ボタン作成を開始');
 
     // 既存のボタンを削除
     this.removeSidebarButton();
@@ -181,7 +367,7 @@ export class SidebarButton {
     this.button.className = 'comiketter-sidebar-button';
     this.button.setAttribute('data-testid', 'comiketter-sidebar-button');
     
-    // ボタンのHTML
+    // ボタンのHTML（XのUIに合わせて調整）
     this.button.innerHTML = `
       <div style="
         display: flex;
@@ -191,21 +377,29 @@ export class SidebarButton {
         border-radius: 9999px;
         transition: background-color 0.2s;
         margin: 4px 0;
+        color: rgb(231, 233, 234);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        font-size: 20px;
+        font-weight: 400;
+        line-height: 24px;
+        text-decoration: none;
+        min-height: 48px;
+        box-sizing: border-box;
       ">
-        <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; margin-right: 16px; fill: currentColor;">
+        <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; margin-right: 16px; fill: currentColor; flex-shrink: 0;">
           <path d="M4 4.5C4 3.12 5.119 2 6.5 2h11C18.881 2 20 3.12 20 4.5v18.44l-8-5.71-8 5.71V4.5zM6.5 4c-.276 0-.5.22-.5.5v14.56l6-4.29 6 4.29V4.5c0-.28-.224-.5-.5-.5h-11z"></path>
         </svg>
-        <span style="font-size: 20px; font-weight: 400;">カスタムブックマーク</span>
+        <span style="flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">カスタムブックマーク</span>
       </div>
     `;
 
     // クリックイベントを設定
     this.button.addEventListener('click', this.handleButtonClick.bind(this));
 
-    // ホバー効果を追加
+    // ホバー効果を追加（XのUIに合わせて）
     this.button.addEventListener('mouseenter', () => {
       if (this.button) {
-        this.button.style.backgroundColor = 'rgba(29, 161, 242, 0.1)';
+        this.button.style.backgroundColor = 'rgba(239, 243, 244, 0.1)';
       }
     });
 
@@ -225,29 +419,113 @@ export class SidebarButton {
    * サイドバーにボタンを挿入
    */
   private insertIntoSidebar(sidebar: HTMLElement): void {
-    sendLog('サイドバーへの挿入開始', { sidebarTagName: sidebar.tagName, sidebarRole: sidebar.getAttribute('role') });
+    sendLog('insertIntoSidebar開始');
     
-    // ナビゲーション要素を探す
-    const navElements = sidebar.querySelectorAll('nav, [role="navigation"], [data-testid="sidebarColumn"] > div, a[role="tab"]');
+    sendLog('サイドバーへの挿入開始', { 
+      sidebarTagName: sidebar.tagName, 
+      sidebarRole: sidebar.getAttribute('role'),
+      sidebarTestId: sidebar.getAttribute('data-testid'),
+      sidebarChildrenCount: sidebar.children.length
+    });
     
-    if (navElements.length > 0) {
-      // ナビゲーション要素の最後に挿入
-      const nav = navElements[navElements.length - 1] as HTMLElement;
-      nav.appendChild(this.button!);
-      sendLog('ナビゲーション要素に挿入完了', { navTagName: nav.tagName });
+    // ブックマークリンクを探して、その直後に挿入
+    const bookmarkLink = sidebar.querySelector('a[href="/i/bookmarks"]');
+    if (bookmarkLink && bookmarkLink.parentElement) {
+      const parent = bookmarkLink.parentElement;
+      const nextSibling = bookmarkLink.nextElementSibling;
+      
+      if (nextSibling) {
+        // ブックマークの次の要素の前に挿入
+        parent.insertBefore(this.button!, nextSibling);
+        sendLog('ブックマークの直後に挿入完了');
+      } else {
+        // ブックマークの後に挿入
+        parent.appendChild(this.button!);
+        sendLog('ブックマークの後に挿入完了');
+      }
     } else {
-      // ナビゲーション要素が見つからない場合はサイドバーに直接挿入
-      sidebar.appendChild(this.button!);
-      sendLog('サイドバーに直接挿入完了');
+      // 挿入先を決定
+      const insertTarget = this.findInsertTarget(sidebar);
+      if (!insertTarget) {
+        sendLog('挿入先が見つかりません');
+        return;
+      }
+      
+      // ボタンを挿入
+      insertTarget.appendChild(this.button!);
+      sendLog('ボタンの挿入完了', { 
+        targetTagName: insertTarget.tagName,
+        targetRole: insertTarget.getAttribute('role')
+      });
     }
     
     // 挿入後の確認
     const insertedButton = document.querySelector('[data-testid="comiketter-sidebar-button"]');
     if (insertedButton) {
       sendLog('ボタンの挿入を確認');
+      
+      // ボタンの位置を確認
+      const buttonRect = insertedButton.getBoundingClientRect();
+      sendLog('ボタンの位置:', {
+        top: buttonRect.top,
+        left: buttonRect.left,
+        width: buttonRect.width,
+        height: buttonRect.height,
+        visible: buttonRect.width > 0 && buttonRect.height > 0
+      });
     } else {
       sendLog('ボタンの挿入に失敗');
     }
+  }
+
+  /**
+   * 挿入先を決定
+   */
+  private findInsertTarget(sidebar: HTMLElement): HTMLElement | null {
+    sendLog('findInsertTarget開始');
+    
+    // 1. ブックマークリンクを探して、その直後に挿入
+    const bookmarkLink = sidebar.querySelector('a[href="/i/bookmarks"]');
+    if (bookmarkLink) {
+      sendLog('ブックマークリンクを発見、その直後に挿入');
+      return sidebar; // 親要素を返して、後で挿入位置を調整
+    }
+    
+    sendLog('ブックマークリンクが見つからないため、代替手段を試行');
+    
+    // 2. ナビゲーション要素を探す
+    const navElements = sidebar.querySelectorAll('nav, [role="navigation"]');
+    if (navElements.length > 0) {
+      const nav = navElements[navElements.length - 1] as HTMLElement;
+      sendLog('ナビゲーション要素を挿入先として選択');
+      return nav;
+    }
+    
+    // 3. タブ要素を探す
+    const tabElements = sidebar.querySelectorAll('a[role="tab"]');
+    if (tabElements.length > 0) {
+      const lastTab = tabElements[tabElements.length - 1] as HTMLElement;
+      const parent = lastTab.parentElement;
+      if (parent) {
+        sendLog('タブ要素の親を挿入先として選択');
+        return parent;
+      }
+    }
+    
+    // 4. リンク要素を探す
+    const linkElements = sidebar.querySelectorAll('a[href]');
+    if (linkElements.length > 0) {
+      const lastLink = linkElements[linkElements.length - 1] as HTMLElement;
+      const parent = lastLink.parentElement;
+      if (parent) {
+        sendLog('リンク要素の親を挿入先として選択');
+        return parent;
+      }
+    }
+    
+    // 5. 直接サイドバーに挿入
+    sendLog('サイドバー自体を挿入先として選択');
+    return sidebar;
   }
 
   /**
@@ -284,12 +562,44 @@ export class SidebarButton {
     this.button = null;
     this.isInitialized = false;
     
-    // 定期的な再初期化を停止
-    if (this.reinitInterval) {
-      clearInterval(this.reinitInterval);
-      this.reinitInterval = null;
+    // MutationObserverを停止
+    if (this.observer) {
+      this.observer.disconnect();
+      this.observer = null;
     }
+    if (this.processingTimeout) {
+      clearTimeout(this.processingTimeout);
+      this.processingTimeout = null;
+    }
+    this.pendingNodes = [];
+    this.processedElements = new WeakSet<HTMLElement>();
     
     sendLog('サイドバーボタン削除完了');
+  }
+
+  /**
+   * 手動でボタンを再作成（デバッグ用）
+   */
+  forceRecreate(): void {
+    sendLog('手動でボタンを再作成');
+    this.removeSidebarButton();
+    this.createSidebarButton();
+  }
+
+  /**
+   * 現在の状態を取得（デバッグ用）
+   */
+  getStatus(): any {
+    const existingButton = document.querySelector('[data-testid="comiketter-sidebar-button"]');
+    return {
+      isInitialized: this.isInitialized,
+      buttonExists: !!existingButton,
+      buttonVisible: existingButton ? {
+        display: window.getComputedStyle(existingButton).display,
+        visibility: window.getComputedStyle(existingButton).visibility,
+        rect: existingButton.getBoundingClientRect()
+      } : null,
+      sidebarFound: !!this.findSidebar()
+    };
   }
 } 
