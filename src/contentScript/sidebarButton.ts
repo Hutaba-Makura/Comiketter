@@ -33,6 +33,7 @@ export class SidebarButton {
   private static instance: SidebarButton;
   private button: HTMLElement | null = null;
   private isInitialized = false;
+  private reinitInterval: NodeJS.Timeout | null = null;
 
   private constructor() {}
 
@@ -54,6 +55,17 @@ export class SidebarButton {
     try {
       sendLog('サイドバーボタン初期化開始');
       
+      // ページの読み込み状態を確認
+      if (document.readyState === 'loading') {
+        sendLog('ページ読み込み中、DOMContentLoadedを待機');
+        await new Promise<void>((resolve) => {
+          document.addEventListener('DOMContentLoaded', () => resolve());
+        });
+      }
+      
+      // 少し待機してからサイドバーの検出を開始
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
       // サイドバーの検出を待機
       await this.waitForSidebar();
       
@@ -62,9 +74,30 @@ export class SidebarButton {
       
       this.isInitialized = true;
       sendLog('サイドバーボタン初期化完了');
+      
+      // 定期的な再初期化を開始
+      this.startPeriodicReinitialization();
     } catch (error) {
       sendLog('サイドバーボタン初期化エラー:', error);
     }
+  }
+
+  /**
+   * 定期的な再初期化を開始
+   */
+  private startPeriodicReinitialization(): void {
+    if (this.reinitInterval) {
+      clearInterval(this.reinitInterval);
+    }
+    
+    this.reinitInterval = setInterval(() => {
+      // ボタンが存在するかチェック
+      const existingButton = document.querySelector('[data-testid="comiketter-sidebar-button"]');
+      if (!existingButton && this.isInitialized) {
+        sendLog('ボタンが見つからないため再作成');
+        this.createSidebarButton();
+      }
+    }, 5000); // 5秒ごとにチェック
   }
 
   /**
@@ -94,15 +127,39 @@ export class SidebarButton {
       '[role="complementary"]',
       'nav[role="navigation"]',
       '[data-testid="primaryColumn"] + div',
+      // Xの新しいUI構造に対応
+      '[role="banner"] nav',
+      '[role="banner"] [role="navigation"]',
+      '[data-testid="sidebarColumn"] nav',
+      '[data-testid="sidebarColumn"] [role="navigation"]',
     ];
 
     for (const selector of selectors) {
       const element = document.querySelector(selector) as HTMLElement;
       if (element) {
+        sendLog(`サイドバー要素を発見: ${selector}`);
         return element;
       }
     }
 
+    // より詳細な検索
+    const banner = document.querySelector('[role="banner"]');
+    if (banner) {
+      const navInBanner = banner.querySelector('nav, [role="navigation"]');
+      if (navInBanner) {
+        sendLog('banner内のナビゲーション要素を発見');
+        return navInBanner as HTMLElement;
+      }
+    }
+
+    // サイドバーカラムを直接検索
+    const sidebarColumn = document.querySelector('[data-testid="sidebarColumn"]');
+    if (sidebarColumn) {
+      sendLog('サイドバーカラムを発見');
+      return sidebarColumn as HTMLElement;
+    }
+
+    sendLog('サイドバー要素が見つかりません');
     return null;
   }
 
@@ -168,16 +225,28 @@ export class SidebarButton {
    * サイドバーにボタンを挿入
    */
   private insertIntoSidebar(sidebar: HTMLElement): void {
+    sendLog('サイドバーへの挿入開始', { sidebarTagName: sidebar.tagName, sidebarRole: sidebar.getAttribute('role') });
+    
     // ナビゲーション要素を探す
-    const navElements = sidebar.querySelectorAll('nav, [role="navigation"], [data-testid="sidebarColumn"] > div');
+    const navElements = sidebar.querySelectorAll('nav, [role="navigation"], [data-testid="sidebarColumn"] > div, a[role="tab"]');
     
     if (navElements.length > 0) {
-      // 最初のナビゲーション要素の最後に挿入
-      const nav = navElements[0] as HTMLElement;
+      // ナビゲーション要素の最後に挿入
+      const nav = navElements[navElements.length - 1] as HTMLElement;
       nav.appendChild(this.button!);
+      sendLog('ナビゲーション要素に挿入完了', { navTagName: nav.tagName });
     } else {
       // ナビゲーション要素が見つからない場合はサイドバーに直接挿入
       sidebar.appendChild(this.button!);
+      sendLog('サイドバーに直接挿入完了');
+    }
+    
+    // 挿入後の確認
+    const insertedButton = document.querySelector('[data-testid="comiketter-sidebar-button"]');
+    if (insertedButton) {
+      sendLog('ボタンの挿入を確認');
+    } else {
+      sendLog('ボタンの挿入に失敗');
     }
   }
 
@@ -214,6 +283,13 @@ export class SidebarButton {
     this.removeSidebarButton();
     this.button = null;
     this.isInitialized = false;
+    
+    // 定期的な再初期化を停止
+    if (this.reinitInterval) {
+      clearInterval(this.reinitInterval);
+      this.reinitInterval = null;
+    }
+    
     sendLog('サイドバーボタン削除完了');
   }
 } 

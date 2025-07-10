@@ -289,22 +289,22 @@ export class BookmarkButton extends BaseButton {
       .comiketter-bookmark-selector[data-theme="darkBlue"] {
         background: rgb(21, 32, 43);
         color: rgb(247, 249, 249);
-      }
-      
+        }
+        
       .comiketter-bookmark-selector[data-theme="darkBlue"] .comiketter-bookmark-selector-header {
-        border-bottom-color: #38444d;
-      }
-      
+          border-bottom-color: #38444d;
+        }
+        
       .comiketter-bookmark-selector[data-theme="darkBlue"] .comiketter-bookmark-item {
-        border-bottom-color: #38444d;
-      }
-      
+          border-bottom-color: #38444d;
+        }
+        
       .comiketter-bookmark-selector[data-theme="darkBlue"] .comiketter-bookmark-actions {
-        border-top-color: #38444d;
-      }
-      
+          border-top-color: #38444d;
+        }
+        
       .comiketter-bookmark-selector[data-theme="darkBlue"] .comiketter-bookmark-button-secondary {
-        background: #38444d;
+          background: #38444d;
         color: rgb(247, 249, 249);
       }
       
@@ -315,7 +315,7 @@ export class BookmarkButton extends BaseButton {
       
       .comiketter-bookmark-selector[data-theme="black"] .comiketter-bookmark-selector-header {
         border-bottom-color: #2f3336;
-      }
+        }
       
       .comiketter-bookmark-selector[data-theme="black"] .comiketter-bookmark-item {
         border-bottom-color: #2f3336;
@@ -445,7 +445,7 @@ export class BookmarkButton extends BaseButton {
     overlay.addEventListener('click', (e) => {
       // オーバーレイ自体がクリックされた場合のみ閉じる
       if (e.target === overlay) {
-        this.hideBookmarkSelector();
+      this.hideBookmarkSelector();
       }
     });
 

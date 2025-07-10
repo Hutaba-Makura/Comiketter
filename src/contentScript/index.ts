@@ -35,6 +35,7 @@ declare global {
   interface Window {
     comiketterObserver?: TweetObserver;
     comiketterApiInterceptor?: ApiInterceptor;
+    comiketterSidebarButton?: SidebarButton;
   }
 }
 
@@ -68,6 +69,7 @@ class ContentScript {
       // グローバル変数に設定（デバッグ用）
       window.comiketterObserver = this.tweetObserver;
       window.comiketterApiInterceptor = this.apiInterceptor;
+      window.comiketterSidebarButton = this.sidebarButton;
 
       this.isInitialized = true;
 
