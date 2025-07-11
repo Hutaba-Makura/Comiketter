@@ -66,7 +66,16 @@ export class ButtonFactory {
    */
   private shouldCreateDownloadButton(tweetInfo: Tweet): boolean {
     // メディアが含まれているかチェック
-    return !!(tweetInfo.media && tweetInfo.media.length > 0);
+    const hasMedia = !!(tweetInfo.media && tweetInfo.media.length > 0);
+    
+    console.log('Comiketter: Download button creation check:', {
+      tweetId: tweetInfo.id,
+      hasMedia,
+      mediaLength: tweetInfo.media?.length || 0,
+      mediaUrls: tweetInfo.media?.map(m => m.url) || []
+    });
+    
+    return hasMedia;
   }
 
   /**

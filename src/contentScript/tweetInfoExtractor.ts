@@ -210,8 +210,19 @@ function extractCreatedAt(article: HTMLElement): string | null {
  * メディアの存在をチェック
  */
 function checkHasMedia(article: HTMLElement): boolean {
-  // 画像の存在チェック
-  const hasImage = article.querySelector('[data-testid="tweetPhoto"]') !== null;
+  // 画像の存在チェック（プロフィール画像とバナー画像を除外）
+  const images = article.querySelectorAll('img[src*="pbs.twimg.com"]');
+  let hasValidImage = false;
+  
+  images.forEach(img => {
+    const src = img.getAttribute('src');
+    if (src) {
+      // プロフィール画像とバナー画像を除外
+      if (!isProfileOrBannerImage(src) && !isVideoThumbnail(src)) {
+        hasValidImage = true;
+      }
+    }
+  });
   
   // 動画の存在チェック
   const hasVideo = article.querySelector('[data-testid="videoPlayer"]') !== null ||
@@ -220,7 +231,16 @@ function checkHasMedia(article: HTMLElement): boolean {
   // 引用ツイート内のメディアは除外
   const isInQuotedTweet = article.closest('[role="link"]') !== null;
   
-  return (hasImage || hasVideo) && !isInQuotedTweet;
+  const hasMedia = hasValidImage || hasVideo;
+  
+  console.log('Comiketter: Media check result:', {
+    hasValidImage,
+    hasVideo,
+    isInQuotedTweet,
+    hasMedia
+  });
+  
+  return hasMedia && !isInQuotedTweet;
 }
 
 /**
@@ -252,12 +272,13 @@ function extractMediaUrls(article: HTMLElement): string[] {
     }
   });
 
-  // 動画URLを抽出（API傍受で取得されるため、ここではプレースホルダー）
+  // 動画URLを抽出（API傍受で取得されるため、ここではダミーURLを設定）
   const videos = article.querySelectorAll('[data-testid="videoPlayer"], [data-testid="playButton"]');
   if (videos.length > 0) {
-    // 動画URLはAPI傍受で取得されるため、ここでは空配列を返す
+    // 動画が検出された場合はダミーURLを追加してDLボタンを表示
     // 実際のURLは background/apiInterceptor.ts で取得される
-    console.log('Comiketter: Video detected, will be handled by API interceptor');
+    console.log('Comiketter: Video detected, adding placeholder URL for DL button');
+    mediaUrls.push('video://placeholder'); // ダミーURL
   }
 
   return mediaUrls;

@@ -127,8 +127,18 @@ export class DownloadManager {
       const videoIdMatch = tweetId.match(/(\d+)/);
       if (videoIdMatch) {
         const videoId = videoIdMatch[1];
-        // 動画の実際のURLを構築（例）
-        return `https://video.twimg.com/ext_tw_video/${videoId}/pu/vid/1280x720/video.mp4`;
+        // 動画の実際のURLを構築（複数の解像度を試行）
+        const resolutions = [
+          '1280x720', // HD
+          '1920x1080', // Full HD
+          '854x480', // SD
+          '640x360', // Low quality
+        ];
+        
+        // 最初の解像度を返す（実際の実装では、URLの妥当性をチェックしてから返す）
+        const videoUrl = `https://video.twimg.com/ext_tw_video/${videoId}/pu/vid/${resolutions[0]}/video.mp4`;
+        console.log('Comiketter: Generated video URL:', videoUrl);
+        return videoUrl;
       }
     } catch (error) {
       console.error('Comiketter: Failed to generate video URL:', error);
@@ -234,6 +244,12 @@ export class DownloadManager {
         throw new Error('Settings not available');
       }
 
+      // 動画URLの場合は特別な処理
+      if (url.includes('video.twimg.com')) {
+        console.log('Comiketter: Testing video download with special handling');
+        console.log('Comiketter: Video URL to test:', url);
+      }
+
       const testMediaFile: TweetMediaFileProps = {
         tweetId: 'test',
         source: url,
@@ -317,6 +333,24 @@ export class DownloadManager {
       // TwitterMediaHarvestと同様のフィルタリング処理
       const filteredMediaFiles = mediaFiles.filter(mediaFile => {
         console.log('Comiketter: Checking media file:', mediaFile.source, 'type:', mediaFile.type);
+        
+        // ダミー動画URLの場合は実際の動画URLを取得
+        if (mediaFile.source === 'video://placeholder') {
+          console.log('Comiketter: Placeholder video URL detected, attempting to get actual video URL');
+          const actualVideoUrl = this.getVideoUrl(request.tweetId);
+          if (actualVideoUrl) {
+            console.log('Comiketter: Found actual video URL:', actualVideoUrl);
+            // 動画ファイルとして扱う
+            mediaFile.source = actualVideoUrl;
+            mediaFile.type = 'video';
+            mediaFile.ext = 'mp4';
+            console.log('Comiketter: Updated media file to video:', mediaFile);
+            return true;
+          } else {
+            console.log('Comiketter: Could not get actual video URL, excluding placeholder');
+            return false;
+          }
+        }
         
         // 動画サムネイルが検出された場合、実際の動画URLを取得
         if (mediaFile.type === 'thumbnail' && mediaFile.source.includes('ext_tw_video_thumb')) {
@@ -484,6 +518,11 @@ export class DownloadManager {
       throw new Error('Download URL is empty or invalid');
     }
 
+    // ダミー動画URLの場合はエラー
+    if (url === 'video://placeholder') {
+      throw new Error('Placeholder video URL detected - actual video URL not available');
+    }
+
     // URLが有効かチェック（基本的な検証）
     if (!url.startsWith('http://') && !url.startsWith('https://')) {
       throw new Error(`Invalid URL format: ${url}`);
@@ -495,6 +534,29 @@ export class DownloadManager {
       saveAs: false, // 設定に応じて変更可能
       conflictAction: 'uniquify'
     };
+
+    // 動画URLの場合は特別なヘッダーを設定
+    if (url.includes('video.twimg.com')) {
+      console.log('Comiketter: Video URL detected, adding special headers');
+      downloadOptions.headers = [
+        {
+          name: 'Referer',
+          value: 'https://twitter.com/'
+        },
+        {
+          name: 'User-Agent',
+          value: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        },
+        {
+          name: 'Accept',
+          value: 'video/mp4,video/*,*/*;q=0.9'
+        },
+        {
+          name: 'Accept-Encoding',
+          value: 'identity'
+        }
+      ];
+    }
 
     // サブディレクトリが設定されている場合
     if (!settings.filenameSettings.noSubDirectory && settings.filenameSettings.directory) {

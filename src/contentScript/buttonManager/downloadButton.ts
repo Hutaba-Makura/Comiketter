@@ -148,6 +148,11 @@ export class DownloadButton extends BaseButton {
       
       console.log('Comiketter: Starting download for tweet:', tweetInfo.id);
 
+      // chrome.runtimeが利用可能かチェック
+      if (!chrome?.runtime?.sendMessage) {
+        throw new Error('Chrome runtime is not available');
+      }
+
       // バックグラウンドスクリプトにダウンロード要求を送信
       const response = await chrome.runtime.sendMessage({
         type: 'DOWNLOAD_TWEET_MEDIA',
@@ -158,7 +163,7 @@ export class DownloadButton extends BaseButton {
         },
       });
 
-      if (response.success) {
+      if (response && response.success) {
         console.log('Comiketter: Download completed successfully');
         this.setButtonStatus(button, ButtonStatus.Success);
         
@@ -167,7 +172,8 @@ export class DownloadButton extends BaseButton {
           this.setButtonStatus(button, ButtonStatus.Downloaded);
         }, 3000);
       } else {
-        console.error('Comiketter: Download failed:', response.error);
+        const errorMessage = response?.error || 'Unknown download error';
+        console.error('Comiketter: Download failed:', errorMessage);
         this.setButtonStatus(button, ButtonStatus.Error);
         
         // 3秒後に通常状態に戻す
@@ -177,6 +183,16 @@ export class DownloadButton extends BaseButton {
       }
     } catch (error) {
       console.error('Comiketter: Error during download:', error);
+      
+      // Extension context invalidatedエラーの場合は特別な処理
+      if (error instanceof Error && error.message.includes('Extension context invalidated')) {
+        console.warn('Comiketter: Extension context invalidated, attempting to reload extension');
+        // ページをリロードして拡張機能を再初期化
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+      }
+      
       this.setButtonStatus(button, ButtonStatus.Error);
       
       // 3秒後に通常状態に戻す
