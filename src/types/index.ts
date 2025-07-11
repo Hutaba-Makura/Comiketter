@@ -75,7 +75,7 @@ export interface TweetMediaFileProps {
   serial: number
   hash: string
   source: string
-  type: 'image' | 'video'
+  type: 'image' | 'thumbnail' | 'video' // thumbnailを追加
   ext: string
   tweetContent?: string
   mediaUrls?: string[]
@@ -211,6 +211,13 @@ export interface AppSettings {
   
   // ファイル名・パス設定
   filenameSettings: FilenameSettingProps
+  
+  // メディアダウンロード設定
+  mediaDownloadSettings: {
+    includeVideoThumbnail: boolean; // 動画サムネイルを含めるかどうか
+    excludeProfileImages: boolean; // プロフィール画像を除外するかどうか
+    excludeBannerImages: boolean; // バナー画像を除外するかどうか
+  }
   
   // UI設定
   timelineAutoUpdate: boolean

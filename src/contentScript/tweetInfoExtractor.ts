@@ -6,7 +6,22 @@
  * Comiketter: Modified and adapted from TwitterMediaHarvest article.ts
  */
 
+/// <reference lib="dom" />
+
 import type { Tweet } from '../types';
+
+// グローバル型定義
+declare global {
+  interface HTMLElement {
+    matches(selector: string): boolean;
+    closest(selector: string): HTMLElement | null;
+    querySelector(selector: string): HTMLElement | null;
+    querySelectorAll(selector: string): NodeListOf<HTMLElement>;
+    getAttribute(name: string): string | null;
+    setAttribute(name: string, value: string): void;
+    textContent: string | null;
+  }
+}
 
 /**
  * ツイート要素からツイート情報を抽出
@@ -209,16 +224,28 @@ function checkHasMedia(article: HTMLElement): boolean {
 }
 
 /**
- * メディアURLを抽出
+ * メディアURLを抽出（TwitterMediaHarvest準拠）
  */
 function extractMediaUrls(article: HTMLElement): string[] {
   const mediaUrls: string[] = [];
 
-  // 画像URLを抽出
+  // 画像URLを抽出（プロフィール画像とバナー画像を除外）
   const images = article.querySelectorAll('img[src*="pbs.twimg.com"]');
   images.forEach(img => {
     const src = img.getAttribute('src');
     if (src && !mediaUrls.includes(src)) {
+      // プロフィール画像とバナー画像を除外
+      if (isProfileOrBannerImage(src)) {
+        console.log('Comiketter: Excluding profile/banner image:', src);
+        return;
+      }
+      
+      // 動画サムネイルを除外
+      if (isVideoThumbnail(src)) {
+        console.log('Comiketter: Excluding video thumbnail:', src);
+        return;
+      }
+      
       // 高解像度版のURLに変換
       const highResUrl = src.replace(/&name=\w+/, '&name=orig');
       mediaUrls.push(highResUrl);
@@ -230,9 +257,56 @@ function extractMediaUrls(article: HTMLElement): string[] {
   if (videos.length > 0) {
     // 動画URLはAPI傍受で取得されるため、ここでは空配列を返す
     // 実際のURLは background/apiInterceptor.ts で取得される
+    console.log('Comiketter: Video detected, will be handled by API interceptor');
   }
 
   return mediaUrls;
+}
+
+/**
+ * プロフィール画像やバナー画像かどうかを判定
+ */
+function isProfileOrBannerImage(url: string): boolean {
+  const urlLower = url.toLowerCase();
+  
+  // プロフィール画像のパターン
+  const profilePatterns = [
+    '/profile_images/',
+    '/profile_banners/',
+    '/profile_images_normal/',
+    '/profile_images_bigger/',
+    '/profile_images_mini/',
+  ];
+  
+  // バナー画像のパターン
+  const bannerPatterns = [
+    '/profile_banners/',
+    '/banner_images/',
+  ];
+  
+  return profilePatterns.some(pattern => urlLower.includes(pattern)) ||
+         bannerPatterns.some(pattern => urlLower.includes(pattern));
+}
+
+/**
+ * 動画サムネイルかどうかを判定
+ */
+function isVideoThumbnail(url: string): boolean {
+  const urlLower = url.toLowerCase();
+  
+  // 動画サムネイルのパターン
+  const thumbnailPatterns = [
+    'ext_tw_video_thumb',
+    'video_thumb',
+    'thumb',
+    'small',
+    'mini',
+    '_normal',
+    '_bigger',
+    '_mini',
+  ];
+  
+  return thumbnailPatterns.some(pattern => urlLower.includes(pattern));
 }
 
 /**

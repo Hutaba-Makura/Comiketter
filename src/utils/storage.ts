@@ -36,6 +36,11 @@ const DEFAULT_SETTINGS: AppSettings = {
     fileAggregation: false,
     groupBy: AggregationToken.Account,
   },
+  mediaDownloadSettings: {
+    includeVideoThumbnail: true, // 動画サムネイルを含める（テスト用）
+    excludeProfileImages: true, // プロフィール画像は除外
+    excludeBannerImages: true, // バナー画像は除外
+  },
   timelineAutoUpdate: true,
   showCustomBookmarks: true,
 };

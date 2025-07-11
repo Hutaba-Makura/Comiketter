@@ -104,6 +104,10 @@ export class MessageHandler {
           await this.handleClearDownloadHistory(sendResponse);
           break;
 
+        case 'TEST_DOWNLOAD':
+          await this.handleTestDownload(message.payload, sendResponse);
+          break;
+
         case 'OPEN_BOOKMARK_PAGE':
           await this.handleOpenBookmarkPage(sendResponse);
           break;
@@ -130,6 +134,25 @@ export class MessageHandler {
       sendResponse({ 
         success: false, 
         error: error instanceof Error ? error.message : 'Unknown error' 
+      });
+    }
+  }
+
+  /**
+   * テストダウンロード要求を処理
+   */
+  private async handleTestDownload(
+    payload: { url: string }, 
+    sendResponse: (response: any) => void
+  ): Promise<void> {
+    try {
+      const result = await this.downloadManager.testDownload(payload.url);
+      sendResponse(result);
+    } catch (error) {
+      console.error('Comiketter: Test download request failed:', error);
+      sendResponse({ 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Test download failed' 
       });
     }
   }

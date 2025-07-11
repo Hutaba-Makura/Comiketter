@@ -48,7 +48,7 @@ chrome.runtime.onInstalled.addListener((details) => {
 });
 
 // コンテンツスクリプトからのログメッセージを受信
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message, sender) => {
   if (message.type === 'LOG') {
     console.log(`${message.message}`, message.data || '');
     console.log(`[${message.timestamp}] From: ${sender.tab?.url || 'unknown'}`);
@@ -56,4 +56,28 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   
   // 他のメッセージはMessageHandlerに委譲
   return false; // 非同期処理を示す
+});
+
+// ダウンロードイベントリスナー
+chrome.downloads.onChanged.addListener((downloadDelta) => {
+  console.log('Comiketter: Download changed:', downloadDelta);
+  
+  if (downloadDelta.state) {
+    const newState = downloadDelta.state.current;
+    console.log('Comiketter: Download state changed to:', newState);
+    
+    if (newState === 'complete') {
+      console.log('Comiketter: Download completed successfully');
+    } else if (newState === 'interrupted') {
+      console.error('Comiketter: Download interrupted');
+    }
+  }
+  
+  if (downloadDelta.error) {
+    console.error('Comiketter: Download error:', downloadDelta.error.current);
+  }
+});
+
+chrome.downloads.onCreated.addListener((downloadItem) => {
+  console.log('Comiketter: Download created:', downloadItem);
 }); 

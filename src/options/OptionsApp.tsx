@@ -157,6 +157,45 @@ export const OptionsApp: React.FC = () => {
         <Divider />
         
         <Stack gap="md">
+          <Title order={3} size="h4">メディアダウンロード設定</Title>
+          <Text size="sm" c="dimmed">
+            TwitterMediaHarvest準拠のメディアダウンロード設定です。動画サムネイルやプロフィール画像の除外設定ができます。
+          </Text>
+          <Switch
+            label="動画サムネイルを含める"
+            checked={settings.mediaDownloadSettings.includeVideoThumbnail}
+            onChange={(event) => updateSettings({
+              mediaDownloadSettings: {
+                ...settings.mediaDownloadSettings,
+                includeVideoThumbnail: event.currentTarget.checked
+              }
+            })}
+          />
+          <Switch
+            label="プロフィール画像を除外"
+            checked={settings.mediaDownloadSettings.excludeProfileImages}
+            onChange={(event) => updateSettings({
+              mediaDownloadSettings: {
+                ...settings.mediaDownloadSettings,
+                excludeProfileImages: event.currentTarget.checked
+              }
+            })}
+          />
+          <Switch
+            label="バナー画像を除外"
+            checked={settings.mediaDownloadSettings.excludeBannerImages}
+            onChange={(event) => updateSettings({
+              mediaDownloadSettings: {
+                ...settings.mediaDownloadSettings,
+                excludeBannerImages: event.currentTarget.checked
+              }
+            })}
+          />
+        </Stack>
+        
+        <Divider />
+        
+        <Stack gap="md">
           <Title order={3} size="h4">カスタムブックマーク管理</Title>
           <Text size="sm" c="dimmed">
             ツイートを保存するカスタムブックマークを作成・管理できます。
