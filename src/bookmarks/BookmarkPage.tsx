@@ -8,7 +8,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Container, Title, Tabs, LoadingOverlay, Alert, Group, Button, Modal, TextInput, Textarea, Stack, Text } from '@mantine/core';
-import { IconAlertCircle, IconPlus, IconEdit, IconTrash } from '@tabler/icons-react';
+import { IconAlertCircle, IconPlus, IconEdit, IconTrash, IconDatabase } from '@tabler/icons-react';
 import type { BookmarkDB, BookmarkedTweetDB } from '../utils/bookmarkDB';
 import { bookmarkDB } from '../utils/bookmarkDB';
 import { TweetTimeline } from './TweetTimeline';
@@ -123,7 +123,7 @@ export const BookmarkPage: React.FC = () => {
   };
 
   const handleDeleteBookmark = async (bookmarkId: string) => {
-    if (!confirm('このブックマークを削除しますか？\nこの操作は取り消せません。')) {
+    if (!window.confirm('このブックマークを削除しますか？\nこの操作は取り消せません。')) {
       return;
     }
 
@@ -161,6 +161,82 @@ export const BookmarkPage: React.FC = () => {
     window.open(`https://twitter.com/i/status/${tweetId}`, '_blank');
   };
 
+  // テスト用サンプルデータを追加
+  const addSampleData = async () => {
+    try {
+      // サンプルブックマークを作成
+      const sampleBookmark = await bookmarkDB.addBookmark({
+        name: 'サンプルブックマーク',
+        description: 'テスト用のサンプルデータです',
+        isActive: true,
+      });
+
+      // サンプルツイートを追加
+      const sampleTweets: Omit<BookmarkedTweetDB, 'id' | 'savedAt'>[] = [
+        {
+          bookmarkId: sampleBookmark.id,
+          tweetId: '1234567890123456789',
+          authorUsername: 'sample_user1',
+          authorDisplayName: 'サンプルユーザー1',
+          authorId: '123456789',
+          content: 'これはテスト用のサンプルツイートです。Comiketterのブックマーク機能をテストするために作成されました。',
+          mediaUrls: ['https://picsum.photos/400/300?random=1'],
+          mediaTypes: ['image/jpeg'],
+          tweetDate: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+          isRetweet: false,
+          isReply: false,
+          saveType: 'url',
+        },
+        {
+          bookmarkId: sampleBookmark.id,
+          tweetId: '1234567890123456790',
+          authorUsername: 'sample_user2',
+          authorDisplayName: 'サンプルユーザー2',
+          authorId: '123456790',
+          content: 'もう一つのサンプルツイートです。画像付きのツイートで、メディアプレビューも表示されます。',
+          mediaUrls: [
+            'https://picsum.photos/400/300?random=2',
+            'https://picsum.photos/400/300?random=3',
+            'https://picsum.photos/400/300?random=4'
+          ],
+          mediaTypes: ['image/jpeg', 'image/jpeg', 'image/jpeg'],
+          tweetDate: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+          isRetweet: true,
+          isReply: false,
+          saveType: 'url',
+        },
+        {
+          bookmarkId: sampleBookmark.id,
+          tweetId: '1234567890123456791',
+          authorUsername: 'sample_user3',
+          authorDisplayName: 'サンプルユーザー3',
+          authorId: '123456791',
+          content: '返信ツイートのサンプルです。他のユーザーへの返信として保存されています。',
+          mediaUrls: [],
+          mediaTypes: [],
+          tweetDate: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+          isRetweet: false,
+          isReply: true,
+          replyToTweetId: '1234567890123456788',
+          replyToUsername: 'original_user',
+          saveType: 'url',
+        },
+      ];
+
+      for (const tweet of sampleTweets) {
+        await bookmarkDB.addBookmarkedTweet(tweet);
+      }
+
+      // データを再読み込み
+      await initializeData();
+      
+      console.log('Comiketter: Sample data added successfully');
+    } catch (err) {
+      console.error('Failed to add sample data:', err);
+      setError('サンプルデータの追加に失敗しました');
+    }
+  };
+
   if (isLoading) {
     return (
       <Container size="lg" py="xl">
@@ -185,14 +261,24 @@ export const BookmarkPage: React.FC = () => {
         <Title order={1} style={{ color: '#1da1f2' }}>
           Comiketter カスタムブックマーク
         </Title>
-        <Button
-          leftSection={<IconPlus size={16} />}
-          onClick={() => setIsCreateModalOpen(true)}
-          variant="filled"
-          color="blue"
-        >
-          新しいブックマーク
-        </Button>
+        <Group>
+          <Button
+            leftSection={<IconDatabase size={16} />}
+            onClick={addSampleData}
+            variant="outline"
+            color="gray"
+          >
+            サンプルデータ追加
+          </Button>
+          <Button
+            leftSection={<IconPlus size={16} />}
+            onClick={() => setIsCreateModalOpen(true)}
+            variant="filled"
+            color="blue"
+          >
+            新しいブックマーク
+          </Button>
+        </Group>
       </Group>
 
       {bookmarks.length === 0 ? (

@@ -11,6 +11,7 @@ export default {
     background: './src/background/index.ts',
     popup: './src/popup/index.tsx',
     options: './src/options/index.tsx',
+    bookmarks: './src/bookmarks/bookmarks-init.ts',
   },
   output: {
     path: path.resolve(__dirname, 'dist'),
