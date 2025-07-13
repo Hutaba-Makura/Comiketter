@@ -70,6 +70,19 @@ chrome.downloads.onChanged.addListener((downloadDelta) => {
       console.log('Comiketter: Download completed successfully');
     } else if (newState === 'interrupted') {
       console.error('Comiketter: Download interrupted');
+      
+      // エラー情報がある場合は詳細をログ出力
+      if (downloadDelta.error) {
+        const errorType = downloadDelta.error.current;
+        console.error('Comiketter: Download error type:', errorType);
+        
+        // SERVER_BAD_CONTENTエラーの場合は特別な処理
+        if (errorType === 'SERVER_BAD_CONTENT') {
+          console.error('Comiketter: SERVER_BAD_CONTENT error detected');
+          console.error('Comiketter: This usually indicates the video URL is invalid or expired');
+          console.error('Comiketter: Consider implementing retry logic with different video quality');
+        }
+      }
     }
   }
   

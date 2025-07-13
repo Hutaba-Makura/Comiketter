@@ -447,6 +447,7 @@ export class DownloadManager {
 
   /**
    * メディアファイルをダウンロードする
+   * TwitterMediaHarvestの実装を参考にしたリトライ機能付き
    * @param mediaFile メディアファイル情報
    * @param settings 設定（省略時は現在の設定を使用）
    */
@@ -467,7 +468,12 @@ export class DownloadManager {
       const filename = FilenameGenerator.makeFilename(mediaFile, currentSettings.filenameSettings);
       console.log('Comiketter: Generated filename:', filename);
       
-      // ダウンロード実行
+      // 動画ファイルの場合はリトライ機能を有効にする
+      if (mediaFile.type === 'video' && mediaFile.source.includes('video.twimg.com')) {
+        return await this.downloadVideoWithRetry(mediaFile, filename, currentSettings);
+      }
+      
+      // 通常のダウンロード実行
       console.log('Comiketter: Starting Chrome download for:', mediaFile.source);
       const downloadId = await this.executeDownload(mediaFile.source, filename, currentSettings);
       console.log('Comiketter: Chrome download ID:', downloadId);
@@ -506,7 +512,69 @@ export class DownloadManager {
   }
 
   /**
+   * 動画ファイルをリトライ機能付きでダウンロード
+   * TwitterMediaHarvestの実装を参考にした動画専用ダウンロード機能
+   */
+  private async downloadVideoWithRetry(
+    mediaFile: TweetMediaFileProps,
+    filename: string,
+    settings: AppSettings
+  ): Promise<DownloadHistory> {
+    const urlsToTry = [mediaFile.source, ...this.generateAlternativeVideoUrls(mediaFile.source)];
+    
+    for (let i = 0; i < urlsToTry.length; i++) {
+      const url = urlsToTry[i];
+      try {
+        console.log(`Comiketter: Trying video URL ${i + 1}/${urlsToTry.length}:`, url);
+        
+        const downloadId = await this.executeDownload(url, filename, settings);
+        
+        // ダウンロード履歴を作成
+        const downloadHistory: Omit<DownloadHistory, 'id'> = {
+          tweetId: mediaFile.tweetId,
+          authorUsername: mediaFile.tweetUser.screenName,
+          authorDisplayName: mediaFile.tweetUser.displayName,
+          authorId: mediaFile.tweetUser.id,
+          filename: filename,
+          filepath: filename,
+          originalUrl: url,
+          downloadMethod: settings.downloadMethod,
+          fileType: this.getFileTypeFromUrl(url),
+          downloadedAt: new Date().toISOString(),
+          status: 'pending',
+          tweetContent: mediaFile.tweetContent,
+          mediaUrls: mediaFile.mediaUrls,
+          mediaTypes: mediaFile.mediaTypes,
+          tweetDate: mediaFile.tweetDate,
+        };
+
+        // 履歴を保存
+        const savedHistory = await StorageManager.addDownloadHistory(downloadHistory);
+        
+        // ダウンロードIDを履歴に保存
+        this.downloadHistory.set(downloadId, savedHistory);
+        
+        console.log('Comiketter: Video download started successfully with URL:', url);
+        return savedHistory;
+      } catch (error) {
+        console.warn(`Comiketter: Failed to download video with URL ${i + 1}:`, error);
+        
+        // 最後のURLでも失敗した場合はエラーを投げる
+        if (i === urlsToTry.length - 1) {
+          throw new Error(`Failed to download video after trying ${urlsToTry.length} different URLs`);
+        }
+        
+        // 少し待ってから次のURLを試す
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    }
+    
+    throw new Error('No valid video URL found');
+  }
+
+  /**
    * Chrome APIを使用してダウンロードを実行
+   * TwitterMediaHarvestの実装を参考に、シンプルで安全なアプローチを採用
    */
   private async executeDownload(
     url: string, 
@@ -528,35 +596,22 @@ export class DownloadManager {
       throw new Error(`Invalid URL format: ${url}`);
     }
 
+    // 動画URLの場合は事前検証を実行
+    if (url.includes('video.twimg.com')) {
+      console.log('Comiketter: Video URL detected, validating before download');
+      const isValid = await this.validateVideoUrl(url);
+      if (!isValid) {
+        throw new Error('Video URL validation failed - URL may be invalid or expired');
+      }
+    }
+
+    // TwitterMediaHarvestの実装を参考に、シンプルなオプションのみ使用
     const downloadOptions: chrome.downloads.DownloadOptions = {
       url: url,
       filename: filename,
       saveAs: false, // 設定に応じて変更可能
       conflictAction: 'uniquify'
     };
-
-    // 動画URLの場合は特別なヘッダーを設定
-    if (url.includes('video.twimg.com')) {
-      console.log('Comiketter: Video URL detected, adding special headers');
-      downloadOptions.headers = [
-        {
-          name: 'Referer',
-          value: 'https://twitter.com/'
-        },
-        {
-          name: 'User-Agent',
-          value: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-        },
-        {
-          name: 'Accept',
-          value: 'video/mp4,video/*,*/*;q=0.9'
-        },
-        {
-          name: 'Accept-Encoding',
-          value: 'identity'
-        }
-      ];
-    }
 
     // サブディレクトリが設定されている場合
     if (!settings.filenameSettings.noSubDirectory && settings.filenameSettings.directory) {
@@ -572,14 +627,11 @@ export class DownloadManager {
       const downloadId = await chrome.downloads.download(downloadOptions);
       console.log('Comiketter: Chrome download returned ID:', downloadId);
       
-      if (chrome.runtime.lastError) {
+      // TwitterMediaHarvestの実装を参考に、ダウンロード失敗の判定
+      if (this.isDownloadFailed(downloadId)) {
+        const errorMessage = chrome.runtime.lastError?.message || 'Failed to download';
         console.error('Comiketter: Chrome runtime error:', chrome.runtime.lastError);
-        throw new Error(chrome.runtime.lastError.message);
-      }
-
-      // ダウンロードIDが有効かチェック
-      if (downloadId === undefined || downloadId === null) {
-        throw new Error('Chrome downloads API returned invalid download ID');
+        throw new Error(errorMessage);
       }
 
       return downloadId;
@@ -695,6 +747,106 @@ export class DownloadManager {
       hash = hash & hash; // 32bit整数に変換
     }
     return Math.abs(hash).toString(16);
+  }
+
+  /**
+   * ダウンロードが失敗したかどうかを判定
+   * TwitterMediaHarvestの実装を参考にしたヘルパー関数
+   */
+  private isDownloadFailed(downloadId: number | undefined): downloadId is undefined {
+    return downloadId === undefined;
+  }
+
+  /**
+   * 動画URLの有効性を検証
+   * TwitterMediaHarvestの実装を参考にした検証機能
+   */
+  private async validateVideoUrl(url: string): Promise<boolean> {
+    try {
+      console.log('Comiketter: Validating video URL:', url);
+      
+      // HEADリクエストでURLの有効性をチェック
+      const response = await fetch(url, {
+        method: 'HEAD',
+        mode: 'no-cors', // CORSエラーを回避
+        cache: 'no-cache'
+      });
+
+      // no-corsモードではresponse.okが常にfalseになるため、
+      // レスポンスが存在するかどうかで判定
+      if (response.type === 'opaque') {
+        console.log('Comiketter: Video URL validation successful (opaque response)');
+        return true;
+      }
+
+      // 通常のレスポンスの場合はステータスコードをチェック
+      if (response.ok) {
+        console.log('Comiketter: Video URL validation successful (status:', response.status, ')');
+        return true;
+      }
+
+      console.warn('Comiketter: Video URL validation failed (status:', response.status, ')');
+      return false;
+    } catch (error) {
+      console.warn('Comiketter: Video URL validation error:', error);
+      // エラーが発生した場合は、ダウンロードを試行する（URLが有効な可能性がある）
+      return true;
+    }
+  }
+
+  /**
+   * 動画URLから異なる品質のURLを生成
+   * TwitterMediaHarvestの実装を参考にした品質選択機能
+   */
+  private generateAlternativeVideoUrls(originalUrl: string): string[] {
+    const alternativeUrls: string[] = [];
+    
+    try {
+      // ext_tw_videoのURLパターンを解析
+      const extTwVideoMatch = originalUrl.match(/\/ext_tw_video\/([^\/]+)\/pu\/vid\/([^\/]+)\/([^\/]+)\/([^?]+)/);
+      if (extTwVideoMatch) {
+        const [, videoId, codec, resolution, filename] = extTwVideoMatch;
+        
+        // 異なる解像度を試す
+        const resolutions = ['480x270', '640x360', '1280x720', '1920x1080'];
+        const currentResolution = resolution;
+        
+        for (const res of resolutions) {
+          if (res !== currentResolution) {
+            const alternativeUrl = originalUrl.replace(
+              `/vid/${codec}/${currentResolution}/${filename}`,
+              `/vid/${codec}/${res}/${filename}`
+            );
+            alternativeUrls.push(alternativeUrl);
+          }
+        }
+      }
+      
+      // amplify_videoのURLパターンも対応
+      const amplifyVideoMatch = originalUrl.match(/\/amplify_video\/([^\/]+)\/vid\/([^\/]+)\/([^\/]+)\/([^?]+)/);
+      if (amplifyVideoMatch) {
+        const [, videoId, codec, resolution, filename] = amplifyVideoMatch;
+        
+        const resolutions = ['320x434', '480x652', '720x980', '1080x1464'];
+        const currentResolution = resolution;
+        
+        for (const res of resolutions) {
+          if (res !== currentResolution) {
+            const alternativeUrl = originalUrl.replace(
+              `/vid/${codec}/${currentResolution}/${filename}`,
+              `/vid/${codec}/${res}/${filename}`
+            );
+            alternativeUrls.push(alternativeUrl);
+          }
+        }
+      }
+      
+      console.log('Comiketter: Generated alternative video URLs:', alternativeUrls);
+    } catch (error) {
+      console.warn('Comiketter: Failed to generate alternative video URLs:', error);
+    }
+    
+    return alternativeUrls;
   }
 
   /**
