@@ -80,7 +80,23 @@ export class DownloadManager {
     try {
       const response = data as any;
       
-      // ツイート情報を抽出
+      // 新しいAPIレスポンス構造に対応
+      if (response.data && response.data.threaded_conversation_with_injections_v2) {
+        const conversation = response.data.threaded_conversation_with_injections_v2;
+        if (conversation.instructions) {
+          for (const instruction of conversation.instructions) {
+            if (instruction.type === 'TimelineAddEntries') {
+              for (const entry of instruction.entries) {
+                if (entry.content && entry.content.itemContent) {
+                  this.extractMediaFromTweet(entry.content.itemContent);
+                }
+              }
+            }
+          }
+        }
+      }
+      
+      // 従来のツイート情報を抽出
       if (response.data && response.data.instructions) {
         for (const instruction of response.data.instructions) {
           if (instruction.type === 'TimelineAddEntries') {
@@ -117,54 +133,180 @@ export class DownloadManager {
   }
 
   /**
+   * 動画バリアントから最高ビットレートのものを選択
+   * TwitterMediaHarvestの実装を参考にした改善版
+   */
+  private selectBestVideoVariant(variants: any[]): any {
+    console.log('Comiketter: Selecting best video variant from', variants.length, 'variants');
+    
+    if (variants.length === 0) {
+      console.warn('Comiketter: No video variants available');
+      return null;
+    }
+    
+    // MP4ファイルのみをフィルタリング（TwitterMediaHarvest準拠）
+    const mp4Variants = variants.filter((v: any) => v.content_type === 'video/mp4');
+    
+    if (mp4Variants.length === 0) {
+      console.warn('Comiketter: No MP4 variants found');
+      return null;
+    }
+    
+    console.log('Comiketter: Found', mp4Variants.length, 'MP4 variants');
+    
+    // ビットレートで最高品質の動画を選択（TwitterMediaHarvest準拠）
+    const bestVariant = mp4Variants.reduce((prev: any, curr: any) => {
+      const prevBitrate = prev.bitrate || 0;
+      const currBitrate = curr.bitrate || 0;
+      
+      console.log('Comiketter: Comparing variants:', {
+        prev: {
+          url: prev.url,
+          bitrate: prevBitrate
+        },
+        curr: {
+          url: curr.url,
+          bitrate: currBitrate
+        }
+      });
+      
+      // ビットレートで比較（高い方が良い）
+      const result = currBitrate >= prevBitrate ? curr : prev;
+      console.log('Comiketter: Bitrate comparison. Selected:', result.url, 'bitrate:', result.bitrate);
+      return result;
+    });
+    
+    console.log('Comiketter: Final selected variant:', {
+      url: bestVariant.url,
+      bitrate: bestVariant.bitrate,
+      content_type: bestVariant.content_type
+    });
+    
+    return bestVariant;
+  }
+
+  /**
+   * URLから解像度情報を抽出
+   */
+  private extractResolutionFromUrl(url: string): { width: number; height: number } | null {
+    try {
+      console.log('Comiketter: Extracting resolution from URL:', url);
+      
+      // amplify_videoのURLパターン: /amplify_video/{id}/vid/avc1/{width}x{height}/{filename}
+      const amplifyMatch = url.match(/\/amplify_video\/[^/]+\/vid\/[^/]+\/(\d+)x(\d+)\//);
+      if (amplifyMatch) {
+        const resolution = {
+          width: parseInt(amplifyMatch[1], 10),
+          height: parseInt(amplifyMatch[2], 10)
+        };
+        console.log('Comiketter: Extracted resolution from amplify_video:', resolution);
+        return resolution;
+      }
+      
+      // ext_tw_videoのURLパターン: /ext_tw_video/{id}/pu/vid/avc1/{width}x{height}/{filename}
+      const extTwMatch = url.match(/\/ext_tw_video\/[^/]+\/pu\/vid\/[^/]+\/(\d+)x(\d+)\//);
+      if (extTwMatch) {
+        const resolution = {
+          width: parseInt(extTwMatch[1], 10),
+          height: parseInt(extTwMatch[2], 10)
+        };
+        console.log('Comiketter: Extracted resolution from ext_tw_video:', resolution);
+        return resolution;
+      }
+      
+      // より汎用的なパターン: {width}x{height}の形式を探す
+      const genericMatch = url.match(/(\d+)x(\d+)/);
+      if (genericMatch) {
+        const resolution = {
+          width: parseInt(genericMatch[1], 10),
+          height: parseInt(genericMatch[2], 10)
+        };
+        console.log('Comiketter: Extracted resolution from generic pattern:', resolution);
+        return resolution;
+      }
+      
+      console.log('Comiketter: No resolution pattern found in URL');
+      return null;
+    } catch (error) {
+      console.error('Comiketter: Failed to extract resolution from URL:', error);
+      return null;
+    }
+  }
+
+  /**
+   * 動画URLからクエリ部分を抽出
+   */
+  private extractQueryFromUrl(url: string): string {
+    try {
+      const urlObj = new window.URL(url);
+      return urlObj.search || '';
+    } catch (error) {
+      console.error('Comiketter: Failed to extract query from URL:', error);
+      return '';
+    }
+  }
+
+  /**
    * 動画の実際のURLを取得（TwitterMediaHarvest準拠）
    */
-  private getVideoUrl(tweetId: string): string | null {
-    // 動画の実際のURLを構築
-    // TwitterMediaHarvestの実装を参考に、動画IDから実際のURLを生成
-    try {
-      // 動画IDのパターンを抽出
-      const videoIdMatch = tweetId.match(/(\d+)/);
-      if (videoIdMatch) {
-        const videoId = videoIdMatch[1];
-        // 動画の実際のURLを構築（複数の解像度を試行）
-        const resolutions = [
-          '1280x720', // HD
-          '1920x1080', // Full HD
-          '854x480', // SD
-          '640x360', // Low quality
-        ];
-        
-        // 最初の解像度を返す（実際の実装では、URLの妥当性をチェックしてから返す）
-        const videoUrl = `https://video.twimg.com/ext_tw_video/${videoId}/pu/vid/${resolutions[0]}/video.mp4`;
-        console.log('Comiketter: Generated video URL:', videoUrl);
-        return videoUrl;
-      }
-    } catch (error) {
-      console.error('Comiketter: Failed to generate video URL:', error);
-    }
+  /**
+   * 動画URLを取得（APIレスポンスから直接取得する方式に統一）
+   * このメソッドは非推奨。extractMediaFromTweetメソッドを使用してください。
+   * @deprecated extractMediaFromTweetメソッドを使用してください
+   */
+  private getVideoUrl(): string | null {
+    console.warn('Comiketter: getVideoUrl is deprecated. Use extractMediaFromTweet instead.');
     return null;
   }
 
   /**
-   * ツイートからメディア情報を抽出（TwitterMediaHarvest準拠）
+   * ツイートからメディア情報を抽出（TwitterMediaHarvest準拠・ネスト対応）
    */
   private extractMediaFromTweet(tweetData: any): void {
     try {
-      const tweet = tweetData.tweet_results?.result || tweetData;
-      if (!tweet || !tweet.legacy) return;
+      // 1. TweetDetailやHomeTimelineなどのinstructions形式に対応
+      const instructions = tweetData?.data?.threaded_conversation_with_injections_v2?.instructions
+        || tweetData?.data?.home?.home_timeline_urt?.instructions
+        || tweetData?.instructions;
+      if (Array.isArray(instructions)) {
+        for (const instruction of instructions) {
+          if (instruction.type === 'TimelineAddEntries' && Array.isArray(instruction.entries)) {
+            for (const entry of instruction.entries) {
+              const itemContent = entry?.content?.itemContent;
+              if (itemContent?.tweet_results?.result) {
+                this.extractMediaFromTweetCore(itemContent.tweet_results.result);
+              }
+            }
+          }
+        }
+        return;
+      }
+      // 2. 単体ツイート形式にも対応
+      if (tweetData?.tweet_results?.result) {
+        this.extractMediaFromTweetCore(tweetData.tweet_results.result);
+        return;
+      }
+      // 3. それ以外の形式（既存のロジック）
+      this.extractMediaFromTweetCore(tweetData);
+    } catch (error) {
+      console.error('Comiketter: Failed to extract media from tweet:', error);
+    }
+  }
 
+  /**
+   * media抽出の本体（既存ロジックを流用）
+   */
+  private extractMediaFromTweetCore(tweet: any): void {
+    try {
+      if (!tweet || !tweet.legacy) return;
       const legacy = tweet.legacy;
       const tweetId = legacy.id_str;
       const user = tweet.core?.user_results?.result?.legacy || {};
-      
       const mediaFiles: TweetMediaFileProps[] = [];
-
       // メディア情報を抽出
       if (legacy.extended_entities && legacy.extended_entities.media) {
         let imageIndex = 0;
         let videoIndex = 0;
-
         for (const media of legacy.extended_entities.media) {
           if (media.type === 'photo') {
             // 画像の場合、最高品質のURLを取得
@@ -184,22 +326,35 @@ export class DownloadManager {
                 serial: ++imageIndex,
                 hash: this.generateHash(photoUrl),
                 createdAt: new Date(),
+                tweetContent: legacy.full_text || '',
+                tweetDate: legacy.created_at || '',
               });
             }
           } else if (media.type === 'video' || media.type === 'animated_gif') {
-            // 動画の場合、TwitterMediaHarvestと同様の処理
+            // 動画の場合、video_infoから最高品質のMP4を選択
             const videoInfo = media.video_info;
-            if (videoInfo && videoInfo.variants) {
+            if (videoInfo && videoInfo.variants && Array.isArray(videoInfo.variants)) {
+              console.log('Comiketter: Processing video media:', {
+                type: media.type,
+                variantsCount: videoInfo.variants.length,
+                variants: videoInfo.variants.map((v: any) => ({
+                  content_type: v.content_type,
+                  bitrate: v.bitrate,
+                  url: v.url
+                }))
+              });
               // MP4ファイルのみをフィルタリング
               const mp4Variants = videoInfo.variants.filter((v: any) => v.content_type === 'video/mp4');
-              
               if (mp4Variants.length > 0) {
-                // 最高ビットレートのMP4ファイルを選択
-                const bestVariant = mp4Variants.reduce((prev: any, curr: any) => 
-                  (curr.bitrate || 0) >= (prev.bitrate || 0) ? curr : prev
-                );
-                
+                // ビットレートで最高品質のMP4ファイルを選択
+                const bestVariant = this.selectBestVideoVariant(videoInfo.variants);
                 if (bestVariant && bestVariant.url) {
+                  console.log('Comiketter: Selected best video variant:', {
+                    url: bestVariant.url,
+                    bitrate: bestVariant.bitrate,
+                    resolution: this.extractResolutionFromUrl(bestVariant.url),
+                    query: this.extractQueryFromUrl(bestVariant.url)
+                  });
                   mediaFiles.push({
                     tweetId,
                     source: bestVariant.url,
@@ -214,21 +369,99 @@ export class DownloadManager {
                     serial: ++videoIndex,
                     hash: this.generateHash(bestVariant.url),
                     createdAt: new Date(),
+                    tweetContent: legacy.full_text || '',
+                    tweetDate: legacy.created_at || '',
+                    mediaUrls: [bestVariant.url],
+                    mediaTypes: ['video/mp4'],
+                    mediaKey: media.media_key || '',
                   });
+                } else {
+                  console.warn('Comiketter: No valid video variant found for media:', media.media_key);
                 }
+              } else {
+                console.warn('Comiketter: No MP4 variants found for video media:', media.media_key);
               }
+            } else {
+              console.warn('Comiketter: Invalid video_info for media:', media.media_key);
             }
           }
         }
       }
-
+      // card内の動画情報も抽出（amplify_video等）
+      if (tweet.card && tweet.card.legacy && tweet.card.legacy.binding_values) {
+        const bindingValues = tweet.card.legacy.binding_values;
+        const unifiedCardValue = bindingValues.find((bv: any) => bv.key === 'unified_card')?.value?.string_value;
+        if (unifiedCardValue) {
+          try {
+            const unifiedCard = JSON.parse(unifiedCardValue);
+            if (unifiedCard.media_entities) {
+              let videoIndex = mediaFiles.filter(f => f.type === 'video').length;
+              for (const [, mediaEntity] of Object.entries(unifiedCard.media_entities)) {
+                const entity = mediaEntity as any;
+                if (entity.type === 'video' && entity.video_info && entity.video_info.variants) {
+                  console.log('Comiketter: Processing unified card video entity:', {
+                    mediaKey: entity.media_key,
+                    variantsCount: entity.video_info.variants.length,
+                    variants: entity.video_info.variants.map((v: any) => ({
+                      content_type: v.content_type,
+                      bitrate: v.bitrate,
+                      url: v.url
+                    }))
+                  });
+                  // MP4ファイルのみをフィルタリング
+                  const mp4Variants = entity.video_info.variants.filter((v: any) => v.content_type === 'video/mp4');
+                  if (mp4Variants.length > 0) {
+                    // ビットレートで最高品質のMP4ファイルを選択
+                    const bestVariant = this.selectBestVideoVariant(entity.video_info.variants);
+                    if (bestVariant && bestVariant.url) {
+                      console.log('Comiketter: Selected best card video variant:', {
+                        url: bestVariant.url,
+                        bitrate: bestVariant.bitrate,
+                        resolution: this.extractResolutionFromUrl(bestVariant.url),
+                        query: this.extractQueryFromUrl(bestVariant.url),
+                        mediaKey: entity.media_key
+                      });
+                      mediaFiles.push({
+                        tweetId,
+                        source: bestVariant.url,
+                        tweetUser: {
+                          screenName: user.screen_name || '',
+                          userId: user.id_str || '',
+                          displayName: user.name || user.screen_name || '',
+                          isProtected: user.protected || false,
+                        },
+                        type: 'video',
+                        ext: 'mp4',
+                        serial: ++videoIndex,
+                        hash: this.generateHash(bestVariant.url),
+                        createdAt: new Date(),
+                        tweetContent: legacy.full_text || '',
+                        tweetDate: legacy.created_at || '',
+                        mediaUrls: [bestVariant.url],
+                        mediaTypes: ['video/mp4'],
+                        mediaKey: entity.media_key || '',
+                      });
+                    } else {
+                      console.warn('Comiketter: No valid video variant found for unified card entity:', entity.media_key);
+                    }
+                  } else {
+                    console.warn('Comiketter: No MP4 variants found for unified card video entity:', entity.media_key);
+                  }
+                }
+              }
+            }
+          } catch (error) {
+            console.error('Comiketter: Failed to parse unified card:', error);
+          }
+        }
+      }
       // キャッシュに保存
       if (mediaFiles.length > 0) {
         this.mediaCache.set(tweetId, mediaFiles);
         console.log('Comiketter: Media info cached for tweet:', tweetId, mediaFiles.length, 'files');
       }
     } catch (error) {
-      console.error('Comiketter: Failed to extract media from tweet:', error);
+      console.error('Comiketter: Failed to extract media from tweet core:', error);
     }
   }
 
@@ -333,42 +566,6 @@ export class DownloadManager {
       // TwitterMediaHarvestと同様のフィルタリング処理
       const filteredMediaFiles = mediaFiles.filter(mediaFile => {
         console.log('Comiketter: Checking media file:', mediaFile.source, 'type:', mediaFile.type);
-        
-        // ダミー動画URLの場合は実際の動画URLを取得
-        if (mediaFile.source === 'video://placeholder') {
-          console.log('Comiketter: Placeholder video URL detected, attempting to get actual video URL');
-          const actualVideoUrl = this.getVideoUrl(request.tweetId);
-          if (actualVideoUrl) {
-            console.log('Comiketter: Found actual video URL:', actualVideoUrl);
-            // 動画ファイルとして扱う
-            mediaFile.source = actualVideoUrl;
-            mediaFile.type = 'video';
-            mediaFile.ext = 'mp4';
-            console.log('Comiketter: Updated media file to video:', mediaFile);
-            return true;
-          } else {
-            console.log('Comiketter: Could not get actual video URL, excluding placeholder');
-            return false;
-          }
-        }
-        
-        // 動画サムネイルが検出された場合、実際の動画URLを取得
-        if (mediaFile.type === 'thumbnail' && mediaFile.source.includes('ext_tw_video_thumb')) {
-          console.log('Comiketter: Video thumbnail detected, attempting to get actual video URL');
-          const actualVideoUrl = this.getVideoUrl(request.tweetId);
-          if (actualVideoUrl) {
-            console.log('Comiketter: Found actual video URL:', actualVideoUrl);
-            // 動画ファイルとして扱う
-            mediaFile.source = actualVideoUrl;
-            mediaFile.type = 'video';
-            mediaFile.ext = 'mp4';
-            console.log('Comiketter: Updated media file to video:', mediaFile);
-            return true;
-          } else {
-            console.log('Comiketter: Could not get actual video URL, excluding thumbnail');
-            return false;
-          }
-        }
         
         // 動画サムネイル除外設定をチェック
         if (mediaFile.type === 'thumbnail' && !settings.mediaDownloadSettings.includeVideoThumbnail) {
@@ -520,12 +717,27 @@ export class DownloadManager {
     filename: string,
     settings: AppSettings
   ): Promise<DownloadHistory> {
-    const urlsToTry = [mediaFile.source, ...this.generateAlternativeVideoUrls(mediaFile.source)];
+    console.log('Comiketter: Starting video download with retry for:', mediaFile.source);
+    
+    // 代替URLを生成
+    const alternativeUrls = this.generateAlternativeVideoUrls(mediaFile.source);
+    const urlsToTry = [mediaFile.source, ...alternativeUrls];
+    
+    console.log('Comiketter: URLs to try:', urlsToTry);
     
     for (let i = 0; i < urlsToTry.length; i++) {
       const url = urlsToTry[i];
       try {
         console.log(`Comiketter: Trying video URL ${i + 1}/${urlsToTry.length}:`, url);
+        
+        // URLの事前検証
+        if (url.includes('video.twimg.com')) {
+          const isValid = await this.validateVideoUrl(url);
+          if (!isValid) {
+            console.warn(`Comiketter: URL validation failed for URL ${i + 1}:`, url);
+            continue;
+          }
+        }
         
         const downloadId = await this.executeDownload(url, filename, settings);
         
@@ -561,11 +773,14 @@ export class DownloadManager {
         
         // 最後のURLでも失敗した場合はエラーを投げる
         if (i === urlsToTry.length - 1) {
-          throw new Error(`Failed to download video after trying ${urlsToTry.length} different URLs`);
+          const errorMessage = `Failed to download video after trying ${urlsToTry.length} different URLs. Last error: ${error instanceof Error ? error.message : 'Unknown error'}`;
+          console.error('Comiketter:', errorMessage);
+          throw new Error(errorMessage);
         }
         
         // 少し待ってから次のURLを試す
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        console.log(`Comiketter: Waiting 1 second before trying next URL...`);
+        await new Promise(resolve => window.setTimeout(resolve, 1000));
       }
     }
     
@@ -706,6 +921,16 @@ export class DownloadManager {
     if (urlLower.includes('.avi')) return 'avi';
     if (urlLower.includes('.webm')) return 'webm';
     
+    // 動画URLの場合はmp4を返す
+    if (urlLower.includes('video.twimg.com/')) {
+      return 'mp4';
+    }
+    
+    // 画像URLの場合はjpgを返す
+    if (urlLower.includes('pbs.twimg.com/media/')) {
+      return 'jpg';
+    }
+    
     // デフォルト
     return 'jpg';
   }
@@ -766,7 +991,7 @@ export class DownloadManager {
       console.log('Comiketter: Validating video URL:', url);
       
       // HEADリクエストでURLの有効性をチェック
-      const response = await fetch(url, {
+      const response = await window.fetch(url, {
         method: 'HEAD',
         mode: 'no-cors', // CORSエラーを回避
         cache: 'no-cache'
@@ -802,13 +1027,16 @@ export class DownloadManager {
     const alternativeUrls: string[] = [];
     
     try {
+      console.log('Comiketter: Generating alternative URLs for:', originalUrl);
+      
       // ext_tw_videoのURLパターンを解析
-      const extTwVideoMatch = originalUrl.match(/\/ext_tw_video\/([^\/]+)\/pu\/vid\/([^\/]+)\/([^\/]+)\/([^?]+)/);
+      const extTwVideoMatch = originalUrl.match(/\/ext_tw_video\/([^/]+)\/pu\/vid\/([^/]+)\/([^/]+)\/([^?]+)/);
       if (extTwVideoMatch) {
-        const [, videoId, codec, resolution, filename] = extTwVideoMatch;
+        const [, , codec, resolution, filename] = extTwVideoMatch;
+        console.log('Comiketter: Extracted ext_tw_video components:', { codec, resolution, filename });
         
-        // 異なる解像度を試す
-        const resolutions = ['480x270', '640x360', '1280x720', '1920x1080'];
+        // 異なる解像度を試す（ビットレートの高い順）
+        const resolutions = ['1920x1080', '1280x720', '640x360', '480x270'];
         const currentResolution = resolution;
         
         for (const res of resolutions) {
@@ -818,16 +1046,18 @@ export class DownloadManager {
               `/vid/${codec}/${res}/${filename}`
             );
             alternativeUrls.push(alternativeUrl);
+            console.log('Comiketter: Generated ext_tw_video alternative:', alternativeUrl);
           }
         }
       }
       
       // amplify_videoのURLパターンも対応
-      const amplifyVideoMatch = originalUrl.match(/\/amplify_video\/([^\/]+)\/vid\/([^\/]+)\/([^\/]+)\/([^?]+)/);
+      const amplifyVideoMatch = originalUrl.match(/\/amplify_video\/([^/]+)\/vid\/([^/]+)\/([^/]+)\/([^?]+)/);
       if (amplifyVideoMatch) {
-        const [, videoId, codec, resolution, filename] = amplifyVideoMatch;
+        const [, , codec, resolution, filename] = amplifyVideoMatch;
+        console.log('Comiketter: Extracted amplify_video components:', { codec, resolution, filename });
         
-        const resolutions = ['320x434', '480x652', '720x980', '1080x1464'];
+        const resolutions = ['1080x1464', '720x980', '480x652', '320x434'];
         const currentResolution = resolution;
         
         for (const res of resolutions) {
@@ -837,11 +1067,17 @@ export class DownloadManager {
               `/vid/${codec}/${res}/${filename}`
             );
             alternativeUrls.push(alternativeUrl);
+            console.log('Comiketter: Generated amplify_video alternative:', alternativeUrl);
           }
         }
       }
       
-      console.log('Comiketter: Generated alternative video URLs:', alternativeUrls);
+      // tweet_videoのURLパターンも対応（通常は代替URLがないが、念のため）
+      if (originalUrl.includes('/tweet_video/')) {
+        console.log('Comiketter: tweet_video URL detected, no alternatives available');
+      }
+      
+      console.log('Comiketter: Generated', alternativeUrls.length, 'alternative video URLs');
     } catch (error) {
       console.warn('Comiketter: Failed to generate alternative video URLs:', error);
     }
@@ -983,4 +1219,4 @@ export class DownloadManager {
     this.settings = newSettings;
     console.log('Comiketter: DownloadManager settings updated');
   }
-} 
+}

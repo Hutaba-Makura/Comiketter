@@ -33,6 +33,7 @@ export function getTweetInfoFromArticle(article: HTMLElement): Tweet | null {
     const displayName = extractDisplayName(article);
     const hasMedia = checkHasMedia(article);
     const mediaUrls = hasMedia ? extractMediaUrls(article) : undefined;
+    const hasVideo = checkHasVideo(article);
     const createdAt = extractCreatedAt(article);
     const text = extractText(article);
 
@@ -40,12 +41,31 @@ export function getTweetInfoFromArticle(article: HTMLElement): Tweet | null {
       tweetId,
       screenName,
       hasMedia,
+      hasVideo,
       mediaUrls: mediaUrls?.length || 0
     });
 
     if (!tweetId || !screenName) {
       console.warn('Comiketter: Failed to extract tweet info - missing tweetId or screenName');
       return null;
+    }
+
+    // メディア情報を構築
+    let media;
+    if (mediaUrls && mediaUrls.length > 0) {
+      // 画像がある場合は画像として追加
+      media = mediaUrls.map(url => ({
+        type: 'image' as const,
+        url,
+        originalUrl: url,
+      }));
+    } else if (hasVideo) {
+      // 動画がある場合はダミーエントリを追加（実際のURLはAPI傍受で取得）
+      media = [{
+        type: 'video' as const,
+        url: 'video://placeholder',
+        originalUrl: 'video://placeholder',
+      }];
     }
 
     const result = {
@@ -57,17 +77,14 @@ export function getTweetInfoFromArticle(article: HTMLElement): Tweet | null {
         profileImageUrl: undefined,
       },
       createdAt: createdAt || new Date().toISOString(),
-      media: mediaUrls ? mediaUrls.map(url => ({
-        type: 'image' as const,
-        url,
-        originalUrl: url,
-      })) : undefined,
+      media,
       url: `https://twitter.com/${screenName}/status/${tweetId}`,
     };
 
     console.log('Comiketter: Final tweet info:', {
       id: result.id,
       hasMedia: !!result.media,
+      hasVideo,
       mediaLength: result.media?.length || 0
     });
 
@@ -211,7 +228,8 @@ function extractCreatedAt(article: HTMLElement): string | null {
  */
 function checkHasMedia(article: HTMLElement): boolean {
   // 画像の存在チェック（プロフィール画像とバナー画像を除外）
-  const images = article.querySelectorAll('img[src*="pbs.twimg.com"]');
+  // より具体的なセレクターを使用してツイート内の画像を検出
+  const images = article.querySelectorAll('img[src*="pbs.twimg.com/media/"]');
   let hasValidImage = false;
   
   images.forEach(img => {
@@ -220,9 +238,27 @@ function checkHasMedia(article: HTMLElement): boolean {
       // プロフィール画像とバナー画像を除外
       if (!isProfileOrBannerImage(src) && !isVideoThumbnail(src)) {
         hasValidImage = true;
+        console.log('Comiketter: Valid image found:', src);
+      } else {
+        console.log('Comiketter: Excluded image:', src, {
+          isProfile: isProfileOrBannerImage(src),
+          isVideoThumbnail: isVideoThumbnail(src)
+        });
       }
     }
   });
+  
+  // 画像が見つからない場合は、より広い範囲で検索
+  if (!hasValidImage) {
+    const allImages = article.querySelectorAll('img[src*="pbs.twimg.com"]');
+    allImages.forEach(img => {
+      const src = img.getAttribute('src');
+      if (src && src.includes('/media/') && !isProfileOrBannerImage(src) && !isVideoThumbnail(src)) {
+        hasValidImage = true;
+        console.log('Comiketter: Valid image found (fallback):', src);
+      }
+    });
+  }
   
   // 動画の存在チェック
   const hasVideo = article.querySelector('[data-testid="videoPlayer"]') !== null ||
@@ -237,7 +273,8 @@ function checkHasMedia(article: HTMLElement): boolean {
     hasValidImage,
     hasVideo,
     isInQuotedTweet,
-    hasMedia
+    hasMedia,
+    totalImages: images.length
   });
   
   return hasMedia && !isInQuotedTweet;
@@ -250,7 +287,7 @@ function extractMediaUrls(article: HTMLElement): string[] {
   const mediaUrls: string[] = [];
 
   // 画像URLを抽出（プロフィール画像とバナー画像を除外）
-  const images = article.querySelectorAll('img[src*="pbs.twimg.com"]');
+  const images = article.querySelectorAll('img[src*="pbs.twimg.com/media/"]');
   images.forEach(img => {
     const src = img.getAttribute('src');
     if (src && !mediaUrls.includes(src)) {
@@ -272,13 +309,11 @@ function extractMediaUrls(article: HTMLElement): string[] {
     }
   });
 
-  // 動画URLを抽出（API傍受で取得されるため、ここではダミーURLを設定）
+  // 動画URLはAPI傍受で取得されるため、ここでは追加しない
+  // 実際の動画URLは background/downloadManager.ts の extractMediaFromTweet で取得される
   const videos = article.querySelectorAll('[data-testid="videoPlayer"], [data-testid="playButton"]');
   if (videos.length > 0) {
-    // 動画が検出された場合はダミーURLを追加してDLボタンを表示
-    // 実際のURLは background/apiInterceptor.ts で取得される
-    console.log('Comiketter: Video detected, adding placeholder URL for DL button');
-    mediaUrls.push('video://placeholder'); // ダミーURL
+    console.log('Comiketter: Video detected, but URL will be extracted from API response');
   }
 
   return mediaUrls;
@@ -310,21 +345,28 @@ function isProfileOrBannerImage(url: string): boolean {
 }
 
 /**
+ * 動画の存在をチェック
+ */
+function checkHasVideo(article: HTMLElement): boolean {
+  // 動画プレイヤーや再生ボタンの存在をチェック
+  const hasVideo = article.querySelector('[data-testid="videoPlayer"]') !== null ||
+                  article.querySelector('[data-testid="playButton"]') !== null;
+  
+  console.log('Comiketter: Video check result:', { hasVideo });
+  
+  return hasVideo;
+}
+
+/**
  * 動画サムネイルかどうかを判定
  */
 function isVideoThumbnail(url: string): boolean {
   const urlLower = url.toLowerCase();
   
-  // 動画サムネイルのパターン
+  // 動画サムネイルのパターン（より具体的に）
   const thumbnailPatterns = [
     'ext_tw_video_thumb',
     'video_thumb',
-    'thumb',
-    'small',
-    'mini',
-    '_normal',
-    '_bigger',
-    '_mini',
   ];
   
   return thumbnailPatterns.some(pattern => urlLower.includes(pattern));
@@ -343,4 +385,4 @@ export function isValidTweetElement(element: HTMLElement): boolean {
  */
 export function getParentTweet(element: HTMLElement): HTMLElement | null {
   return element.closest('article[data-testid="tweet"]');
-} 
+}

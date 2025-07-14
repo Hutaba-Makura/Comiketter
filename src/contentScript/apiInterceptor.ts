@@ -8,11 +8,6 @@
  */
 
 // 型定義
-type TxTarget = {
-  method: string;
-  path: string;
-};
-
 type WebPackModuleItem = [string[], Module];
 type Module = Record<string, unknown>;
 type ESModule = {
@@ -317,7 +312,15 @@ export class ApiInterceptor {
    */
   private handleApiResponse(detail: Comiketter.ApiResponseDetail): void {
     try {
+      console.log('Comiketter: Processing API response for path:', detail.path);
+      
       const responseData = JSON.parse(detail.body);
+      
+      // 動画情報が含まれているかチェック
+      if (this.containsVideoInfo(responseData)) {
+        console.log('Comiketter: Video information detected in API response');
+      }
+      
       this.processApiResponse(detail.path, responseData);
     } catch (error) {
       console.error('Comiketter: Failed to parse API response', error);
@@ -339,5 +342,50 @@ export class ApiInterceptor {
       },
     });
     document.dispatchEvent(event);
+  }
+
+  /**
+   * レスポンスデータに動画情報が含まれているかチェック
+   * @param data レスポンスデータ
+   * @returns 動画情報が含まれている場合true
+   */
+  private containsVideoInfo(data: any): boolean {
+    try {
+      // 再帰的に動画情報を検索
+      const searchForVideoInfo = (obj: any): boolean => {
+        if (!obj || typeof obj !== 'object') return false;
+        
+        // video_infoプロパティをチェック
+        if (obj.video_info && Array.isArray(obj.video_info.variants)) {
+          console.log('Comiketter: Found video_info with variants:', obj.video_info.variants.length);
+          return true;
+        }
+        
+        // typeプロパティでvideoをチェック
+        if (obj.type === 'video' || obj.type === 'animated_gif') {
+          console.log('Comiketter: Found video media type:', obj.type);
+          return true;
+        }
+        
+        // 配列の場合は各要素をチェック
+        if (Array.isArray(obj)) {
+          return obj.some(item => searchForVideoInfo(item));
+        }
+        
+        // オブジェクトの場合は各プロパティをチェック
+        for (const key in obj) {
+          if (searchForVideoInfo(obj[key])) {
+            return true;
+          }
+        }
+        
+        return false;
+      };
+      
+      return searchForVideoInfo(data);
+    } catch (error) {
+      console.warn('Comiketter: Error checking for video info:', error);
+      return false;
+    }
   }
 } 

@@ -81,6 +81,7 @@ export interface TweetMediaFileProps {
   mediaUrls?: string[]
   mediaTypes?: string[]
   tweetDate?: string
+  mediaKey?: string // 動画のmedia_keyを追加
 }
 
 // ダウンロード競合時の動作

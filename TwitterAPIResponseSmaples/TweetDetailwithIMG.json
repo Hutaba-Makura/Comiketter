@@ -1,0 +1,414 @@
+{
+    "data": {
+        "threaded_conversation_with_injections_v2": {
+            "instructions": [
+                {
+                    "type": "TimelineAddEntries",
+                    "entries": [
+                        {
+                            "entryId": "tweet-1944387160645537833",
+                            "sortIndex": "7278984876209237974",
+                            "content": {
+                                "entryType": "TimelineTimelineItem",
+                                "__typename": "TimelineTimelineItem",
+                                "itemContent": {
+                                    "itemType": "TimelineTweet",
+                                    "__typename": "TimelineTweet",
+                                    "tweet_results": {
+                                        "result": {
+                                            "__typename": "Tweet",
+                                            "rest_id": "1944387160645537833",
+                                            "has_birdwatch_notes": false,
+                                            "core": {
+                                                "user_results": {
+                                                    "result": {
+                                                        "__typename": "User",
+                                                        "id": "VXNlcjoxNTMxNDkxMTA0MzEwMjc2MDk2",
+                                                        "rest_id": "1531491104310276096",
+                                                        "affiliates_highlighted_label": {},
+                                                        "avatar": {
+                                                            "image_url": "https://pbs.twimg.com/profile_images/1939241906178871296/XzSLYTFJ_normal.jpg"
+                                                        },
+                                                        "core": {
+                                                            "created_at": "Tue May 31 04:21:54 +0000 2022",
+                                                            "name": "多分人間",
+                                                            "screen_name": "xxx_666__x"
+                                                        },
+                                                        "dm_permissions": {
+                                                            "can_dm": true
+                                                        },
+                                                        "has_graduated_access": true,
+                                                        "is_blue_verified": true,
+                                                        "legacy": {
+                                                            "default_profile": true,
+                                                            "default_profile_image": false,
+                                                            "description": "イラスト使用禁止",
+                                                            "entities": {
+                                                                "description": {
+                                                                    "urls": []
+                                                                }
+                                                            },
+                                                            "fast_followers_count": 0,
+                                                            "favourites_count": 6714,
+                                                            "followers_count": 72706,
+                                                            "friends_count": 91,
+                                                            "has_custom_timelines": true,
+                                                            "is_translator": false,
+                                                            "listed_count": 415,
+                                                            "media_count": 169,
+                                                            "normal_followers_count": 72706,
+                                                            "pinned_tweet_ids_str": [
+                                                                "1820009623224762536"
+                                                            ],
+                                                            "possibly_sensitive": false,
+                                                            "profile_banner_url": "https://pbs.twimg.com/profile_banners/1531491104310276096/1719898405",
+                                                            "profile_interstitial_type": "",
+                                                            "statuses_count": 6145,
+                                                            "translator_type": "none",
+                                                            "want_retweets": false,
+                                                            "withheld_in_countries": []
+                                                        },
+                                                        "location": {
+                                                            "location": ""
+                                                        },
+                                                        "media_permissions": {
+                                                            "can_media_tag": false
+                                                        },
+                                                        "parody_commentary_fan_label": "None",
+                                                        "profile_image_shape": "Circle",
+                                                        "privacy": {
+                                                            "protected": false
+                                                        },
+                                                        "relationship_perspectives": {
+                                                            "following": false
+                                                        },
+                                                        "tipjar_settings": {},
+                                                        "verification": {
+                                                            "verified": false
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "unmention_data": {},
+                                            "edit_control": {
+                                                "edit_tweet_ids": [
+                                                    "1944387160645537833"
+                                                ],
+                                                "editable_until_msecs": "1752416598000",
+                                                "is_edit_eligible": true,
+                                                "edits_remaining": "5"
+                                            },
+                                            "is_translatable": false,
+                                            "views": {
+                                                "count": "74717",
+                                                "state": "EnabledWithCount"
+                                            },
+                                            "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
+                                            "legacy": {
+                                                "bookmark_count": 412,
+                                                "bookmarked": false,
+                                                "created_at": "Sun Jul 13 13:23:18 +0000 2025",
+                                                "conversation_id_str": "1944387160645537833",
+                                                "display_text_range": [
+                                                    0,
+                                                    12
+                                                ],
+                                                "entities": {
+                                                    "hashtags": [],
+                                                    "media": [
+                                                        {
+                                                            "display_url": "pic.x.com/oXNux7PKhM",
+                                                            "expanded_url": "https://x.com/xxx_666__x/status/1944387160645537833/photo/1",
+                                                            "id_str": "1944387152055332864",
+                                                            "indices": [
+                                                                13,
+                                                                36
+                                                            ],
+                                                            "media_key": "3_1944387152055332864",
+                                                            "media_url_https": "https://pbs.twimg.com/media/GvvZ0CAXcAAoAi5.jpg",
+                                                            "type": "photo",
+                                                            "url": "https://t.co/oXNux7PKhM",
+                                                            "ext_media_availability": {
+                                                                "status": "Available"
+                                                            },
+                                                            "features": {
+                                                                "large": {
+                                                                    "faces": [
+                                                                        {
+                                                                            "x": 212,
+                                                                            "y": 251,
+                                                                            "h": 350,
+                                                                            "w": 350
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                "medium": {
+                                                                    "faces": [
+                                                                        {
+                                                                            "x": 212,
+                                                                            "y": 251,
+                                                                            "h": 350,
+                                                                            "w": 350
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                "small": {
+                                                                    "faces": [
+                                                                        {
+                                                                            "x": 140,
+                                                                            "y": 166,
+                                                                            "h": 232,
+                                                                            "w": 232
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                "orig": {
+                                                                    "faces": [
+                                                                        {
+                                                                            "x": 212,
+                                                                            "y": 251,
+                                                                            "h": 350,
+                                                                            "w": 350
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            },
+                                                            "sizes": {
+                                                                "large": {
+                                                                    "h": 1024,
+                                                                    "w": 768,
+                                                                    "resize": "fit"
+                                                                },
+                                                                "medium": {
+                                                                    "h": 1024,
+                                                                    "w": 768,
+                                                                    "resize": "fit"
+                                                                },
+                                                                "small": {
+                                                                    "h": 680,
+                                                                    "w": 510,
+                                                                    "resize": "fit"
+                                                                },
+                                                                "thumb": {
+                                                                    "h": 150,
+                                                                    "w": 150,
+                                                                    "resize": "crop"
+                                                                }
+                                                            },
+                                                            "original_info": {
+                                                                "height": 1024,
+                                                                "width": 768,
+                                                                "focus_rects": [
+                                                                    {
+                                                                        "x": 0,
+                                                                        "y": 66,
+                                                                        "w": 768,
+                                                                        "h": 430
+                                                                    },
+                                                                    {
+                                                                        "x": 0,
+                                                                        "y": 0,
+                                                                        "w": 768,
+                                                                        "h": 768
+                                                                    },
+                                                                    {
+                                                                        "x": 0,
+                                                                        "y": 0,
+                                                                        "w": 768,
+                                                                        "h": 876
+                                                                    },
+                                                                    {
+                                                                        "x": 128,
+                                                                        "y": 0,
+                                                                        "w": 512,
+                                                                        "h": 1024
+                                                                    },
+                                                                    {
+                                                                        "x": 0,
+                                                                        "y": 0,
+                                                                        "w": 768,
+                                                                        "h": 1024
+                                                                    }
+                                                                ]
+                                                            },
+                                                            "allow_download_status": {
+                                                                "allow_download": true
+                                                            },
+                                                            "media_results": {
+                                                                "result": {
+                                                                    "media_key": "3_1944387152055332864"
+                                                                }
+                                                            }
+                                                        }
+                                                    ],
+                                                    "symbols": [],
+                                                    "timestamps": [],
+                                                    "urls": [],
+                                                    "user_mentions": []
+                                                },
+                                                "extended_entities": {
+                                                    "media": [
+                                                        {
+                                                            "display_url": "pic.x.com/oXNux7PKhM",
+                                                            "expanded_url": "https://x.com/xxx_666__x/status/1944387160645537833/photo/1",
+                                                            "id_str": "1944387152055332864",
+                                                            "indices": [
+                                                                13,
+                                                                36
+                                                            ],
+                                                            "media_key": "3_1944387152055332864",
+                                                            "media_url_https": "https://pbs.twimg.com/media/GvvZ0CAXcAAoAi5.jpg",
+                                                            "type": "photo",
+                                                            "url": "https://t.co/oXNux7PKhM",
+                                                            "ext_media_availability": {
+                                                                "status": "Available"
+                                                            },
+                                                            "features": {
+                                                                "large": {
+                                                                    "faces": [
+                                                                        {
+                                                                            "x": 212,
+                                                                            "y": 251,
+                                                                            "h": 350,
+                                                                            "w": 350
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                "medium": {
+                                                                    "faces": [
+                                                                        {
+                                                                            "x": 212,
+                                                                            "y": 251,
+                                                                            "h": 350,
+                                                                            "w": 350
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                "small": {
+                                                                    "faces": [
+                                                                        {
+                                                                            "x": 140,
+                                                                            "y": 166,
+                                                                            "h": 232,
+                                                                            "w": 232
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                "orig": {
+                                                                    "faces": [
+                                                                        {
+                                                                            "x": 212,
+                                                                            "y": 251,
+                                                                            "h": 350,
+                                                                            "w": 350
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            },
+                                                            "sizes": {
+                                                                "large": {
+                                                                    "h": 1024,
+                                                                    "w": 768,
+                                                                    "resize": "fit"
+                                                                },
+                                                                "medium": {
+                                                                    "h": 1024,
+                                                                    "w": 768,
+                                                                    "resize": "fit"
+                                                                },
+                                                                "small": {
+                                                                    "h": 680,
+                                                                    "w": 510,
+                                                                    "resize": "fit"
+                                                                },
+                                                                "thumb": {
+                                                                    "h": 150,
+                                                                    "w": 150,
+                                                                    "resize": "crop"
+                                                                }
+                                                            },
+                                                            "original_info": {
+                                                                "height": 1024,
+                                                                "width": 768,
+                                                                "focus_rects": [
+                                                                    {
+                                                                        "x": 0,
+                                                                        "y": 66,
+                                                                        "w": 768,
+                                                                        "h": 430
+                                                                    },
+                                                                    {
+                                                                        "x": 0,
+                                                                        "y": 0,
+                                                                        "w": 768,
+                                                                        "h": 768
+                                                                    },
+                                                                    {
+                                                                        "x": 0,
+                                                                        "y": 0,
+                                                                        "w": 768,
+                                                                        "h": 876
+                                                                    },
+                                                                    {
+                                                                        "x": 128,
+                                                                        "y": 0,
+                                                                        "w": 512,
+                                                                        "h": 1024
+                                                                    },
+                                                                    {
+                                                                        "x": 0,
+                                                                        "y": 0,
+                                                                        "w": 768,
+                                                                        "h": 1024
+                                                                    }
+                                                                ]
+                                                            },
+                                                            "allow_download_status": {
+                                                                "allow_download": true
+                                                            },
+                                                            "media_results": {
+                                                                "result": {
+                                                                    "media_key": "3_1944387152055332864"
+                                                                }
+                                                            }
+                                                        }
+                                                    ]
+                                                },
+                                                "favorite_count": 5702,
+                                                "favorited": false,
+                                                "full_text": "アナーキー・ストッキング https://t.co/oXNux7PKhM",
+                                                "is_quote_status": false,
+                                                "lang": "ja",
+                                                "possibly_sensitive": false,
+                                                "possibly_sensitive_editable": true,
+                                                "quote_count": 2,
+                                                "reply_count": 0,
+                                                "retweet_count": 711,
+                                                "retweeted": false,
+                                                "user_id_str": "1531491104310276096",
+                                                "id_str": "1944387160645537833"
+                                            },
+                                            "quick_promote_eligibility": {
+                                                "eligibility": "IneligibleNotProfessional"
+                                            }
+                                        }
+                                    },
+                                    "tweetDisplayType": "Tweet",
+                                    "hasModeratedReplies": false
+                                },
+                                "clientEventInfo": {
+                                    "component": "tweet",
+                                    "element": "tweet"
+                                }
+                            }
+                        }
+                    ]
+                },
+                {
+                    "type": "TimelineTerminateTimeline",
+                    "direction": "Top"
+                }
+            ]
+        }
+    }
+}
