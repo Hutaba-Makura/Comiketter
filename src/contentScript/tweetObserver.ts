@@ -244,11 +244,7 @@ export class TweetObserver {
     const hasBookmarkButton = !!article.querySelector('.comiketter-bookmark-button');
     const hasDownloadButton = !!article.querySelector('.comiketter-download-button');
     
-    console.log('Comiketter: Button check for article:', {
-      hasBookmarkButton,
-      hasDownloadButton,
-      shouldAdd: !hasBookmarkButton
-    });
+
     
     return !hasBookmarkButton;
   }
@@ -258,39 +254,33 @@ export class TweetObserver {
    */
   private addButtonsToTweet(article: HTMLElement): void {
     try {
-      console.log('Comiketter: Adding buttons to tweet');
+
       
       // ツイート情報を取得
       const tweetInfo = getTweetInfoFromArticle(article);
       if (!tweetInfo) {
-        console.log('Comiketter: Failed to get tweet info');
         return;
       }
 
-      console.log('Comiketter: Tweet info obtained:', {
-        id: tweetInfo.id,
-        hasMedia: !!tweetInfo.media,
-        mediaLength: tweetInfo.media?.length || 0
-      });
+
 
       // アクションバー（いいね、RT等のボタン群）を取得
       const actionBar = this.getActionBar(article);
       if (!actionBar) {
-        console.log('Comiketter: Failed to get action bar');
         return;
       }
 
-      console.log('Comiketter: Action bar found');
+
 
       // ボタンを作成
       const buttons = this.buttonFactory.createButtonsForTweet(tweetInfo);
 
-      console.log('Comiketter: Buttons created:', buttons.length);
+
 
       // アクションバーに挿入（順序を制御）
       this.buttonFactory.insertButtonsToActionBar(actionBar, buttons);
       
-      console.log('Comiketter: Buttons inserted successfully');
+
     } catch (error) {
       console.error('Comiketter: Failed to add buttons:', error);
       sendLog('Failed to add buttons:', error);

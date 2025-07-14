@@ -451,7 +451,9 @@ export class MessageHandler {
     timestamp: number;
   }): Promise<void> {
     try {
-      console.log('Comiketter: API response captured:', payload.path);
+      // APIパスからタイトルを抽出
+      const title = this.extractApiTitle(payload.path);
+      console.log('Comiketter: API傍受:', title, '(', payload.path, ')');
       this.downloadManager.processApiResponse(payload);
     } catch (error) {
       console.error('Comiketter: Failed to process API response:', error);
@@ -467,11 +469,40 @@ export class MessageHandler {
     timestamp: number;
   }): Promise<void> {
     try {
-      console.log('Comiketter: Processed API response:', payload.path);
+      // APIパスからタイトルを抽出
+      const title = this.extractApiTitle(payload.path);
+      console.log('Comiketter: API処理済み:', title, '(', payload.path, ')');
       this.downloadManager.processApiResponse(payload);
     } catch (error) {
       console.error('Comiketter: Failed to process API response:', error);
     }
+  }
+
+  /**
+   * APIパスからタイトルを抽出
+   */
+  private extractApiTitle(path: string): string {
+    // GraphQLエンドポイントの場合は操作名を抽出
+    if (path.includes('/graphql/')) {
+      const match = path.match(/\/graphql\/([^/]+)/);
+      if (match) {
+        return match[1];
+      }
+      return 'GraphQL';
+    }
+    
+    // その他のAPIエンドポイント
+    if (path.includes('/tweet/')) return 'ツイート詳細';
+    if (path.includes('/user/')) return 'ユーザー情報';
+    if (path.includes('/timeline/')) return 'タイムライン';
+    if (path.includes('/search/')) return '検索結果';
+    if (path.includes('/media/')) return 'メディア情報';
+    if (path.includes('/bookmark/')) return 'ブックマーク';
+    if (path.includes('/favorite/')) return 'いいね';
+    if (path.includes('/retweet/')) return 'リツイート';
+    
+    // デフォルト
+    return 'API';
   }
 
   /**
