@@ -6,10 +6,7 @@
  * Comiketter: Test utilities for development and debugging
  */
 
-// グローバル型定義
-declare global {
-  var setTimeout: (callback: (...args: any[]) => void, ms: number, ...args: any[]) => number;
-}
+// グローバル型定義（setTimeoutは既に定義されているため削除）
 
 import { logger } from './logger';
 import { TweetMediaFileProps } from '../types';

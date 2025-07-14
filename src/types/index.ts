@@ -83,11 +83,18 @@ export interface TweetMediaFileProps {
   tweetDate?: string
 }
 
+// ダウンロード競合時の動作
+export enum ConflictAction {
+  Uniquify = 'uniquify',
+  Overwrite = 'overwrite',
+  Prompt = 'prompt'
+}
+
 export interface DownloadConfig {
   url: string
   filename: string
   saveAs: boolean
-  conflictAction: 'uniquify' | 'overwrite' | 'prompt'
+  conflictAction: ConflictAction
 }
 
 // カスタムブックマーク関連の型定義
