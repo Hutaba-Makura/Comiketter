@@ -1120,6 +1120,13 @@ export class DownloadManager {
   }
 
   /**
+   * 設定を取得（パブリックメソッド）
+   */
+  async getCurrentSettings(): Promise<AppSettings | null> {
+    return await this.getSettings();
+  }
+
+  /**
    * ダウンロード状態を更新
    */
   async updateDownloadStatus(downloadId: number, status: DownloadStatus): Promise<void> {
