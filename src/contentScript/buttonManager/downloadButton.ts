@@ -162,6 +162,7 @@ export class DownloadButton extends BaseButton {
           mediaUrls: tweetInfo.media?.map(m => m.url) || [],
         },
       });
+      console.log('Comiketter: Send message to background script:', tweetInfo.id);
 
       if (response && response.success) {
         console.log('Comiketter: Download completed successfully');
