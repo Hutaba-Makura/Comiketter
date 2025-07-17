@@ -518,6 +518,7 @@ export class DownloadManager {
   async downloadTweetMedia(request: DownloadRequest): Promise<{ success: boolean; error?: string }> {
     try {
       console.log('Comiketter: Starting download for tweet:', request.tweetId);
+      console.log('Comiketter: Request:', request);
 
       // 設定を取得
       const settings = await this.getSettings();
