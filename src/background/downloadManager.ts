@@ -529,8 +529,21 @@ export class DownloadManager {
 
       // メディアURLを取得（API傍受から取得済みの場合）
       let mediaFiles: TweetMediaFileProps[] = [];
-      if (request.mediaUrls && request.mediaUrls.length > 0) {
-        // 直接URLが提供された場合
+      
+      // video://placeholderの場合はキャッシュから取得を試行
+      const hasPlaceholderVideo = request.mediaUrls?.some(url => url === 'video://placeholder');
+      
+      if (hasPlaceholderVideo) {
+        console.log('Comiketter: Placeholder video detected, looking for cached media info');
+        const cachedMedia = await this.getCachedMediaInfo(request.tweetId);
+        if (cachedMedia) {
+          mediaFiles = cachedMedia;
+          console.log('Comiketter: Found cached media files:', cachedMedia.length);
+        } else {
+          console.log('Comiketter: No cached media found for placeholder video');
+        }
+      } else if (request.mediaUrls && request.mediaUrls.length > 0) {
+        // 直接URLが提供された場合（プレースホルダー以外）
         console.log('Comiketter: Using direct media URLs:', request.mediaUrls);
         mediaFiles = request.mediaUrls.map((url, index) => ({
           tweetId: request.tweetId,
