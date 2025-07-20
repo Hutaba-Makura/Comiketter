@@ -474,11 +474,15 @@ export class ApiInterceptor {
       // video_infoプロパティをチェック
       if (obj.video_info && obj.video_info.variants) {
         console.log(`🎬 Comiketter: 動画情報を検出 - variants数: ${obj.video_info.variants.length}`);
+        // typeプロパティで動画をチェック
+        if (obj.type === 'video' || obj.type === 'animated_gif') {
+          console.log(`🎬 Comiketter: 動画メディアタイプを検出: ${obj.type}`);
+        }
         return true;
       }
       
-      // typeプロパティで動画をチェック
-      if (obj.type === 'video') {
+      // TODO:いつか消す
+      if (obj.type === 'video' || obj.type === 'animated_gif') {
         console.log(`🎬 Comiketter: 動画メディアタイプを検出: ${obj.type}`);
         return true;
       }
