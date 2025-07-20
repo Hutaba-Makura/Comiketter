@@ -5,6 +5,16 @@
  * 
  * Comiketter: API Interceptor for capturing Twitter API responses
  * Modified and adapted from TwitterMediaHarvest
+ * 
+ * 傍受するAPIの種類:
+ * - HomeTimeline: ホームタイムライン
+ * - TweetDetail: ツイート詳細
+ * - UserTweets: ユーザーのツイート
+ * - UserTweetsAndReplies: ユーザーのツイートとリプライ
+ * - TweetResultByRestId: REST IDによるツイート取得
+ * - Conversation: 会話スレッド
+ * - SearchTimeline: 検索タイムライン
+ * - Bookmarks: ブックマーク
  */
 
 // 型定義
@@ -25,6 +35,30 @@ type MakeTransactionId = (path: string, method: string) => Promise<string>;
 const Pattern = {
   tweetRelated: /^\/i\/api\/graphql\/(HomeTimeline|TweetDetail|UserTweets|UserTweetsAndReplies|TweetResultByRestId|Conversation|SearchTimeline|Bookmarks)/,
 } as const;
+
+// API種類の定義
+const ApiTypes = {
+  HomeTimeline: 'HomeTimeline',
+  TweetDetail: 'TweetDetail',
+  UserTweets: 'UserTweets',
+  UserTweetsAndReplies: 'UserTweetsAndReplies',
+  TweetResultByRestId: 'TweetResultByRestId',
+  Conversation: 'Conversation',
+  SearchTimeline: 'SearchTimeline',
+  Bookmarks: 'Bookmarks',
+} as const;
+
+// API種類を日本語で表示するマッピング
+const ApiTypeLabels: Record<string, string> = {
+  [ApiTypes.HomeTimeline]: 'ホームタイムライン',
+  [ApiTypes.TweetDetail]: 'ツイート詳細',
+  [ApiTypes.UserTweets]: 'ユーザーのツイート',
+  [ApiTypes.UserTweetsAndReplies]: 'ユーザーのツイートとリプライ',
+  [ApiTypes.TweetResultByRestId]: 'REST IDによるツイート取得',
+  [ApiTypes.Conversation]: '会話スレッド',
+  [ApiTypes.SearchTimeline]: '検索タイムライン',
+  [ApiTypes.Bookmarks]: 'ブックマーク',
+};
 
 // イベント定義
 const enum ComiketterEvent {
@@ -55,7 +89,11 @@ if (typeof XMLHttpRequest !== 'undefined') {
       
       if (validUrl && validUrl.pathname.match(Pattern.tweetRelated)) {
         thisArg.addEventListener('load', captureResponse);
-        console.log('Comiketter: XMLHttpRequest intercepted', method, url); // 消さないで
+        
+        // API種類を特定してログ出力
+        const apiType = extractApiType(validUrl.pathname);
+        const apiLabel = ApiTypeLabels[apiType] || apiType;
+        console.log(`🔍 Comiketter: 新しいAPI傍受 - ${apiLabel} (${method} ${url})`);
       }
       
       return Reflect.apply(target, thisArg, args);
@@ -66,6 +104,11 @@ if (typeof XMLHttpRequest !== 'undefined') {
     try {
       const url = validateUrl(this.responseURL);
       if (url && url.pathname.match(Pattern.tweetRelated)) {
+        const apiType = extractApiType(url.pathname);
+        const apiLabel = ApiTypeLabels[apiType] || apiType;
+        
+        console.log(`📡 Comiketter: APIレスポンス受信 - ${apiLabel} (ステータス: ${this.status})`);
+        
         const event = new CustomEvent<Comiketter.ApiResponseDetail>(
           ComiketterEvent.ApiResponse,
           {
@@ -251,10 +294,17 @@ if (typeof fetch !== 'undefined') {
       const method = init?.method || 'GET';
       
       if (url && url.pathname.match(Pattern.tweetRelated)) {
+        // API種類を特定してログ出力
+        const apiType = extractApiType(url.pathname);
+        const apiLabel = ApiTypeLabels[apiType] || apiType;
+        console.log(`🔍 Comiketter: 新しいfetch API傍受 - ${apiLabel} (${method} ${input})`);
+        
         return Reflect.apply(target, thisArg, args).then(async (response: Response) => {
           try {
             const responseClone = response.clone();
             const body = await responseClone.text();
+            
+            console.log(`📡 Comiketter: fetch APIレスポンス受信 - ${apiLabel} (ステータス: ${response.status})`);
             
             const event = new CustomEvent<Comiketter.ApiResponseDetail>(
               ComiketterEvent.ApiResponse,
@@ -278,6 +328,24 @@ if (typeof fetch !== 'undefined') {
       return Reflect.apply(target, thisArg, args);
     },
   });
+}
+
+/**
+ * URLパスからAPI種類を抽出する
+ * @param pathname URLパス
+ * @returns API種類
+ */
+function extractApiType(pathname: string): string {
+  const match = pathname.match(Pattern.tweetRelated);
+  if (match) {
+    // GraphQLエンドポイント名を抽出
+    const parts = pathname.split('/');
+    const graphqlIndex = parts.findIndex(part => part === 'graphql');
+    if (graphqlIndex !== -1 && parts[graphqlIndex + 1]) {
+      return parts[graphqlIndex + 1];
+    }
+  }
+  return 'Unknown';
 }
 
 /**
@@ -305,14 +373,26 @@ export class ApiInterceptor {
 
   private handleApiResponse(detail: Comiketter.ApiResponseDetail): void {
     try {
-      console.log('Comiketter: Processing API response for path:', detail.path);
+      const apiType = extractApiType(detail.path);
+      const apiLabel = ApiTypeLabels[apiType] || apiType;
+      
+      console.log(`🔄 Comiketter: APIレスポンス処理開始 - ${apiLabel} (ステータス: ${detail.status})`);
       
       // レスポンスボディをパース
       const data = JSON.parse(detail.body);
       
+      // レスポンスの基本情報をログ出力
+      console.log(`📊 Comiketter: ${apiLabel} レスポンス解析完了`, {
+        path: detail.path,
+        status: detail.status,
+        dataSize: detail.body.length,
+        hasData: !!data,
+        dataKeys: data ? Object.keys(data) : []
+      });
+      
       // 動画情報が含まれているかチェック
       if (this.containsVideoInfo(data)) {
-        console.log('Comiketter: Video information detected in API response');
+        console.log(`🎥 Comiketter: ${apiLabel} で動画情報を検出しました`);
       }
       
       // バックグラウンドスクリプトに送信
@@ -324,6 +404,11 @@ export class ApiInterceptor {
 
   private processApiResponse(path: string, data: unknown): void {
     try {
+      const apiType = extractApiType(path);
+      const apiLabel = ApiTypeLabels[apiType] || apiType;
+      
+      console.log(`📤 Comiketter: ${apiLabel} をバックグラウンドスクリプトに送信中...`);
+      
       // バックグラウンドスクリプトにAPIレスポンスを送信
       chrome.runtime.sendMessage({
         type: 'API_RESPONSE_CAPTURED',
@@ -332,8 +417,10 @@ export class ApiInterceptor {
           data: data,
           timestamp: Date.now()
         }
+      }).then(() => {
+        console.log(`✅ Comiketter: ${apiLabel} の送信が完了しました`);
       }).catch((error) => {
-        console.error('Comiketter: Failed to send API response to background:', error);
+        console.error(`❌ Comiketter: ${apiLabel} の送信に失敗しました:`, error);
       });
     } catch (error) {
       console.error('Comiketter: Failed to process API response:', error);
@@ -346,13 +433,13 @@ export class ApiInterceptor {
       
       // video_infoプロパティをチェック
       if (obj.video_info && obj.video_info.variants) {
-        console.log('Comiketter: Found video_info with variants:', obj.video_info.variants.length);
+        console.log(`🎬 Comiketter: 動画情報を検出 - variants数: ${obj.video_info.variants.length}`);
         return true;
       }
       
       // typeプロパティで動画をチェック
       if (obj.type === 'video') {
-        console.log('Comiketter: Found video media type:', obj.type);
+        console.log(`🎬 Comiketter: 動画メディアタイプを検出: ${obj.type}`);
         return true;
       }
       
@@ -369,7 +456,7 @@ export class ApiInterceptor {
     try {
       return searchForVideoInfo(data);
     } catch (error) {
-      console.warn('Comiketter: Error checking for video info:', error);
+      console.warn('Comiketter: 動画情報チェック中にエラーが発生しました:', error);
       return false;
     }
   }

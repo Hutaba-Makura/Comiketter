@@ -416,7 +416,7 @@ export class MessageHandler {
       const { id, state } = downloadDelta;
       
       if (id && state) {
-        let status: string;
+        let status: 'pending' | 'failed' | 'success';
         
         switch (state.current) {
           case 'complete':
@@ -432,7 +432,7 @@ export class MessageHandler {
             return;
         }
 
-        await this.downloadManager.updateDownloadStatus(id, status as any);
+        await this.downloadManager.updateDownloadStatus(id, status);
         console.log('Comiketter: Download status updated:', { id, status });
       }
     } catch (error) {
