@@ -15,7 +15,6 @@ import type { Tweet } from '../../types';
 // ログ送信関数
 const sendLog = (message: string, data?: any) => {
   const logMessage = `[Comiketter] ${message}`;
-  console.log(logMessage, data);
   
   // バックグラウンドスクリプトにログを送信
   try {
@@ -34,33 +33,24 @@ const sendLog = (message: string, data?: any) => {
 
 // テーマ検出関数（BookmarkSelectorから移植）
 const detectTheme = (): 'light' | 'darkBlue' | 'black' => {
-  sendLog('テーマ検出開始');
-  
   // body要素のbackground-colorを計算されたスタイルから取得
   const computedStyle = getComputedStyle(document.body);
   const backgroundColor = computedStyle.backgroundColor;
-  sendLog('body background-color (computed):', backgroundColor);
   
   // 直接スタイル属性も確認
   const inlineStyle = document.body.style.backgroundColor;
-  sendLog('body background-color (inline):', inlineStyle);
   
   // 両方の値をチェック
   const colorToCheck = backgroundColor || inlineStyle;
   
   if (colorToCheck === 'rgb(255, 255, 255)') {
-    sendLog('ライトテーマと判定');
     return 'light';
   } else if (colorToCheck === 'rgb(21, 32, 43)') {
-    sendLog('ダークブルーテーマと判定');
     return 'darkBlue';
   } else if (colorToCheck === 'rgb(0, 0, 0)') {
-    sendLog('ブラックテーマと判定');
     return 'black';
   }
   
-  sendLog('不明なテーマ、デフォルトでライトテーマと判定');
-  sendLog('検出された色:', colorToCheck);
   return 'light';
 };
 
@@ -115,8 +105,6 @@ export class BookmarkButton extends BaseButton {
       attributes: true,
       attributeFilter: ['style']
     });
-    
-    sendLog('テーマ変更監視開始');
   }
   
   /**
@@ -129,7 +117,6 @@ export class BookmarkButton extends BaseButton {
       
       if (currentTheme !== newTheme) {
         this.bookmarkSelector.setAttribute('data-theme', newTheme);
-        sendLog('テーマ更新:', newTheme);
       }
     }
   }
@@ -734,7 +721,7 @@ export class BookmarkButton extends BaseButton {
       console.error('Comiketter: No tweet info available');
       return;
     }
-    
+
     try {
       const bookmarkManager = BookmarkApiClient.getInstance();
       const selectedBookmarks = this.getSelectedBookmarks();
@@ -743,13 +730,14 @@ export class BookmarkButton extends BaseButton {
         alert('ブックマークを選択してください');
         return;
       }
-      
+
       // 各ブックマークにツイートを追加
       for (const bookmarkId of selectedBookmarks) {
         await bookmarkManager.addTweetToBookmark(bookmarkId, this.currentTweetInfo.id, this.currentTweetInfo);
       }
       
       console.log('Comiketter: Saved tweet to bookmarks:', selectedBookmarks);
+      
       this.hideBookmarkSelector();
       
       // 成功メッセージを表示

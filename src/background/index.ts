@@ -12,8 +12,6 @@ class BackgroundScript {
   private messageHandler: MessageHandler;
 
   constructor() {
-    console.log('Comiketter: Background script starting...');
-    
     this.messageHandler = new MessageHandler();
     
     this.initialize();
@@ -23,8 +21,6 @@ class BackgroundScript {
     try {
       // Service Worker環境ではAPI傍受は不要
       // API傍受はコンテンツスクリプトで実行される
-      
-      console.log('Comiketter: Background script initialized successfully');
     } catch (error) {
       console.error('Comiketter: Failed to initialize background script:', error);
     }
@@ -36,14 +32,10 @@ new BackgroundScript();
 
 // Handle extension installation
 chrome.runtime.onInstalled.addListener((details) => {
-  console.log('Comiketter: Extension installed/updated', details);
-  
   if (details.reason === 'install') {
     // First time installation
-    console.log('Comiketter: First time installation');
   } else if (details.reason === 'update') {
     // Extension updated
-    console.log('Comiketter: Extension updated');
   }
 });
 
@@ -60,15 +52,10 @@ chrome.runtime.onMessage.addListener((message, sender) => {
 
 // ダウンロードイベントリスナー
 chrome.downloads.onChanged.addListener((downloadDelta) => {
-  console.log('Comiketter: Download changed:', downloadDelta);
-  
   if (downloadDelta.state) {
     const newState = downloadDelta.state.current;
-    console.log('Comiketter: Download state changed to:', newState);
     
-    if (newState === 'complete') {
-      console.log('Comiketter: Download completed successfully');
-    } else if (newState === 'interrupted') {
+    if (newState === 'interrupted') {
       console.error('Comiketter: Download interrupted');
       
       // エラー情報がある場合は詳細をログ出力
@@ -89,8 +76,4 @@ chrome.downloads.onChanged.addListener((downloadDelta) => {
   if (downloadDelta.error) {
     console.error('Comiketter: Download error:', downloadDelta.error.current);
   }
-});
-
-chrome.downloads.onCreated.addListener((downloadItem) => {
-  console.log('Comiketter: Download created:', downloadItem);
 }); 

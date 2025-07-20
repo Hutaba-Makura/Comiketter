@@ -241,49 +241,40 @@ if (typeof document !== 'undefined') {
   });
 }
 
-// Proxy fetch API to intercept API calls
-if (typeof window !== 'undefined' && typeof window.fetch !== 'undefined') {
-  const originalFetch = window.fetch;
-  window.fetch = new Proxy(originalFetch, {
+// fetchのプロキシ（Service Worker環境では実行しない）
+if (typeof fetch !== 'undefined') {
+  const originalFetch = fetch;
+  (globalThis as any).fetch = new Proxy(originalFetch, {
     apply(target, thisArg, args) {
       const [input, init] = args;
-      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+      const url = validateUrl(input);
       const method = init?.method || 'GET';
       
-      try {
-        const validUrl = validateUrl(url);
-        if (validUrl) {
-          const matchedUrl = validUrl.pathname.match(Pattern.tweetRelated);
-          if (validUrl && matchedUrl) {
-            // レスポンスを傍受するためにPromiseをラップ
-            return Reflect.apply(target, thisArg, args).then((response: Response) => {
-              if (response.status === 200) {
-                // レスポンスのクローンを作成（元のレスポンスを保持）
-                const clonedResponse = response.clone();
-                clonedResponse.text().then(body => {
-                  const event = new CustomEvent<Comiketter.ApiResponseDetail>(
-                    ComiketterEvent.ApiResponse,
-                    {
-                      detail: {
-                        path: validUrl.pathname,
-                        status: response.status,
-                        body: body,
-                      },
-                    }
-                  );
-                  document.dispatchEvent(event);
-                }).catch(error => {
-                  console.error('Comiketter: Failed to read fetch response body:', error);
-                });
+      if (url && url.pathname.match(Pattern.tweetRelated)) {
+        return Reflect.apply(target, thisArg, args).then(async (response: Response) => {
+          try {
+            const responseClone = response.clone();
+            const body = await responseClone.text();
+            
+            const event = new CustomEvent<Comiketter.ApiResponseDetail>(
+              ComiketterEvent.ApiResponse,
+              {
+                detail: {
+                  path: url.pathname,
+                  status: response.status,
+                  body: body,
+                },
               }
-              return response;
-            });
+            );
+            document.dispatchEvent(event);
+          } catch (error) {
+            console.error('Comiketter: Failed to read fetch response body:', error);
           }
-        }
-      } catch (error) {
-        console.error('Comiketter: Error processing fetch URL:', url, error);
+          
+          return response;
+        });
       }
-
+      
       return Reflect.apply(target, thisArg, args);
     },
   });
@@ -295,93 +286,87 @@ if (typeof window !== 'undefined' && typeof window.fetch !== 'undefined') {
  */
 export class ApiInterceptor {
   constructor() {
-    // Constructor
+    this.init();
   }
 
-  /**
-   * API傍受機能を初期化する
-   * MAIN環境では直接的な処理は行わず、イベント発火のみ
-   */
   async init(): Promise<void> {
-    console.log('Comiketter: API Interceptor initialized in browser environment');
+    try {
+      // APIレスポンスイベントリスナーを設定
+      document.addEventListener(ComiketterEvent.ApiResponse, (event) => {
+        const detail = (event as CustomEvent<Comiketter.ApiResponseDetail>).detail;
+        this.handleApiResponse(detail);
+      });
+
+      console.log('Comiketter: API Interceptor initialized in browser environment');
+    } catch (error) {
+      console.error('Comiketter: Failed to initialize API Interceptor:', error);
+    }
   }
 
-  /**
-   * キャプチャされたAPIレスポンスを処理する
-   * @param detail APIレスポンスの詳細情報
-   */
   private handleApiResponse(detail: Comiketter.ApiResponseDetail): void {
     try {
       console.log('Comiketter: Processing API response for path:', detail.path);
       
-      const responseData = JSON.parse(detail.body);
+      // レスポンスボディをパース
+      const data = JSON.parse(detail.body);
       
       // 動画情報が含まれているかチェック
-      if (this.containsVideoInfo(responseData)) {
+      if (this.containsVideoInfo(data)) {
         console.log('Comiketter: Video information detected in API response');
       }
       
-      this.processApiResponse(detail.path, responseData);
+      // バックグラウンドスクリプトに送信
+      this.processApiResponse(detail.path, data);
     } catch (error) {
       console.error('Comiketter: Failed to parse API response', error);
     }
   }
 
-  /**
-   * 特定のAPIパスに対するレスポンスデータを処理し、ISOLATED環境にイベント送信する
-   * @param path APIパス
-   * @param data レスポンスデータ
-   */
   private processApiResponse(path: string, data: unknown): void {
-    // MAIN環境からISOLATED環境にイベント送信
-    const event = new CustomEvent('comiketter:api-response-processed', {
-      detail: {
-        path,
-        data,
-        timestamp: Date.now(),
-      },
-    });
-    document.dispatchEvent(event);
+    try {
+      // バックグラウンドスクリプトにAPIレスポンスを送信
+      chrome.runtime.sendMessage({
+        type: 'API_RESPONSE_CAPTURED',
+        payload: {
+          path: path,
+          data: data,
+          timestamp: Date.now()
+        }
+      }).catch((error) => {
+        console.error('Comiketter: Failed to send API response to background:', error);
+      });
+    } catch (error) {
+      console.error('Comiketter: Failed to process API response:', error);
+    }
   }
 
-  /**
-   * レスポンスデータに動画情報が含まれているかチェック
-   * @param data レスポンスデータ
-   * @returns 動画情報が含まれている場合true
-   */
   private containsVideoInfo(data: any): boolean {
-    try {
-      // 再帰的に動画情報を検索
-      const searchForVideoInfo = (obj: any): boolean => {
-        if (!obj || typeof obj !== 'object') return false;
-        
-        // video_infoプロパティをチェック
-        if (obj.video_info && Array.isArray(obj.video_info.variants)) {
-          console.log('Comiketter: Found video_info with variants:', obj.video_info.variants.length);
-          return true;
-        }
-        
-        // typeプロパティでvideoをチェック
-        if (obj.type === 'video' || obj.type === 'animated_gif') {
-          console.log('Comiketter: Found video media type:', obj.type);
-          return true;
-        }
-        
-        // 配列の場合は各要素をチェック
-        if (Array.isArray(obj)) {
-          return obj.some(item => searchForVideoInfo(item));
-        }
-        
-        // オブジェクトの場合は各プロパティをチェック
-        for (const key in obj) {
-          if (searchForVideoInfo(obj[key])) {
-            return true;
-          }
-        }
-        
-        return false;
-      };
+    const searchForVideoInfo = (obj: any): boolean => {
+      if (!obj || typeof obj !== 'object') return false;
       
+      // video_infoプロパティをチェック
+      if (obj.video_info && obj.video_info.variants) {
+        console.log('Comiketter: Found video_info with variants:', obj.video_info.variants.length);
+        return true;
+      }
+      
+      // typeプロパティで動画をチェック
+      if (obj.type === 'video') {
+        console.log('Comiketter: Found video media type:', obj.type);
+        return true;
+      }
+      
+      // 再帰的に検索
+      for (const key in obj) {
+        if (searchForVideoInfo(obj[key])) {
+          return true;
+        }
+      }
+      
+      return false;
+    };
+    
+    try {
       return searchForVideoInfo(data);
     } catch (error) {
       console.warn('Comiketter: Error checking for video info:', error);

@@ -145,8 +145,6 @@ export class DownloadButton extends BaseButton {
 
       // ボタンをダウンロード中状態に変更
       this.setButtonStatus(button, ButtonStatus.Downloading);
-      
-      console.log('Comiketter: Starting download for tweet:', tweetInfo.id);
 
       // chrome.runtimeが利用可能かチェック
       if (!chrome?.runtime?.sendMessage) {
@@ -162,10 +160,8 @@ export class DownloadButton extends BaseButton {
           mediaUrls: tweetInfo.media?.map(m => m.url) || [],
         },
       });
-      console.log('Comiketter: Send message to background script:', tweetInfo.id);
 
       if (response && response.success) {
-        console.log('Comiketter: Download completed successfully');
         this.setButtonStatus(button, ButtonStatus.Success);
         
         // 3秒後にダウンロード済み状態に変更

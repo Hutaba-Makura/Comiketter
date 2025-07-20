@@ -41,8 +41,6 @@ export class MessageHandler {
     sendResponse: (response: any) => void
   ): Promise<void> {
     try {
-      console.log('Comiketter: Received message:', message);
-
       switch (message.type) {
         case 'LOG':
           // ログメッセージは既にバックグラウンドスクリプトで処理されているため、
@@ -450,10 +448,10 @@ export class MessageHandler {
     data: unknown;
     timestamp: number;
   }): Promise<void> {
+    const title = this.extractApiTitle(payload.path);
+    console.log('Comiketter: API傍受:', title, '(', payload.path, ')');
+    
     try {
-      // APIパスからタイトルを抽出
-      const title = this.extractApiTitle(payload.path);
-      console.log('Comiketter: API傍受:', title, '(', payload.path, ')');
       this.downloadManager.processApiResponse(payload);
     } catch (error) {
       console.error('Comiketter: Failed to process API response:', error);
@@ -468,10 +466,10 @@ export class MessageHandler {
     data: unknown;
     timestamp: number;
   }): Promise<void> {
+    const title = this.extractApiTitle(payload.path);
+    console.log('Comiketter: API処理済み:', title, '(', payload.path, ')');
+    
     try {
-      // APIパスからタイトルを抽出
-      const title = this.extractApiTitle(payload.path);
-      console.log('Comiketter: API処理済み:', title, '(', payload.path, ')');
       this.downloadManager.processApiResponse(payload);
     } catch (error) {
       console.error('Comiketter: Failed to process API response:', error);
