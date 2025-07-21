@@ -10,13 +10,17 @@ processApiResponseには
 このデータから必要な情報を抽出して、キャッシュに保存する。このキャッシュから必要に応じてデータを参照してDL処理＆DL履歴登録、CB登録を行うのでこれらの機能を包括できるような保存項目でキャッシュする必要がある。
 →暫定的にツイート一個単位における全ての情報を保存することにした。
 HomeLatestTimeline、TweetDetail、Bookmarkとかのツイート情報を含むAPIをケースごとに処理していく
-HomeLatestTimeline、UserTweets、UserMedia、TweetDetail…などの複数のツイート情報を含むAPIリクエスト
+HomeLatestTimeline、UserTweets、TweetDetail…などの複数のツイート情報を含むAPIリクエスト
 "instructions": [
                     {
                         "type": "TimelineAddEntries",
                         "entries": [
                             {
-の"entries"の配列の要素を全てキャッシュに格納する。但しこの "type"は"TimelineAddEntries",
+の"entries"の配列の要素を全てキャッシュに格納する。但しこの "type"は"TimelineAddEntries"であるもののみを取得する。
 
-UserMediaは処理が異なる。
+UserMediaは処理が異なる。これは一旦受け取っても処理しない方向で
+
+Favorite、Unfavoriteは一旦処理しない方向で
+
+CreateRetweetはレスポンスを参考にIDを"retweeted": falseをtrueにする実装。
 
