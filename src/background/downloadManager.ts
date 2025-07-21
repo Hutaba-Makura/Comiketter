@@ -67,6 +67,7 @@ export class DownloadManager {
   /**
    * GraphQLレスポンスを処理してメディア情報を抽出
    */
+  //TODO: ここで情報を抽出し、キャッシュデータに保存する
   private processGraphQLResponse(data: unknown): void {
     try {
       const response = data as any;
