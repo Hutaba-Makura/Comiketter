@@ -1,26 +1,133 @@
-Twitterから傍受した各種APIの情報(パス、レスポンス、タイムスタンプなど)を処理する為のルールを以下に記述する。
-この情報を処理し、キャッシュとして保存する処理はprocessApiResponseで行う。
-processApiResponseには
- processApiResponse(message: {
+# Twitter API レスポンス処理ルール
+
+Twitterから傍受した各種APIの情報（パス、レスポンス、タイムスタンプなど）を処理・キャッシュするためのルールをまとめます。
+
+この情報は `processApiResponse` 関数で処理され、キャッシュからDL処理や履歴登録、カスタムブックマーク登録などの各機能で参照されます。
+
+---
+
+## 1. 基本仕様
+
+- `processApiResponse` のインターフェース：
+  ```ts
+  processApiResponse(message: {
     path: string;
     data: unknown;
     timestamp: number;
   })
-といった形で渡され、pathには https://x.com/i/api/graphql/lI07N6Otwv1PhnEgXILM7A/FavoriteTweet のようなパスが、dataにはAPIのレスポンスが、timestampにはタイムスタンプが与えられている。
-このデータから必要な情報を抽出して、キャッシュに保存する。このキャッシュから必要に応じてデータを参照してDL処理＆DL履歴登録、CB登録を行うのでこれらの機能を包括できるような保存項目でキャッシュする必要がある。
+  ```
+- `path` にはAPIのエンドポイント（例: `https://x.com/i/api/graphql/...`）
+- `data` にはAPIレスポンス本体
+- `timestamp` には取得時刻（UNIXタイムスタンプ）
 
-HomeLatestTimeline、TweetDetail、Bookmarkとかのツイート情報を含むAPIをケースごとに処理していく
-HomeLatestTimeline、UserTweets、TweetDetail…などの複数のツイート情報を含むAPIリクエスト
-"instructions": [
-                    {
-                        "type": "TimelineAddEntries",
-                        "entries": [
-                            {
-の"entries"の配列の要素を全てキャッシュに格納する。但しこの "type"は"TimelineAddEntries"であるもののみを取得する。
+---
 
-UserMediaは処理が異なる。これは一旦受け取っても処理しない方向で
+## 2. 抽出・保存すべきキー
 
-Favorite、Unfavoriteは一旦処理しない方向で
+### 2.1 共通
+- `path`（APIのパス）
+- `data`（APIレスポンス本体）
+- `timestamp`（取得時刻）
 
-CreateRetweetはレスポンスを参考にIDを"retweeted": falseをtrueにする実装。
+### 2.2 ツイート情報を含むAPI
+（例：HomeLatestTimeline, UserTweets, TweetDetail など）
+- `instructions`（配列）
+  - 各要素の `type` が `"TimelineAddEntries"` のみ処理対象
+    - `entries`（配列）
+      - `entryId`
+      - `content`（ツイート本体やモジュール情報など）
+
+### 2.3 UserMedia
+- 一旦処理しない（抽出不要）
+
+### 2.4 Favorite, Unfavorite
+- 一旦処理しない（抽出不要）
+
+### 2.5 CreateRetweet
+- レスポンスを参考に、該当ツイートIDの `retweeted` を `true` に更新
+
+---
+
+APIレスポンスから取り出すべきキー一覧
+
+## 必須キー一覧（全ツイートに共通）
+
+| パス                                                | 説明                |
+| ------------------------------------------------- | ----------------- |
+| `tweet.legacy.id_str`                             | ツイートのID（文字列）      |
+| `tweet.legacy.full_text`                          | ツイート本文            |
+| `tweet.legacy.created_at`                         | ツイート作成日時          |
+| `tweet.legacy.favorite_count`                     | いいね数              |
+| `tweet.legacy.retweet_count`                      | リツイート数            |
+| `tweet.legacy.reply_count`                        | リプライ数             |
+| `tweet.legacy.quote_count`                        | 引用ツイート数           |
+| `tweet.legacy.bookmarked`                         | 自身がブックマークしたかどうか   |
+| `tweet.legacy.favorited`                          | 自身がいいねしたかどうか      |
+| `tweet.legacy.retweeted`                          | 自身がリツイートしたかどうか    |
+| `tweet.legacy.possibly_sensitive`                 | センシティブメディア表示制御フラグ |
+| `tweet.core.user_results.result.core.name`        | 投稿者表示名            |
+| `tweet.core.user_results.result.core.screen_name` | 投稿者アカウント名         |
+| `tweet.core.user_results.result.avatar.image_url` | 投稿者アイコンURL        |
+
+## オプションキー（存在する場合のみ保存）
+
+| パス                                              | 説明                                        |
+| ----------------------------------------------- | ----------------------------------------- |
+| `tweet.legacy.extended_entities.media[].id_str` | メディアID                                    |
+| `...media[].type`                               | "photo" / "video" / "animated\_gif" のいずれか |
+| `...media[].media_url_https`                    | サムネイルまたは画像URL                             |
+| `...media[].video_info.variants[].url`          | 動画/GIFの各画質URL                             |
+| `...video_info.variants[].bitrate`              | （動画用）画質選択時に使用                             |
+| `...video_info.duration_millis`                 | 動画/GIFの長さ（ミリ秒）                            |
+| `tweet.legacy.in_reply_to_screen_name`          | 返信先ユーザー                                   |
+| `tweet.legacy.in_reply_to_status_id_str`        | 返信先ツイートID                                 |
+| `tweet.legacy.in_reply_to_user_id_str`          | 返信先ユーザーID                                 |
+| `tweet.retweeted_status_result`                 | リツイート元ツイート情報（ネスト構造）                       |
+| `tweet.legacy.conversation_id_str`              | 会話ID（スレッド識別用）                             |
+
+## 保存用JSON構造の例（動画付きツイート）
+
+```json
+{
+  "id_str": "1944427852440711438",
+  "full_text": "https://t.co/MVSXqxKK6Y",
+  "created_at": "Sun Jul 13 16:05:00 +0000 2025",
+  "favorite_count": 23801,
+  "retweet_count": 4068,
+  "reply_count": 47,
+  "quote_count": 290,
+  "bookmarked": false,
+  "favorited": true,
+  "retweeted": true,
+  "possibly_sensitive": false,
+  "user": {
+    "name": "No Context Shitposting",
+    "screen_name": "NoContextCrap",
+    "avatar_url": "https://pbs.twimg.com/profile_images/1869811311757971456/UPcBhjlg_normal.jpg"
+  },
+  "media": [
+    {
+      "id_str": "1944360728472764416",
+      "type": "video",
+      "media_url_https": "https://pbs.twimg.com/amplify_video_thumb/1944360728472764416/img/IWf6NpBkJH7sKCmM.jpg",
+      "video_info": {
+        "duration_millis": 16049,
+        "aspect_ratio": [1, 1],
+        "variants": [
+          {
+            "bitrate": 1280000,
+            "content_type": "video/mp4",
+            "url": "https://video.twimg.com/amplify_video/1944360728472764416/vid/720x720/qK94KXWtWMof4vpn.mp4"
+          },
+          {
+            "content_type": "application/x-mpegURL",
+            "url": "https://video.twimg.com/amplify_video/1944360728472764416/pl/vxJQuEJ7TUHoBkT9.m3u8"
+          }
+        ]
+      }
+    }
+  ]
+}
+```
+
 
