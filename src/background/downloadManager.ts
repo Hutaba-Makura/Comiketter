@@ -8,6 +8,7 @@
 
 import { FilenameGenerator } from '../utils/filenameGenerator';
 import { StorageManager } from '../utils/storage';
+import { ApiProcessor } from '../api-processor';
 import { 
   DownloadHistory, 
   TweetMediaFileProps, 
@@ -34,8 +35,10 @@ export interface DownloadRequest {
 export class DownloadManager {
   private settings: AppSettings | null = null;
   private mediaCache: Map<string, TweetMediaFileProps[]> = new Map();
+  private apiProcessor: ApiProcessor;
 
   constructor() {
+    this.apiProcessor = new ApiProcessor();
     this.initialize();
   }
 
@@ -56,8 +59,20 @@ export class DownloadManager {
     timestamp: number;
   }): void {
     try {
-      if (message.path.includes('/graphql/')) {
-        this.processGraphQLResponse(message.data);
+      // 新しいAPI処理構造を使用
+      const result = this.apiProcessor.processApiResponse(message);
+      
+      // 抽出されたツイートからメディア情報をキャッシュに保存
+      for (const tweet of result.tweets) {
+        if (tweet.media && tweet.media.length > 0) {
+          const mediaFiles = this.convertToMediaFiles(tweet);
+          this.mediaCache.set(tweet.id_str, mediaFiles);
+        }
+      }
+
+      // エラーがあればログ出力
+      if (result.errors.length > 0) {
+        console.warn('Comiketter: API処理でエラーが発生しました:', result.errors);
       }
     } catch (error) {
       console.error('Comiketter: Failed to process API response:', error);
@@ -65,30 +80,54 @@ export class DownloadManager {
   }
 
   /**
-   * GraphQLレスポンスを処理してメディア情報を抽出
+   * ProcessedTweetをTweetMediaFilePropsに変換
    */
-  //TODO: ここで情報を抽出し、キャッシュデータに保存する
-  private processGraphQLResponse(data: unknown): void {
-    try {
-      const response = data as any;
-      
-      // 新しいAPIレスポンス構造に対応
-      if (response.data?.threaded_conversation_with_injections_v2?.instructions) {
-        this.extractMediaFromInstructions(response.data.threaded_conversation_with_injections_v2.instructions);
-      }
-      
-      // 従来のツイート情報を抽出
-      if (response.data?.instructions) {
-        this.extractMediaFromInstructions(response.data.instructions);
-      }
-
-      // 直接的なツイート情報
-      if (response.data?.tweet) {
-        this.extractMediaFromTweet(response.data.tweet);
-      }
-    } catch (error) {
-      console.error('Comiketter: Failed to process GraphQL response:', error);
+  private convertToMediaFiles(tweet: any): TweetMediaFileProps[] {
+    const mediaFiles: TweetMediaFileProps[] = [];
+    
+    if (!tweet.media || !Array.isArray(tweet.media)) {
+      return mediaFiles;
     }
+
+    for (let i = 0; i < tweet.media.length; i++) {
+      const media = tweet.media[i];
+      const mediaType = this.detectMediaType(media.media_url_https);
+      
+      if (mediaType === 'image' || mediaType === 'thumbnail') {
+        // 画像の場合
+        const mediaFile = this.createMediaFile({
+          tweetId: tweet.id_str,
+          source: media.media_url_https,
+          user: tweet.user,
+          type: 'image',
+          ext: this.getFileExtension(media.media_url_https),
+          serial: i + 1,
+          tweetContent: tweet.full_text,
+          tweetDate: tweet.created_at,
+          mediaKey: media.id_str
+        });
+        mediaFiles.push(mediaFile);
+      } else if (mediaType === 'video' && media.video_info?.variants) {
+        // 動画の場合
+        const bestVariant = this.selectBestVideoVariant(media.video_info.variants);
+        if (bestVariant) {
+          const mediaFile = this.createMediaFile({
+            tweetId: tweet.id_str,
+            source: bestVariant.url,
+            user: tweet.user,
+            type: 'video',
+            ext: this.getFileExtension(bestVariant.url),
+            serial: i + 1,
+            tweetContent: tweet.full_text,
+            tweetDate: tweet.created_at,
+            mediaKey: media.id_str
+          });
+          mediaFiles.push(mediaFile);
+        }
+      }
+    }
+
+    return mediaFiles;
   }
 
   /**

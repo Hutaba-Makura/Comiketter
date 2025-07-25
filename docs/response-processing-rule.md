@@ -2,49 +2,76 @@
 
 Twitterから傍受した各種APIの情報（パス、レスポンス、タイムスタンプなど）を処理・キャッシュするためのルールをまとめます。
 
-この情報は `processApiResponse` 関数で処理され、キャッシュからDL処理や履歴登録、カスタムブックマーク登録などの各機能で参照されます。
+この情報は `ApiProcessor` クラスの `processApiResponse` メソッドで処理され、統一された形式でダウンロード処理や履歴登録、カスタムブックマーク登録などの各機能で参照されます。
 
 ---
 
 ## 1. 基本仕様
 
-- `processApiResponse` のインターフェース：
-  ```ts
-  processApiResponse(message: {
-    path: string;
-    data: unknown;
-    timestamp: number;
-  })
-  ```
+### 1.1 処理構造
+- `ApiProcessor` クラスがメインの処理を担当
+- `TweetExtractor` でツイート情報を抽出
+- `UserExtractor` でユーザー情報を抽出
+- `MediaExtractor` でメディア情報を抽出
+
+### 1.2 インターフェース
+```ts
+processApiResponse(message: {
+  path: string;
+  data: unknown;
+  timestamp: number;
+}): ApiProcessingResult
+```
+
+### 1.3 戻り値
+```ts
+interface ApiProcessingResult {
+  tweets: ProcessedTweet[];
+  errors: string[];
+}
+```
+
+### 1.4 入力パラメータ
 - `path` にはAPIのエンドポイント（例: `https://x.com/i/api/graphql/...`）
 - `data` にはAPIレスポンス本体
 - `timestamp` には取得時刻（UNIXタイムスタンプ）
 
 ---
 
-## 2. 抽出・保存すべきキー
+## 2. 対応APIタイプ
 
-### 2.1 共通
-- `path`（APIのパス）
-- `data`（APIレスポンス本体）
-- `timestamp`（取得時刻）
+### 2.1 処理対象API
+- `HomeLatestTimeline` - ホームタイムライン
+- `HomeTimeline` - ホームタイムライン（従来版）
+- `UserTweets` - ユーザーのツイート
+- `UserTweetsAndReplies` - ユーザーのツイートとリプライ
+- `UserHighlightsTweets` - ユーザーのハイライトツイート
+- `UserArticlesTweets` - ユーザーの記事ツイート
+- `TweetDetail` - ツイート詳細
+- `TweetResultByRestId` - REST IDによるツイート取得
+- `Bookmarks` - ブックマーク
+- `Likes` - いいね
+- `SearchTimeline` - 検索タイムライン
+- `CommunitiesExploreTimeline` - コミュニティタイムライン
+- `ListLatestTweetsTimeline` - リストタイムライン
 
-### 2.2 ツイート情報を含むAPI
-（例：HomeLatestTimeline, UserTweets, TweetDetail など）
+### 2.2 処理対象外API
+- `UserMedia` - 一旦処理しない（抽出不要）
+- `FavoriteTweet` - 一旦処理しない（抽出不要）
+- `UnfavoriteTweet` - 一旦処理しない（抽出不要）
+- `CreateRetweet` - リツイート処理は別途実装予定
+- `UserByScreenName` - ユーザー情報のみのため処理対象外
+- `UserByRestId` - ユーザー情報のみのため処理対象外
+- `useUpsellTrackingMutation` - 追跡用のため処理対象外
+
+### 2.3 APIレスポンス構造の処理
 - `instructions`（配列）
   - 各要素の `type` が `"TimelineAddEntries"` のみ処理対象
     - `entries`（配列）
       - `entryId`
       - `content`（ツイート本体やモジュール情報など）
-
-### 2.3 UserMedia
-- 一旦処理しない（抽出不要）
-
-### 2.4 Favorite, Unfavorite
-- 一旦処理しない（抽出不要）
-
-### 2.5 CreateRetweet
-- レスポンスを参考に、該当ツイートIDの `retweeted` を `true` に更新
+- `threaded_conversation_with_injections_v2.instructions`（新しい構造）
+- 直接的な `tweet` オブジェクト
 
 ---
 
