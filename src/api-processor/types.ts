@@ -55,6 +55,27 @@ export interface ApiProcessingResult {
   errors: string[];
 }
 
+// APIキャッシュ関連の型定義
+export interface CachedTweet extends ProcessedTweet {
+  cached_at: number; // キャッシュ保存時のタイムスタンプ
+  api_source: string; // 取得元APIのパス
+}
+
+export interface ApiCacheEntry {
+  id: string;
+  tweets: CachedTweet[];
+  api_type: ApiType;
+  api_path: string;
+  timestamp: number;
+  expires_at: number; // キャッシュの有効期限
+}
+
+export interface ApiCacheResult {
+  cached_tweets: CachedTweet[];
+  new_tweets: ProcessedTweet[];
+  errors: string[];
+}
+
 export type ApiType = 
   | 'HomeLatestTimeline'
   | 'UserTweets'

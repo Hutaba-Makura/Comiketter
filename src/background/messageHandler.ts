@@ -8,12 +8,16 @@
 
 import { DownloadManager, DownloadRequest } from './downloadManager';
 import { StorageManager } from '../utils/storage';
+import { ApiProcessor } from '../api-processor/api-processor';
+import type { ApiResponseMessage } from '../api-processor/types';
 
 export class MessageHandler {
   private downloadManager: DownloadManager;
+  private apiProcessor: ApiProcessor;
 
   constructor() {
     this.downloadManager = new DownloadManager();
+    this.apiProcessor = new ApiProcessor();
     this.setupMessageListeners();
   }
 
@@ -116,6 +120,19 @@ export class MessageHandler {
             sendResponse({ success: true, data: result });
           } catch (error) {
             console.error('Bookmark action failed:', error);
+            sendResponse({ 
+              success: false, 
+              error: error instanceof Error ? error.message : 'Unknown error' 
+            });
+          }
+          break;
+
+        case 'CACHE_ACTION':
+          try {
+            const result = await this.handleCacheAction(message.payload);
+            sendResponse({ success: true, data: result });
+          } catch (error) {
+            console.error('Cache action failed:', error);
             sendResponse({ 
               success: false, 
               error: error instanceof Error ? error.message : 'Unknown error' 
@@ -409,6 +426,34 @@ export class MessageHandler {
   }
 
   /**
+   * キャッシュ関連のメッセージを処理
+   */
+  private async handleCacheAction(message: any): Promise<any> {
+    const { action } = message;
+
+    try {
+      switch (action) {
+        case 'getCacheStats':
+          return await ApiProcessor.getCacheStats();
+
+        case 'cleanupExpiredCache':
+          await ApiProcessor.cleanupExpiredCache();
+          return { success: true, message: '期限切れキャッシュを削除しました' };
+
+        case 'clearAllCache':
+          await ApiProcessor.clearAllCache();
+          return { success: true, message: '全キャッシュを削除しました' };
+
+        default:
+          throw new Error(`Unknown cache action: ${action}`);
+      }
+    } catch (error) {
+      console.error('Cache action handler error:', error);
+      throw error;
+    }
+  }
+
+  /**
    * ダウンロード状態変更を処理
    */
   private async handleDownloadChange(downloadDelta: chrome.downloads.DownloadDelta): Promise<void> {
@@ -441,17 +486,24 @@ export class MessageHandler {
   }
 
   /**
-   * APIレスポンスキャプチャを処理
+   * APIレスポンスキャプチャを処理（キャッシュ機能付き）
    */
-  private async handleApiResponseCaptured(payload: {
-    path: string;
-    data: unknown;
-    timestamp: number;
-  }): Promise<void> {
+  private async handleApiResponseCaptured(payload: ApiResponseMessage): Promise<void> {
     const title = this.extractApiTitle(payload.path);
     console.log('Comiketter: API傍受:', title, '(', payload.path, ')');
     
     try {
+      // APIプロセッサーでキャッシュ機能付き処理
+      const result = await this.apiProcessor.processApiResponse(payload);
+      
+      console.log(`Comiketter: API処理完了 - ${title} (ツイート数: ${result.tweets.length}, エラー数: ${result.errors.length})`);
+      
+      // エラーがある場合はログ出力
+      if (result.errors.length > 0) {
+        console.error('Comiketter: API処理エラー:', result.errors);
+      }
+
+      // ダウンロードマネージャーにも処理を委譲（既存の機能との互換性）
       this.downloadManager.processApiResponse(payload);
     } catch (error) {
       console.error('Comiketter: Failed to process API response:', error);
@@ -461,15 +513,12 @@ export class MessageHandler {
   /**
    * 処理済みAPIレスポンスを処理
    */
-  private async handleApiResponseProcessed(payload: {
-    path: string;
-    data: unknown;
-    timestamp: number;
-  }): Promise<void> {
+  private async handleApiResponseProcessed(payload: ApiResponseMessage): Promise<void> {
     const title = this.extractApiTitle(payload.path);
     console.log('Comiketter: API処理済み:', title, '(', payload.path, ')');
     
     try {
+      // 既に処理済みの場合はダウンロードマネージャーのみ実行
       this.downloadManager.processApiResponse(payload);
     } catch (error) {
       console.error('Comiketter: Failed to process API response:', error);
