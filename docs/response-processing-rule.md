@@ -41,37 +41,41 @@ interface ApiProcessingResult {
 ## 2. 対応APIタイプ
 
 ### 2.1 処理対象API
-- `HomeLatestTimeline` - ホームタイムライン
 - `HomeTimeline` - ホームタイムライン（従来版）
+- `HomeLatestTimeline` - ホームタイムライン
+- `TweetDetail` - ツイート詳細
+
 - `UserTweets` - ユーザーのツイート
 - `UserTweetsAndReplies` - ユーザーのツイートとリプライ
 - `UserHighlightsTweets` - ユーザーのハイライトツイート
 - `UserArticlesTweets` - ユーザーの記事ツイート
-- `TweetDetail` - ツイート詳細
 - `TweetResultByRestId` - REST IDによるツイート取得
-- `Bookmarks` - ブックマーク
 - `Likes` - いいね
 - `SearchTimeline` - 検索タイムライン
 - `CommunitiesExploreTimeline` - コミュニティタイムライン
 - `ListLatestTweetsTimeline` - リストタイムライン
 
 ### 2.2 処理対象外API
-- `UserMedia` - 一旦処理しない（抽出不要）
+- `CreateBookmarks` - ブックマーク
 - `FavoriteTweet` - 一旦処理しない（抽出不要）
-- `UnfavoriteTweet` - 一旦処理しない（抽出不要）
 - `CreateRetweet` - リツイート処理は別途実装予定
+- `useUpsellTrackingMutation` - 画面の縦横比を変えた際に送信
+- `NotificationsTimeline` - 通知欄の読み込み
+- `dm/conversation/` - DMの会話履歴
+
+- `UserMedia` - 一旦処理しない（抽出不要）
+- `UnfavoriteTweet` - 一旦処理しない（抽出不要）
 - `UserByScreenName` - ユーザー情報のみのため処理対象外
 - `UserByRestId` - ユーザー情報のみのため処理対象外
 - `useUpsellTrackingMutation` - 追跡用のため処理対象外
 
+処理対象外のAPIはフィルタに記述しない、ここにはTwitterのAPIの把握の為、後に機能を追加する為に記述している。
+
 ### 2.3 APIレスポンス構造の処理
 - `instructions`（配列）
   - 各要素の `type` が `"TimelineAddEntries"` のみ処理対象
-    - `entries`（配列）
-      - `entryId`
-      - `content`（ツイート本体やモジュール情報など）
-- `threaded_conversation_with_injections_v2.instructions`（新しい構造）
-- 直接的な `tweet` オブジェクト
+  - `entries`（配列）
+    - ここに収納されている要素１個がツイート1個分の情報を持っており、この要素が持つ辞書型の中から以下に示したキーのみを取得する
 
 ---
 
