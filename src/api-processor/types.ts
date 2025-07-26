@@ -77,6 +77,7 @@ export interface ApiCacheResult {
 }
 
 export type ApiType = 
+  | 'HomeTimeline'
   | 'HomeLatestTimeline'
   | 'UserTweets'
   | 'TweetDetail'

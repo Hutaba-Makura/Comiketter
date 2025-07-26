@@ -18,16 +18,18 @@ export class UserExtractor {
         return null;
       }
 
-      const legacy = userResult.legacy;
+      // 実際のAPIレスポンス構造に合わせて修正
+      // core.user_results.result.core からユーザー情報を取得
+      const userCore = userResult.core;
       const avatar = userResult.avatar;
 
-      if (!legacy?.screen_name) {
+      if (!userCore?.screen_name) {
         return null;
       }
 
       const user: ProcessedUser = {
-        name: legacy.name || '',
-        screen_name: legacy.screen_name,
+        name: userCore.name || '',
+        screen_name: userCore.screen_name,
         avatar_url: avatar?.image_url || ''
       };
 
@@ -43,16 +45,17 @@ export class UserExtractor {
    */
   extractFromUser(userData: any): ProcessedUser | null {
     try {
-      if (!userData?.legacy?.screen_name) {
+      // 実際のAPIレスポンス構造に合わせて修正
+      const userCore = userData.core;
+      const avatar = userData.avatar;
+
+      if (!userCore?.screen_name) {
         return null;
       }
 
-      const legacy = userData.legacy;
-      const avatar = userData.avatar;
-
       const user: ProcessedUser = {
-        name: legacy.name || '',
-        screen_name: legacy.screen_name,
+        name: userCore.name || '',
+        screen_name: userCore.screen_name,
         avatar_url: avatar?.image_url || ''
       };
 

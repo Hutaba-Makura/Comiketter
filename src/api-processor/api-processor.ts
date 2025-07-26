@@ -45,6 +45,7 @@ export class ApiProcessor {
 
       // APIタイプに応じて処理を分岐
       switch (apiType) {
+        case 'HomeTimeline':
         case 'HomeLatestTimeline':
         case 'UserTweets':
         case 'TweetDetail':
@@ -52,7 +53,9 @@ export class ApiProcessor {
         case 'Likes':
         case 'CommunitiesExploreTimeline':
         case 'ListLatestTweetsTimeline':
-          const processedTweets = this.processTweetRelatedApi(message.data);
+          // processTweetRelatedApiが期待する形式に変換
+          const tweetData = { data: message.data };
+          const processedTweets = this.processTweetRelatedApi(tweetData);
           
           // キャッシュ機能を使用して処理
           const cacheResult = await ApiCacheManager.processWithCache(
@@ -115,6 +118,7 @@ export class ApiProcessor {
 
       // APIタイプに応じて処理を分岐
       switch (apiType) {
+        case 'HomeTimeline':
         case 'HomeLatestTimeline':
         case 'UserTweets':
         case 'TweetDetail':
@@ -122,7 +126,12 @@ export class ApiProcessor {
         case 'Likes':
         case 'CommunitiesExploreTimeline':
         case 'ListLatestTweetsTimeline':
-          result.tweets = this.processTweetRelatedApi(message.data);
+          console.log(`Comiketter: ツイート関連API処理開始 - ${apiType}`);
+          // processTweetRelatedApiが期待する形式に変換
+          const tweetData = { data: message.data };
+          const processedTweets = this.processTweetRelatedApi(tweetData);
+          console.log(`Comiketter: ツイート関連API処理完了 - 抽出数: ${processedTweets.length}`);
+          result.tweets = processedTweets;
           break;
 
         case 'UserMedia':
@@ -162,6 +171,7 @@ export class ApiProcessor {
   private extractApiType(path: string): ApiType {
     if (path.includes('/graphql/')) {
       if (path.includes('HomeLatestTimeline')) return 'HomeLatestTimeline';
+      if (path.includes('HomeTimeline')) return 'HomeTimeline';
       if (path.includes('UserTweets')) return 'UserTweets';
       if (path.includes('TweetDetail')) return 'TweetDetail';
       if (path.includes('UserMedia')) return 'UserMedia';
@@ -187,9 +197,18 @@ export class ApiProcessor {
     const response = data as any;
 
     try {
-      // instructions配列から直接抽出（.md 2.3準拠）
-      if (response.data?.instructions) {
-        const extractedTweets = this.extractTweetsFromInstructions(response.data.instructions);
+      // 実際のAPIレスポンス構造に対応
+      // data.home.home_timeline_urt.instructions または data.instructions
+      let instructions = null;
+      
+      if (response.data?.home?.home_timeline_urt?.instructions) {
+        instructions = response.data.home.home_timeline_urt.instructions;
+      } else if (response.data?.instructions) {
+        instructions = response.data.instructions;
+      }
+
+      if (instructions) {
+        const extractedTweets = this.extractTweetsFromInstructions(instructions);
         tweets.push(...extractedTweets);
       }
 
@@ -278,7 +297,7 @@ export class ApiProcessor {
         if (legacy[key] === undefined || legacy[key] === null) return false;
       }
 
-      // ユーザー情報必須
+      // ユーザー情報必須（実際のAPIレスポンス構造に合わせて修正）
       const user = tweet.core?.user_results?.result?.core;
       if (!user?.name || !user?.screen_name) return false;
       
