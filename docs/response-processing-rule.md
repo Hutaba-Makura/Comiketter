@@ -13,6 +13,7 @@ Twitterから傍受した各種APIの情報（パス、レスポンス、タイ�
 - `TweetExtractor` でツイート情報を抽出
 - `UserExtractor` でユーザー情報を抽出
 - `MediaExtractor` でメディア情報を抽出
+- `ApiCacheManager` でキャッシュ機能を管理
 
 ### 1.2 インターフェース
 ```ts
@@ -74,6 +75,44 @@ interface ApiProcessingResult {
 処理対象外のAPIはフィルタに記述しない、ここにはTwitterのAPIの把握の為、後に機能を追加する為に記述している。
 
 ### 2.3 APIレスポンス構造の処理
+
+#### 対応するAPIレスポンス構造
+実装では以下の3つの構造に対応しています：
+
+1. **ホームタイムライン系**
+   ```json
+   {
+     "data": {
+       "home": {
+         "home_timeline_urt": {
+           "instructions": [...]
+         }
+       }
+     }
+   }
+   ```
+
+2. **ツイート詳細系**
+   ```json
+   {
+     "data": {
+       "threaded_conversation_with_injections_v2": {
+         "instructions": [...]
+       }
+     }
+   }
+   ```
+
+3. **その他のAPI**
+   ```json
+   {
+     "data": {
+       "instructions": [...]
+     }
+   }
+   ```
+
+#### 処理フロー
 - `instructions`（配列）
   - 各要素の `type` が `"TimelineAddEntries"` のみ処理対象
   - `entries`（配列）
@@ -130,7 +169,6 @@ APIレスポンスから取り出すべきキー一覧
 | `tweet.legacy.bookmarked`                         | 自身がブックマークしたかどうか   |
 | `tweet.legacy.favorited`                          | 自身がいいねしたかどうか      |
 | `tweet.legacy.retweeted`                          | 自身がリツイートしたかどうか    |
-| `tweet.legacy.possibly_sensitive`                 | センシティブメディア表示制御フラグ |
 | `tweet.core.user_results.result.core.name`        | 投稿者表示名            |
 | `tweet.core.user_results.result.core.screen_name` | 投稿者アカウント名         |
 | `tweet.core.user_results.result.avatar.image_url` | 投稿者アイコンURL        |
@@ -139,6 +177,7 @@ APIレスポンスから取り出すべきキー一覧
 
 | パス                                              | 説明                                        |
 | ----------------------------------------------- | ----------------------------------------- |
+| `tweet.legacy.possibly_sensitive`                | センシティブメディア表示制御フラグ（存在しない場合はfalse） |
 | `tweet.legacy.extended_entities.media[].id_str` | メディアID                                    |
 | `...media[].type`                               | "photo" / "video" / "animated\_gif" のいずれか |
 | `...media[].media_url_https`                    | サムネイルまたは画像URL                             |
@@ -209,4 +248,36 @@ tweet.retweeted_status_result.result.legacy.full_text
 2.3で収集した各ツイートのデータには、キャッシュとして保存する際にタイムスタンプを付与する。このタイムスタンプは、各ツイートがいつ取得されたかを示すものであり、一定期間が経過した後に古いキャッシュを削除する際の判定基準として利用される。
 
 この仕組みにより、保存されたデータの鮮度を管理し、ストレージ使用量の増大を防ぐとともに、UI上での古い情報の残留も避けることができる。
+
+---
+
+## 4. キャッシュ機能
+
+### 4.1 キャッシュの仕組み
+- `ApiCacheManager` クラスがキャッシュ機能を管理
+- `chrome.storage.local` を使用して永続化
+- 各APIタイプ・パスごとにキャッシュエントリを管理
+- 重複ツイートの検出と新規ツイートの抽出を自動化
+
+### 4.2 キャッシュエントリの構造
+```ts
+interface ApiCacheEntry {
+  id: string;
+  tweets: CachedTweet[];
+  api_type: ApiType;
+  api_path: string;
+  timestamp: number;
+  expires_at: number;
+}
+```
+
+### 4.3 キャッシュの有効期限
+- デフォルトで24時間（86400000ミリ秒）
+- 期限切れのキャッシュは自動的に削除
+- 最大1000エントリまで保存（超過時は古いものから削除）
+
+### 4.4 重複検出
+- `tweet.legacy.id_str` をキーとして重複を検出
+- 既存のツイートは更新、新規ツイートのみを追加
+- DB層での重複管理を前提とした設計
 
