@@ -187,33 +187,13 @@ export class ApiProcessor {
     const response = data as any;
 
     try {
-      // 新しいAPIレスポンス構造に対応
-      if (response.data?.threaded_conversation_with_injections_v2?.instructions) {
-        const extractedTweets = this.extractTweetsFromInstructions(
-          response.data.threaded_conversation_with_injections_v2.instructions
-        );
-        tweets.push(...extractedTweets);
-      }
-
-      // 従来のツイート情報を抽出
+      // instructions配列から直接抽出（.md 2.3準拠）
       if (response.data?.instructions) {
         const extractedTweets = this.extractTweetsFromInstructions(response.data.instructions);
         tweets.push(...extractedTweets);
       }
 
-      // 直接的なツイート情報
-      if (response.data?.tweet) {
-        if (this.hasRequiredTweetKeys(response.data.tweet)) {
-          const extractedTweet = this.tweetExtractor.extractFromTweet(response.data.tweet);
-          if (extractedTweet) {
-            tweets.push(extractedTweet);
-          }
-        }
-      }
-
-      // 重複を除去（IDで判定）
-      const uniqueTweets = this.removeDuplicateTweets(tweets);
-      return uniqueTweets;
+      return tweets;
     } catch (error) {
       console.error('Comiketter: ツイート関連API処理エラー:', error);
       return [];
@@ -221,8 +201,8 @@ export class ApiProcessor {
   }
 
   /**
-   * instructions配列からツイートを抽出（必須キーのバリデーション付き）
-   * response-processing-rule.md 2.3準拠
+   * instructions配列からツイートを抽出（.md 2.3準拠）
+   * entries[].content.itemContent.tweet_results.result から tweet を取り出す
    */
   private extractTweetsFromInstructions(instructions: any[]): ProcessedTweet[] {
     const tweets: ProcessedTweet[] = [];
@@ -232,21 +212,7 @@ export class ApiProcessor {
         for (const entry of instruction.entries || []) {
           const result = entry.content?.itemContent?.tweet_results?.result;
           if (result && this.hasRequiredTweetKeys(result)) {
-            // retweeted_status_resultがあれば再帰的に抽出
-            if (result.retweeted_status_result?.result && this.hasRequiredTweetKeys(result.retweeted_status_result.result)) {
-              const retweet = this.tweetExtractor.extractFromTweet(result.retweeted_status_result.result);
-              if (retweet) {
-                // retweeted_statusとして格納
-                const mainTweet = this.tweetExtractor.extractFromTweet(result);
-                if (mainTweet) {
-                  mainTweet.retweeted_status = retweet;
-                  tweets.push(mainTweet);
-                }
-                continue;
-              }
-            }
-            // 通常ツイート
-            const extractedTweet = this.tweetExtractor.extractFromTweet(result);
+            const extractedTweet = this.extractTweetWithRetweet(result);
             if (extractedTweet) {
               tweets.push(extractedTweet);
             }
@@ -259,6 +225,31 @@ export class ApiProcessor {
   }
 
   /**
+   * ツイートを抽出（リツイート元も含む）
+   */
+  private extractTweetWithRetweet(tweet: any): ProcessedTweet | null {
+    try {
+      // リツイート元がある場合は再帰的に抽出
+      if (tweet.retweeted_status_result?.result && this.hasRequiredTweetKeys(tweet.retweeted_status_result.result)) {
+        const retweet = this.extractTweetWithRetweet(tweet.retweeted_status_result.result);
+        if (retweet) {
+          const mainTweet = this.tweetExtractor.extractFromTweet(tweet);
+          if (mainTweet) {
+            mainTweet.retweeted_status = retweet;
+            return mainTweet;
+          }
+        }
+      }
+
+      // 通常ツイート
+      return this.tweetExtractor.extractFromTweet(tweet);
+    } catch (error) {
+      console.error('Comiketter: ツイート抽出エラー:', error);
+      return null;
+    }
+  }
+
+  /**
    * 必須キーがすべて存在するかチェック（.md準拠）
    */
   private hasRequiredTweetKeys(tweet: any): boolean {
@@ -266,45 +257,38 @@ export class ApiProcessor {
       // legacy必須
       if (!tweet.legacy) return false;
       const legacy = tweet.legacy;
-      // ツイートID
-      if (!legacy.id_str) return false;
-      // 本文
-      if (typeof legacy.full_text !== 'string') return false;
-      // 作成日時
-      if (!legacy.created_at) return false;
-      // 各種数値
-      if (typeof legacy.favorite_count !== 'number') return false;
-      if (typeof legacy.retweet_count !== 'number') return false;
-      if (typeof legacy.reply_count !== 'number') return false;
-      if (typeof legacy.quote_count !== 'number') return false;
-      // ブックマーク・いいね・リツイート・センシティブ
-      if (typeof legacy.bookmarked !== 'boolean') return false;
-      if (typeof legacy.favorited !== 'boolean') return false;
-      if (typeof legacy.retweeted !== 'boolean') return false;
-      if (typeof legacy.possibly_sensitive !== 'boolean') return false;
-      // ユーザー情報
+
+      // 必須キー一覧（.md準拠）
+      const requiredKeys = [
+        'id_str',
+        'full_text', 
+        'created_at',
+        'favorite_count',
+        'retweet_count',
+        'reply_count',
+        'quote_count',
+        'bookmarked',
+        'favorited',
+        'retweeted',
+        'possibly_sensitive'
+      ];
+
+      // 必須キーの存在チェック
+      for (const key of requiredKeys) {
+        if (legacy[key] === undefined || legacy[key] === null) return false;
+      }
+
+      // ユーザー情報必須
       const user = tweet.core?.user_results?.result?.core;
       if (!user?.name || !user?.screen_name) return false;
+      
       const avatar = tweet.core?.user_results?.result?.avatar?.image_url;
       if (!avatar) return false;
+
       return true;
     } catch {
       return false;
     }
-  }
-
-  /**
-   * 重複ツイートを除去
-   */
-  private removeDuplicateTweets(tweets: ProcessedTweet[]): ProcessedTweet[] {
-    const seen = new Set<string>();
-    return tweets.filter(tweet => {
-      if (seen.has(tweet.id_str)) {
-        return false;
-      }
-      seen.add(tweet.id_str);
-      return true;
-    });
   }
 
   /**
