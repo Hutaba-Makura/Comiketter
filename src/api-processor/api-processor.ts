@@ -198,11 +198,13 @@ export class ApiProcessor {
 
     try {
       // 実際のAPIレスポンス構造に対応
-      // data.home.home_timeline_urt.instructions または data.instructions
+      // data.home.home_timeline_urt.instructions または data.threaded_conversation_with_injections_v2.instructions または data.instructions
       let instructions = null;
       
       if (response.data?.home?.home_timeline_urt?.instructions) {
         instructions = response.data.home.home_timeline_urt.instructions;
+      } else if (response.data?.threaded_conversation_with_injections_v2?.instructions) {
+        instructions = response.data.threaded_conversation_with_injections_v2.instructions;
       } else if (response.data?.instructions) {
         instructions = response.data.instructions;
       }
@@ -288,13 +290,17 @@ export class ApiProcessor {
         'quote_count',
         'bookmarked',
         'favorited',
-        'retweeted',
-        'possibly_sensitive'
+        'retweeted'
       ];
 
       // 必須キーの存在チェック
       for (const key of requiredKeys) {
         if (legacy[key] === undefined || legacy[key] === null) return false;
+      }
+
+      // possibly_sensitiveはオプションキー（存在しない場合はfalseとして扱う）
+      if (legacy.possibly_sensitive === undefined || legacy.possibly_sensitive === null) {
+        legacy.possibly_sensitive = false;
       }
 
       // ユーザー情報必須（実際のAPIレスポンス構造に合わせて修正）
