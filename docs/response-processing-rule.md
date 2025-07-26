@@ -41,33 +41,35 @@ interface ApiProcessingResult {
 ## 2. 対応APIタイプ
 
 ### 2.1 処理対象API
-- `HomeTimeline` - ホームタイムライン（従来版）
-- `HomeLatestTimeline` - ホームタイムライン
-- `TweetDetail` - ツイート詳細
-
-- `UserTweets` - ユーザーのツイート
-- `UserTweetsAndReplies` - ユーザーのツイートとリプライ
-- `UserHighlightsTweets` - ユーザーのハイライトツイート
-- `UserArticlesTweets` - ユーザーの記事ツイート
-- `TweetResultByRestId` - REST IDによるツイート取得
-- `Likes` - いいね
-- `SearchTimeline` - 検索タイムライン
-- `CommunitiesExploreTimeline` - コミュニティタイムライン
-- `ListLatestTweetsTimeline` - リストタイムライン
+- 使われているのが確認できたAPI
+  - `HomeTimeline` - ホームタイムライン（従来版）
+  - `HomeLatestTimeline` - ホームタイムライン
+  - `TweetDetail` - ツイート詳細
+  - `ListLatestTweetsTimeline` - リストタイムライン
+- 使われているのが確認出来なかったAPI
+  - `UserTweets` - ユーザーのツイート
+  - `UserTweetsAndReplies` - ユーザーのツイートとリプライ
+  - `UserHighlightsTweets` - ユーザーのハイライトツイート
+  - `UserArticlesTweets` - ユーザーの記事ツイート
+  - `TweetResultByRestId` - REST IDによるツイート取得
+  - `Likes` - いいね
+  - `CommunitiesExploreTimeline` - コミュニティタイムライン
 
 ### 2.2 処理対象外API
-- `CreateBookmarks` - ブックマーク
-- `FavoriteTweet` - 一旦処理しない（抽出不要）
-- `CreateRetweet` - リツイート処理は別途実装予定
-- `useUpsellTrackingMutation` - 画面の縦横比を変えた際に送信
-- `NotificationsTimeline` - 通知欄の読み込み
-- `dm/conversation/` - DMの会話履歴
-
-- `UserMedia` - 一旦処理しない（抽出不要）
-- `UnfavoriteTweet` - 一旦処理しない（抽出不要）
-- `UserByScreenName` - ユーザー情報のみのため処理対象外
-- `UserByRestId` - ユーザー情報のみのため処理対象外
-- `useUpsellTrackingMutation` - 追跡用のため処理対象外
+- 使われているのが確認できたAPI
+  - `CreateBookmarks` - ブックマーク
+  - `FavoriteTweet` - 一旦処理しない（抽出不要）
+  - `CreateRetweet` - リツイート処理は別途実装予定
+  - `useUpsellTrackingMutation` - 画面の縦横比を変えた際に送信
+  - `SearchTimeline` - 検索タイムライン
+  - `NotificationsTimeline` - 通知欄の読み込み
+  - `dm/conversation/` - DMの会話履歴
+  - `UserMedia` - 一旦処理しない（抽出不要）
+  - `UnfavoriteTweet` - 一旦処理しない（抽出不要）
+- 使われているのが確認出来なかったAPI
+  - `UserByScreenName` - ユーザー情報のみのため処理対象外
+  - `UserByRestId` - ユーザー情報のみのため処理対象外
+  - `useUpsellTrackingMutation` - 追跡用のため処理対象外
 
 処理対象外のAPIはフィルタに記述しない、ここにはTwitterのAPIの把握の為、後に機能を追加する為に記述している。
 
@@ -75,10 +77,21 @@ interface ApiProcessingResult {
 - `instructions`（配列）
   - 各要素の `type` が `"TimelineAddEntries"` のみ処理対象
   - `entries`（配列）
-    - ここに収納されている要素１個がツイート1個分の情報を持っており、この要素が持つ辞書型の中から以下に示したキーのみを取得する
+    - content
+      - itemContent
+        - tweet_results
+          - result
+            - ここに収納されている要素１個がツイート1個分の情報を持っており、この要素が持つ辞書型の中から以下に示したキーのみを取得する
+
+entry.content.itemContent.tweet_results.resultに収集したい要素がある。
+<br>つまり、entries[].content.itemContent.tweet_results.result から tweet を取り出す
+<br>必須キーが欠けているものは収集しなくてよい
 
 ```json
-"instructions": [
+{
+    "data": {
+        "threaded_conversation_with_injections_v2": {
+            "instructions": [
                 {
                     "type": "TimelineClearCache"
                 },
@@ -86,8 +99,16 @@ interface ApiProcessingResult {
                     "type": "TimelineAddEntries",
                     "entries": [
                         {
-                            "entryId": "tweet-1947246800030568882",
-                            "sortIndex": 
+                            "entryId": "tweet-1940726218699297260",
+                            "sortIndex": "1947285839201435648",
+                            "content": {
+                                "entryType": "TimelineTimelineItem",
+                                "__typename": "TimelineTimelineItem",
+                                "itemContent": {
+                                    "itemType": "TimelineTweet",
+                                    "__typename": "TimelineTweet",
+                                    "tweet_results": {
+                                        "result": {
                         ⋮
 ```
 
@@ -129,6 +150,14 @@ APIレスポンスから取り出すべきキー一覧
 | `tweet.legacy.in_reply_to_user_id_str`          | 返信先ユーザーID                                 |
 | `tweet.retweeted_status_result`                 | リツイート元ツイート情報（ネスト構造）                       |
 | `tweet.legacy.conversation_id_str`              | 会話ID（スレッド識別用）                             |
+
+## 補足
+オプションキーにある tweet.retweeted_status_result は、実際には構造が1段ネストされていて、
+
+```json
+tweet.retweeted_status_result.result.legacy.full_text
+```
+のようにアクセスします。
 
 ## 保存用JSON構造の例（動画付きツイート）
 
