@@ -77,6 +77,20 @@ interface ApiProcessingResult {
   - `entries`（配列）
     - ここに収納されている要素１個がツイート1個分の情報を持っており、この要素が持つ辞書型の中から以下に示したキーのみを取得する
 
+```json
+"instructions": [
+                {
+                    "type": "TimelineClearCache"
+                },
+                {
+                    "type": "TimelineAddEntries",
+                    "entries": [
+                        {
+                            "entryId": "tweet-1947246800030568882",
+                            "sortIndex": 
+                        ⋮
+```
+
 ---
 
 APIレスポンスから取り出すべきキー一覧
