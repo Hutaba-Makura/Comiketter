@@ -210,11 +210,16 @@ export class ApiProcessor {
       let instructions = null;
       
       if (response.data?.home?.home_timeline_urt?.instructions) {
+        console.log('Comiketter: home_timeline_urt.instructionsが存在します');
         instructions = response.data.home.home_timeline_urt.instructions;
       } else if (response.data?.threaded_conversation_with_injections_v2?.instructions) {
+        console.log('Comiketter: threaded_conversation_with_injections_v2.instructionsが存在します');
         instructions = response.data.threaded_conversation_with_injections_v2.instructions;
       } else if (response.data?.instructions) {
+        console.log('Comiketter: instructionsが存在します');
         instructions = response.data.instructions;
+      } else {
+        console.log('Comiketter: instructionsが存在しません');
       }
 
       if (instructions) {
