@@ -70,7 +70,7 @@ export class MediaExtractor {
   /**
    * 動画のバリアント情報を抽出
    */
-  private extractVideoVariants(variants: any[]): ProcessedMedia['video_info']['variants'] {
+  private extractVideoVariants(variants: any[]): NonNullable<ProcessedMedia['video_info']>['variants'] {
     return variants
       .filter(variant => variant?.url && variant?.content_type)
       .map(variant => ({

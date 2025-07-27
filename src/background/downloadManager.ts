@@ -53,14 +53,14 @@ export class DownloadManager {
   /**
    * APIレスポンスを処理し、メディア情報を抽出
    */
-  processApiResponse(message: {
+  async processApiResponse(message: {
     path: string;
     data: unknown;
     timestamp: number;
-  }): void {
+  }): Promise<void> {
     try {
       // 新しいAPI処理構造を使用
-      const result = this.apiProcessor.processApiResponse(message);
+      const result = await this.apiProcessor.processApiResponse(message);
       
       // 抽出されたツイートからメディア情報をキャッシュに保存
       for (const tweet of result.tweets) {

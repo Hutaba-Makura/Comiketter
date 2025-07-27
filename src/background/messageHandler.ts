@@ -504,7 +504,7 @@ export class MessageHandler {
       }
 
       // ダウンロードマネージャーにも処理を委譲（既存の機能との互換性）
-      this.downloadManager.processApiResponse(payload);
+      await this.downloadManager.processApiResponse(payload);
     } catch (error) {
       console.error('Comiketter: Failed to process API response:', error);
     }
@@ -519,7 +519,7 @@ export class MessageHandler {
     
     try {
       // 既に処理済みの場合はダウンロードマネージャーのみ実行
-      this.downloadManager.processApiResponse(payload);
+      await this.downloadManager.processApiResponse(payload);
     } catch (error) {
       console.error('Comiketter: Failed to process API response:', error);
     }
