@@ -50,7 +50,6 @@ export class ApiProcessor {
         case 'UserTweets':
         case 'TweetDetail':
         case 'Bookmarks':
-        case 'Likes':
         case 'CommunitiesExploreTimeline':
         case 'ListLatestTweetsTimeline':
           // processTweetRelatedApiが期待する形式に変換
@@ -72,6 +71,11 @@ export class ApiProcessor {
           console.log(`Comiketter: キャッシュ処理結果 - 新規: ${cacheResult.new_tweets.length}件, キャッシュ: ${cacheResult.cached_tweets.length}件`);
           break;
 
+        case 'Likes':
+          // 処理対象外（ドキュメントに基づく）
+          console.log('Comiketter: Likes APIは処理対象外です');
+          break;
+
         case 'UserMedia':
           // 一旦処理しない（抽出不要）
           console.log('Comiketter: UserMedia APIは処理対象外です');
@@ -79,8 +83,9 @@ export class ApiProcessor {
 
         case 'Favorite':
         case 'Unfavorite':
-          // 一旦処理しない（抽出不要）
-          console.log('Comiketter: Favorite/Unfavorite APIは処理対象外です');
+          // like処理ルール変更に基づく処理
+          console.log(`Comiketter: ${apiType} APIを処理中...`);
+          // 必要に応じてlike状態の更新処理を実装
           break;
 
         case 'CreateRetweet':
@@ -179,6 +184,9 @@ export class ApiProcessor {
       if (path.includes('Likes')) return 'Likes';
       if (path.includes('CommunitiesExploreTimeline')) return 'CommunitiesExploreTimeline';
       if (path.includes('ListLatestTweetsTimeline')) return 'ListLatestTweetsTimeline';
+      if (path.includes('FavoriteTweet')) return 'Favorite';
+      if (path.includes('UnfavoriteTweet')) return 'Unfavorite';
+      if (path.includes('CreateRetweet')) return 'CreateRetweet';
     }
 
     if (path.includes('/favorites/create')) return 'Favorite';
@@ -213,6 +221,9 @@ export class ApiProcessor {
         const extractedTweets = this.extractTweetsFromInstructions(instructions);
         tweets.push(...extractedTweets);
       }
+
+      // 何件のツイートが抽出されたかを表示
+      console.log('Comiketter: eTFIメソッドで抽出されたツイート数:', tweets.length);
 
       return tweets;
     } catch (error) {

@@ -53,7 +53,6 @@ interface ApiProcessingResult {
   - `UserHighlightsTweets` - ユーザーのハイライトツイート
   - `UserArticlesTweets` - ユーザーの記事ツイート
   - `TweetResultByRestId` - REST IDによるツイート取得
-  - `Likes` - いいね
   - `CommunitiesExploreTimeline` - コミュニティタイムライン
 
 ### 2.2 処理対象外API
@@ -68,6 +67,7 @@ interface ApiProcessingResult {
   - `UserMedia` - 一旦処理しない（抽出不要）
   - `UnfavoriteTweet` - 一旦処理しない（抽出不要）
 - 使われているのが確認出来なかったAPI
+  - `Likes` - いいね
   - `UserByScreenName` - ユーザー情報のみのため処理対象外
   - `UserByRestId` - ユーザー情報のみのため処理対象外
   - `useUpsellTrackingMutation` - 追跡用のため処理対象外

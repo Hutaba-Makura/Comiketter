@@ -131,6 +131,7 @@ export class ApiCacheManager {
       // キャッシュから既存のツイートを取得
       const cachedTweets = await this.getCachedTweets(apiType, apiPath, timestamp);
       const cachedTweetIds = new Set(cachedTweets.map(tweet => tweet.id_str));
+      console.log('Comiketter: cachedTweetIds length', cachedTweetIds.size); // キャッシュされているツイート数
 
       // 新しいツイートのみを抽出
       const newTweetsOnly = newTweets.filter(tweet => !cachedTweetIds.has(tweet.id_str));
