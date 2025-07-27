@@ -205,6 +205,15 @@ export class ApiProcessor {
     const response = data as any;
 
     try {
+      // デバッグ: レスポンス構造をログ出力
+      console.log('Comiketter: レスポンス構造デバッグ:', {
+        hasData: !!response.data,
+        dataKeys: response.data ? Object.keys(response.data) : [],
+        homeKeys: response.data?.home ? Object.keys(response.data.home) : [],
+        homeTimelineKeys: response.data?.home?.home_timeline_urt ? Object.keys(response.data.home.home_timeline_urt) : [],
+        threadedKeys: response.data?.threaded_conversation_with_injections_v2 ? Object.keys(response.data.threaded_conversation_with_injections_v2) : []
+      });
+
       // 実際のAPIレスポンス構造に対応
       // data.home.home_timeline_urt.instructions または data.threaded_conversation_with_injections_v2.instructions または data.instructions
       let instructions = null;
