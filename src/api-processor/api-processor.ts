@@ -125,12 +125,10 @@ export class ApiProcessor {
       switch (apiType) {
         case 'HomeTimeline':
         case 'HomeLatestTimeline':
-        case 'UserTweets':
-        case 'TweetDetail':
         case 'Bookmarks':
-        case 'Likes':
         case 'CommunitiesExploreTimeline':
         case 'ListLatestTweetsTimeline':
+        case 'TweetDetail':
           console.log(`Comiketter: ツイート関連API処理開始 - ${apiType}`);
           // processTweetRelatedApiが期待する形式に変換
           const tweetData = { data: message.data };
@@ -138,21 +136,19 @@ export class ApiProcessor {
           console.log(`Comiketter: ツイート関連API処理完了 - 抽出数: ${processedTweets.length}`);
           result.tweets = processedTweets;
           break;
-
+          
+        case 'UserTweets':
         case 'UserMedia':
           // 一旦処理しない（抽出不要）
-          console.log('Comiketter: UserMedia APIは処理対象外です');
+          console.log(`Comiketter: ${apiType} APIは処理対象外です`);
           break;
 
+        case 'Likes':
         case 'Favorite':
         case 'Unfavorite':
-          // 一旦処理しない（抽出不要）
-          console.log('Comiketter: Favorite/Unfavorite APIは処理対象外です');
-          break;
-
         case 'CreateRetweet':
-          // リツイート処理は別途実装
-          console.log('Comiketter: CreateRetweet APIは別途処理が必要です');
+          // リツイートなどの処理は別途実装
+          console.log(`Comiketter: ${apiType} APIは別途処理が必要です`);
           break;
 
         default:
@@ -237,18 +233,6 @@ export class ApiProcessor {
       } else if (response.data?.data?.instructions) {
         console.log('Comiketter: data.data.instructionsが存在します');
         instructions = response.data.data.instructions;
-      } else if (response.data?.bookmark_timeline_v2?.timeline?.instructions) { // Bookmarks API対応（従来構造）
-        console.log('Comiketter: bookmark_timeline_v2.timeline.instructionsが存在します');
-        instructions = response.data.bookmark_timeline_v2.timeline.instructions;
-      } else if (response.data?.home?.home_timeline_urt?.instructions) {
-        console.log('Comiketter: home_timeline_urt.instructionsが存在します');
-        instructions = response.data.home.home_timeline_urt.instructions;
-      } else if (response.data?.threaded_conversation_with_injections_v2?.instructions) {
-        console.log('Comiketter: threaded_conversation_with_injections_v2.instructionsが存在します');
-        instructions = response.data.threaded_conversation_with_injections_v2.instructions;
-      } else if (response.data?.instructions) {
-        console.log('Comiketter: instructionsが存在します');
-        instructions = response.data.instructions;
       } else {
         console.log('Comiketter: instructionsが存在しません');
       }
