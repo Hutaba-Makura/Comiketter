@@ -54,19 +54,41 @@ export class ApiCacheManager {
       };
 
       const existingCache = await this.getCacheEntries();
+      console.log(`Comiketter: キャッシュ保存前の総エントリ数: ${existingCache.length}`);
       
-      // 同じAPIタイプとパスの古いキャッシュを削除（APIタイプも含めて判定）
-      const filteredCache = existingCache.filter(
-        entry => !(entry.api_type === apiType && entry.api_path === apiPath)
+      // 同じAPIタイプとパスの既存エントリを検索
+      const existingEntryIndex = existingCache.findIndex(
+        entry => entry.api_type === apiType && entry.api_path === apiPath
       );
-
-      // 新しいキャッシュを追加
-      filteredCache.push(cacheEntry);
+      
+      console.log(`Comiketter: キャッシュ検索 - タイプ: ${apiType}, パス: ${apiPath}`);
+      console.log(`Comiketter: 既存エントリインデックス: ${existingEntryIndex}`);
+      
+      // 既存エントリの詳細情報を表示
+      if (existingEntryIndex !== -1) {
+        const existingEntry = existingCache[existingEntryIndex];
+        console.log(`Comiketter: 既存エントリ詳細 - タイプ: ${existingEntry.api_type}, パス: ${existingEntry.api_path}, ツイート数: ${existingEntry.tweets.length}`);
+      }
+      
+      let filteredCache = [...existingCache];
+      
+      if (existingEntryIndex !== -1) {
+        // 既存エントリを更新
+        console.log(`Comiketter: 既存キャッシュエントリを更新 - ${apiType}: ${apiPath}`);
+        filteredCache[existingEntryIndex] = cacheEntry;
+      } else {
+        // 新しいエントリを追加
+        console.log(`Comiketter: 新しいキャッシュエントリを追加 - ${apiType}: ${apiPath}`);
+        filteredCache.push(cacheEntry);
+      }
 
       // 最大エントリ数を超えた場合、古いものから削除
       if (filteredCache.length > CACHE_CONFIG.MAX_CACHE_ENTRIES) {
+        const beforeCount = filteredCache.length;
         filteredCache.sort((a, b) => b.timestamp - a.timestamp);
         filteredCache.splice(CACHE_CONFIG.MAX_CACHE_ENTRIES);
+        const afterCount = filteredCache.length;
+        console.log(`Comiketter: 最大エントリ数超過により削除 - ${beforeCount - afterCount}件`);
       }
 
       await chrome.storage.local.set({
@@ -74,6 +96,7 @@ export class ApiCacheManager {
       });
 
       console.log(`Comiketter: APIキャッシュを保存しました - ${apiType} (${uniqueTweets.length}件)`);
+      console.log(`Comiketter: キャッシュ保存後の総エントリ数: ${filteredCache.length}`);
     } catch (error) {
       console.error('Comiketter: APIキャッシュ保存エラー:', error);
     }
@@ -149,11 +172,17 @@ export class ApiCacheManager {
       result.cached_tweets = cachedTweets;
       result.new_tweets = newTweetsOnly;
 
-      // 新しいツイートがある場合のみキャッシュを更新
-      if (newTweetsOnly.length > 0) {
+      // キャッシュを更新（新しいツイートがある場合、または初回キャッシュの場合）
+      const isFirstTimeCache = cachedTweets.length === 0;
+      const shouldUpdateCache = newTweetsOnly.length > 0 || isFirstTimeCache;
+      
+      if (shouldUpdateCache) {
         // キャッシュ済みツイートと新しいツイートを統合して保存
         const allTweets = [...cachedTweets, ...newTweetsOnly];
+        console.log(`Comiketter: キャッシュを更新 - 新規: ${newTweetsOnly.length}件, 既存: ${cachedTweets.length}件${isFirstTimeCache ? ' (初回キャッシュ)' : ''}`);
         await this.saveCache(apiType, apiPath, allTweets, timestamp);
+      } else {
+        console.log(`Comiketter: キャッシュ更新をスキップ - 新規ツイートなし (${apiType})`);
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -224,6 +253,28 @@ export class ApiCacheManager {
 
       const totalTweets = cacheEntries.reduce((sum, entry) => sum + entry.tweets.length, 0);
       const timestamps = cacheEntries.map(entry => entry.timestamp);
+
+      // 各APIタイプのエントリ数を集計
+      const apiTypeCounts = cacheEntries.reduce((counts, entry) => {
+        counts[entry.api_type] = (counts[entry.api_type] || 0) + 1;
+        return counts;
+      }, {} as Record<string, number>);
+
+      console.log('Comiketter: キャッシュ統計詳細:');
+      console.log(`  - 総エントリ数: ${cacheEntries.length}`);
+      console.log(`  - 総ツイート数: ${totalTweets}`);
+      Object.entries(apiTypeCounts).forEach(([apiType, count]) => {
+        const tweetsInType = cacheEntries
+          .filter(entry => entry.api_type === apiType)
+          .reduce((sum, entry) => sum + entry.tweets.length, 0);
+        console.log(`  - ${apiType}: ${count}エントリ (${tweetsInType}ツイート)`);
+        
+        // 各APIタイプの詳細パスを表示
+        const entriesOfType = cacheEntries.filter(entry => entry.api_type === apiType);
+        entriesOfType.forEach((entry, index) => {
+          console.log(`    ${index + 1}. ${entry.api_path} (${entry.tweets.length}ツイート)`);
+        });
+      });
 
       return {
         totalEntries: cacheEntries.length,

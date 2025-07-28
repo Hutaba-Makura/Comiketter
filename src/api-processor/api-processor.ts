@@ -42,6 +42,7 @@ export class ApiProcessor {
     try {
       const apiType = this.extractApiType(message.path);
       console.log(`Comiketter: API処理開始 - ${apiType} (${message.path})`);
+      console.log(`Comiketter: APIタイプ詳細 - 抽出されたタイプ: ${apiType}, パス: ${message.path}`);
 
       // 操作系APIは早期リターン（重複処理を避ける）
       if (this.isOperationApi(apiType)) {
@@ -164,17 +165,18 @@ export class ApiProcessor {
    */
   private extractApiType(path: string): ApiType {
     if (path.includes('/graphql/')) {
+      // より具体的なパターンを先に判定
+      if (path.includes('UserTweetsAndReplies')) return 'UserTweetsAndReplies';
+      if (path.includes('UserTweets')) return 'UserTweets';
+      if (path.includes('BookmarkSearchTimeline')) return 'BookmarkSearchTimeline';
+      if (path.includes('Bookmarks')) return 'Bookmarks';
+      if (path.includes('CommunityTweetSearchModuleQuery')) return 'CommunityTweetSearchModuleQuery';
+      if (path.includes('CommunityTweetsTimeline')) return 'CommunityTweetsTimeline';
+      if (path.includes('ListLatestTweetsTimeline')) return 'ListLatestTweetsTimeline';
+      if (path.includes('SearchTimeline')) return 'SearchTimeline';
       if (path.includes('HomeLatestTimeline')) return 'HomeLatestTimeline';
       if (path.includes('HomeTimeline')) return 'HomeTimeline';
       if (path.includes('TweetDetail')) return 'TweetDetail';
-      if (path.includes('ListLatestTweetsTimeline')) return 'ListLatestTweetsTimeline';
-      if (path.includes('SearchTimeline')) return 'SearchTimeline';
-      if (path.includes('CommunityTweetsTimeline')) return 'CommunityTweetsTimeline';
-      if (path.includes('CommunityTweetSearchModuleQuery')) return 'CommunityTweetSearchModuleQuery';
-      if (path.includes('Bookmarks')) return 'Bookmarks';
-      if (path.includes('BookmarkSearchTimeline')) return 'BookmarkSearchTimeline';
-      if (path.includes('UserTweets')) return 'UserTweets';
-      if (path.includes('UserTweetsAndReplies')) return 'UserTweetsAndReplies';
       if (path.includes('CreateBookmarks')) return 'CreateBookmarks';
       if (path.includes('DeleteBookmark')) return 'DeleteBookmark';
       if (path.includes('FavoriteTweet')) return 'FavoriteTweet';
