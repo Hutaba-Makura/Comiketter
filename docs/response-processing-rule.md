@@ -47,6 +47,9 @@ interface ApiProcessingResult {
   - `HomeLatestTimeline` - ホームタイムライン
   - `TweetDetail` - ツイート詳細
   - `ListLatestTweetsTimeline` - リストタイムライン
+  - `SearchTimeline` - 検索タイムライン
+  - `CommunityTweetsTimeline` - コミュニティのタイムライン
+  - `CommunityTweetSearchModuleQuery` - コミュニティの検索タイムライン
 - 使われているのが確認出来なかったAPI
   - `UserTweets` - ユーザーのツイート
   - `UserTweetsAndReplies` - ユーザーのツイートとリプライ
@@ -66,7 +69,6 @@ interface ApiProcessingResult {
   - `dm/conversation/` - DMの会話履歴 （一旦処理しない）
   - `UserMedia` - ユーザーのメディア欄　（一旦処理しない）
   - `useUpsellTrackingMutation` - 画面の縦横比を変えた際に送信 （一旦処理しない）
-  - `SearchTimeline` - 検索タイムライン （抽出不要）
   - `NotificationsTimeline` - 通知欄の読み込み （抽出不要）
   - `CreateTweet` - ツイート （抽出不要）
 - 使われているのが確認出来なかったAPI
@@ -76,6 +78,18 @@ interface ApiProcessingResult {
   - `useUpsellTrackingMutation` - 追跡用のため処理対象外
 
 処理対象外のAPIはフィルタに記述しない、ここにはTwitterのAPIの把握の為、後に機能を追加する為に記述している。
+
+### 2.4 傍聴対象と処理対象のルール
+
+#### 傍聴対象（apiInterceptor.ts）
+- **処理対象API**: すべて傍聴対象
+- **処理対象外API（一旦処理しない）**: 傍聴対象に含める
+- **処理対象外API（使用確認できなかった）**: 傍聴対象から除外
+
+#### 処理対象（api-processor.ts）
+- **処理対象API**: ツイート情報を抽出してキャッシュに保存
+- **処理対象外API（一旦処理しない）**: `console.log(\`Comiketter: ${apiType} APIは別途処理が必要です\`);`で統一
+- **処理対象外API（使用確認できなかった）**: 処理対象から除外
 
 ### 2.3 APIレスポンス構造の処理
 

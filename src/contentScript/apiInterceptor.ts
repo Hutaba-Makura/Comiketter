@@ -27,7 +27,7 @@ const requestPathWeakMap = new WeakMap<XMLHttpRequest, TxTarget>();
 
 const Pattern = Object.freeze({
   tweetRelated:
-    /^(?:\/i\/api)?\/graphql\/(?<queryId>.+)?\/(?<queryName>TweetDetail|TweetResultByRestId|UserTweets|UserMedia|HomeTimeline|HomeLatestTimeline|UserTweetsAndReplies|UserHighlightsTweets|UserArticlesTweets|Bookmarks|Likes|CommunitiesExploreTimeline|ListLatestTweetsTimeline|SearchTimeline|UserByScreenName|UserByRestId|FavoriteTweet|CreateRetweet|UnfavoriteTweet|useUpsellTrackingMutation|CreateBookmark|DeleteBookmark)$/,
+    /^(?:\/i\/api)?\/graphql\/(?<queryId>.+)?\/(?<queryName>TweetDetail|HomeTimeline|HomeLatestTimeline|ListLatestTweetsTimeline|SearchTimeline|CommunityTweetsTimeline|CommunityTweetSearchModuleQuery|CreateBookmarks|DeleteBookmark|FavoriteTweet|UnfavoriteTweet|CreateRetweet|DeleteRetweet|CreateTweet|useUpsellTrackingMutation)$/,
 });
 
 // API種類の定義
@@ -35,21 +35,18 @@ const ApiTypes = {
   HomeTimeline: 'HomeTimeline',
   HomeLatestTimeline: 'HomeLatestTimeline',
   TweetDetail: 'TweetDetail',
-  TweetResultByRestId: 'TweetResultByRestId',
-  UserTweets: 'UserTweets',
-  UserMedia: 'UserMedia',
-  UserTweetsAndReplies: 'UserTweetsAndReplies',
-  UserHighlightsTweets: 'UserHighlightsTweets',
-  UserArticlesTweets: 'UserArticlesTweets',
-  Bookmarks: 'Bookmarks',
-  Likes: 'Likes',
-  CommunitiesExploreTimeline: 'CommunitiesExploreTimeline',
   ListLatestTweetsTimeline: 'ListLatestTweetsTimeline',
   SearchTimeline: 'SearchTimeline',
-  UserByScreenName: 'UserByScreenName',
-  UserByRestId: 'UserByRestId',
+  CommunityTweetsTimeline: 'CommunityTweetsTimeline',
+  CommunityTweetSearchModuleQuery: 'CommunityTweetSearchModuleQuery',
+  CreateBookmarks: 'CreateBookmarks',
+  DeleteBookmark: 'DeleteBookmark',
   FavoriteTweet: 'FavoriteTweet',
+  UnfavoriteTweet: 'UnfavoriteTweet',
   CreateRetweet: 'CreateRetweet',
+  DeleteRetweet: 'DeleteRetweet',
+  CreateTweet: 'CreateTweet',
+  useUpsellTrackingMutation: 'useUpsellTrackingMutation',
 } as const;
 
 // API種類を日本語で表示するマッピング
@@ -57,21 +54,18 @@ const ApiTypeLabels: Record<string, string> = {
   [ApiTypes.HomeTimeline]: 'ホームタイムライン',
   [ApiTypes.HomeLatestTimeline]: 'ホーム最新タイムライン',
   [ApiTypes.TweetDetail]: 'ツイート詳細',
-  [ApiTypes.TweetResultByRestId]: 'REST IDによるツイート取得',
-  [ApiTypes.UserTweets]: 'ユーザーのツイート',
-  [ApiTypes.UserMedia]: 'ユーザーのメディア',
-  [ApiTypes.UserTweetsAndReplies]: 'ユーザーのツイートとリプライ',
-  [ApiTypes.UserHighlightsTweets]: 'ユーザーのハイライトツイート',
-  [ApiTypes.UserArticlesTweets]: 'ユーザーの記事ツイート',
-  [ApiTypes.Bookmarks]: 'ブックマーク',
-  [ApiTypes.Likes]: 'いいね',
-  [ApiTypes.CommunitiesExploreTimeline]: 'コミュニティ探索タイムライン',
   [ApiTypes.ListLatestTweetsTimeline]: 'リスト最新ツイートタイムライン',
   [ApiTypes.SearchTimeline]: '検索タイムライン',
-  [ApiTypes.UserByScreenName]: 'スクリーンネームによるユーザー取得',
-  [ApiTypes.UserByRestId]: 'REST IDによるユーザー取得',
+  [ApiTypes.CommunityTweetsTimeline]: 'コミュニティタイムライン',
+  [ApiTypes.CommunityTweetSearchModuleQuery]: 'コミュニティ検索タイムライン',
+  [ApiTypes.CreateBookmarks]: 'ブックマーク作成',
+  [ApiTypes.DeleteBookmark]: 'ブックマーク削除',
   [ApiTypes.FavoriteTweet]: 'ツイートいいね',
+  [ApiTypes.UnfavoriteTweet]: 'ツイートいいね解除',
   [ApiTypes.CreateRetweet]: 'リツイート作成',
+  [ApiTypes.DeleteRetweet]: 'リツイート削除',
+  [ApiTypes.CreateTweet]: 'ツイート作成',
+  [ApiTypes.useUpsellTrackingMutation]: '画面縦横比変更追跡',
 };
 
 const enum ComiketterEvent {
