@@ -226,9 +226,9 @@ export class ApiProcessor {
       } else if (response.data?.data?.threaded_conversation_with_injections_v2?.instructions) { // 検知実績あり
         console.log('Comiketter: data.data.threaded_conversation_with_injections_v2.instructionsが存在します');
         instructions = response.data.data.threaded_conversation_with_injections_v2.instructions;
-      } else if (response.data?.data?.communityResults?.result?.ranked_community_timeline?.instructions) {
-        console.log('Comiketter: data.data.communityResults.result.ranked_community_timeline.instructionsが存在します');
-        instructions = response.data.data.communityResults.result.ranked_community_timeline.instructions;
+      } else if (response.data?.data?.communityResults?.result?.ranked_community_timeline?.timeline?.instructions) {
+        console.log('Comiketter: data.data.communityResults.result.ranked_community_timeline.timeline.instructionsが存在します');
+        instructions = response.data.data.communityResults.result.ranked_community_timeline.timeline.instructions;
       } else if (response.data?.data?.communityResults?.result?.community_filtered_timeline?.timeline?.instructions) {
         console.log('Comiketter: data.data.communityResults.result.community_filtered_timeline.timeline.instructionsが存在します');
         instructions = response.data.data.communityResults.result.community_filtered_timeline.timeline.instructions;
