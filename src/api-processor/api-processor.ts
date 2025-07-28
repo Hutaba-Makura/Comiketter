@@ -215,22 +215,31 @@ export class ApiProcessor {
         threadedKeys: response.data?.threaded_conversation_with_injections_v2 ? Object.keys(response.data.threaded_conversation_with_injections_v2) : [],
         dataDataHomeKeys: response.data?.data?.home ? Object.keys(response.data.data.home) : [],
         dataDataHomeTimelineKeys: response.data?.data?.home?.home_timeline_urt ? Object.keys(response.data.data.home.home_timeline_urt) : [],
-        dataDataThreadedKeys: response.data?.data?.threaded_conversation_with_injections_v2 ? Object.keys(response.data.data.threaded_conversation_with_injections_v2) : []
+        dataDataThreadedKeys: response.data?.data?.threaded_conversation_with_injections_v2 ? Object.keys(response.data.data.threaded_conversation_with_injections_v2) : [],
+        bookmarkKeys: response.data?.bookmark_timeline_v2 ? Object.keys(response.data.bookmark_timeline_v2) : [],
+        dataDataBookmarkKeys: response.data?.data?.bookmark_timeline_v2 ? Object.keys(response.data.data.bookmark_timeline_v2) : []
       });
 
       // 実際のAPIレスポンス構造に対応
       // data.data.home.home_timeline_urt.instructions または data.data.threaded_conversation_with_injections_v2.instructions または data.data.instructions
+      // data.data.bookmark_timeline_v2.timeline.instructions または data.bookmark_timeline_v2.timeline.instructions
       let instructions = null;
       
       if (response.data?.data?.home?.home_timeline_urt?.instructions) { // 検知実績あり
         console.log('Comiketter: data.data.home.home_timeline_urt.instructionsが存在します');
         instructions = response.data.data.home.home_timeline_urt.instructions;
+      } else if (response.data?.data?.bookmark_timeline_v2?.timeline?.instructions) { // 検知実績あり
+        console.log('Comiketter: data.data.bookmark_timeline_v2.timeline.instructionsが存在します');
+        instructions = response.data.data.bookmark_timeline_v2.timeline.instructions;
       } else if (response.data?.data?.threaded_conversation_with_injections_v2?.instructions) {
         console.log('Comiketter: data.data.threaded_conversation_with_injections_v2.instructionsが存在します');
         instructions = response.data.data.threaded_conversation_with_injections_v2.instructions;
       } else if (response.data?.data?.instructions) {
         console.log('Comiketter: data.data.instructionsが存在します');
         instructions = response.data.data.instructions;
+      } else if (response.data?.bookmark_timeline_v2?.timeline?.instructions) { // Bookmarks API対応（従来構造）
+        console.log('Comiketter: bookmark_timeline_v2.timeline.instructionsが存在します');
+        instructions = response.data.bookmark_timeline_v2.timeline.instructions;
       } else if (response.data?.home?.home_timeline_urt?.instructions) {
         console.log('Comiketter: home_timeline_urt.instructionsが存在します');
         instructions = response.data.home.home_timeline_urt.instructions;
