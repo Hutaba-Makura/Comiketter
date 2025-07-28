@@ -53,6 +53,7 @@ interface ApiProcessingResult {
   - `Bookmarks` - ブックマークのタイムライン
   - `BookmarkSearchTimeline` - ブックマークの検索タイムライン
   - `UserTweets` - ユーザーのツイート
+  - `UserTweetsAndReplies` - ユーザーの返信
 - 使われているのが確認出来なかったAPI
   - `UserTweetsAndReplies` - ユーザーのツイートとリプライ
   - `UserHighlightsTweets` - ユーザーのハイライトツイート

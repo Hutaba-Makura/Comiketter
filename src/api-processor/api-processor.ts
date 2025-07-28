@@ -54,6 +54,8 @@ export class ApiProcessor {
         case 'CommunityTweetSearchModuleQuery':
         case 'Bookmarks':
         case 'BookmarkSearchTimeline':
+        case 'UserTweets':
+        case 'UserTweetsAndReplies':
           // processTweetRelatedApiが期待する形式に変換
           const tweetData = { data: message.data };
           const processedTweets = this.processTweetRelatedApi(tweetData);
@@ -124,6 +126,8 @@ export class ApiProcessor {
         case 'CommunityTweetSearchModuleQuery':
         case 'Bookmarks':
         case 'BookmarkSearchTimeline':
+        case 'UserTweets':
+        case 'UserTweetsAndReplies':
           console.log(`Comiketter: ツイート関連API処理開始 - ${apiType}`);
           // processTweetRelatedApiが期待する形式に変換
           const tweetData = { data: message.data };
@@ -173,6 +177,8 @@ export class ApiProcessor {
       if (path.includes('CommunityTweetSearchModuleQuery')) return 'CommunityTweetSearchModuleQuery';
       if (path.includes('Bookmarks')) return 'Bookmarks';
       if (path.includes('BookmarkSearchTimeline')) return 'BookmarkSearchTimeline';
+      if (path.includes('UserTweets')) return 'UserTweets';
+      if (path.includes('UserTweetsAndReplies')) return 'UserTweetsAndReplies';
       if (path.includes('CreateBookmarks')) return 'CreateBookmarks';
       if (path.includes('DeleteBookmark')) return 'DeleteBookmark';
       if (path.includes('FavoriteTweet')) return 'FavoriteTweet';
@@ -215,34 +221,13 @@ export class ApiProcessor {
           listKeys: response.data?.data?.list ? Object.keys(response.data.data.list) : []
         });
 
-      // 実際のAPIレスポンス構造に対応
-      // data.data.home.home_timeline_urt.instructions または data.data.threaded_conversation_with_injections_v2.instructions または data.data.instructions
-      // data.data.bookmark_timeline_v2.timeline.instructions または data.bookmark_timeline_v2.timeline.instructions
-      let instructions = null;
+      // 汎用的なinstructions探索
+      let instructions = this.findInstructionsRecursively(response.data);
       
-      if (response.data?.data?.home?.home_timeline_urt?.instructions) { // HomeTimelineを検知
-        console.log('Comiketter: data.data.home.home_timeline_urt.instructionsが存在します');
-        instructions = response.data.data.home.home_timeline_urt.instructions;
-      } else if (response.data?.data?.bookmark_timeline_v2?.timeline?.instructions) { // Bookmarksを検知
-        console.log('Comiketter: data.data.bookmark_timeline_v2.timeline.instructionsが存在します');
-        instructions = response.data.data.bookmark_timeline_v2.timeline.instructions;
-      } else if (response.data?.data?.search_by_raw_query?.bookmarks_search_timeline?.timeline?.instructions) { // BookmarkSearchTimelineを検知
-        console.log('Comiketter: data.data.search_by_raw_query.bookmarks_search_timeline.timeline.instructionsが存在します');
-        instructions = response.data.data.search_by_raw_query.bookmarks_search_timeline.timeline.instructions;
-      } else if (response.data?.data?.list?.tweets_timeline?.timeline?.instructions) { // ListLatestTweetsTimelineを検知
-        console.log('Comiketter: data.data.list.tweets_timeline.timeline.instructionsが存在します');
-        instructions = response.data.data.list.tweets_timeline.timeline.instructions;
-      } else if (response.data?.data?.threaded_conversation_with_injections_v2?.instructions) { // TweetDetailを検知
-        console.log('Comiketter: data.data.threaded_conversation_with_injections_v2.instructionsが存在します');
-        instructions = response.data.data.threaded_conversation_with_injections_v2.instructions;
-      } else if (response.data?.data?.communityResults?.result?.ranked_community_timeline?.timeline?.instructions) { // CommunityTweetsTimelineを検知
-        console.log('Comiketter: data.data.communityResults.result.ranked_community_timeline.timeline.instructionsが存在します');
-        instructions = response.data.data.communityResults.result.ranked_community_timeline.timeline.instructions;
-      } else if (response.data?.data?.communityResults?.result?.community_filtered_timeline?.timeline?.instructions) { // CommunityTweetSearchModuleQueryを検知
-        console.log('Comiketter: data.data.communityResults.result.community_filtered_timeline.timeline.instructionsが存在します');
-        instructions = response.data.data.communityResults.result.community_filtered_timeline.timeline.instructions;
+      if (instructions) {
+        console.log('Comiketter: instructionsを発見しました');
       } else {
-        console.log('Comiketter: instructionsが存在しません');
+        console.log('Comiketter: instructionsが見つかりませんでした');
       }
 
       if (instructions) {
@@ -353,6 +338,70 @@ export class ApiProcessor {
     } catch {
       return false;
     }
+  }
+
+  /**
+   * 汎用的なinstructions探索メソッド
+   * 様々なAPIレスポンス構造からinstructionsを再帰的に探索
+   * @param obj 探索対象のオブジェクト
+   * @param maxDepth 最大探索深度（デフォルト: 5）
+   * @returns 見つかったinstructions配列、またはnull
+   */
+  private findInstructionsRecursively(obj: any, maxDepth: number = 5): any[] | null {
+    if (!obj || typeof obj !== 'object' || maxDepth <= 0) {
+      return null;
+    }
+
+    // 直接instructionsプロパティをチェック
+    if (obj.instructions && Array.isArray(obj.instructions)) {
+      console.log('Comiketter: instructionsを直接発見しました');
+      return obj.instructions;
+    }
+
+    // 既知のパターンを優先的にチェック
+    const knownPatterns = [
+      'data.home.home_timeline_urt.instructions', // HomeTimelineを検知
+      'data.bookmark_timeline_v2.timeline.instructions', // Bookmarksを検知
+      'data.search_by_raw_query.bookmarks_search_timeline.timeline.instructions', // BookmarkSearchTimelineを検知
+      'data.list.tweets_timeline.timeline.instructions', // ListLatestTweetsTimelineを検知
+      'data.threaded_conversation_with_injections_v2.instructions', // TweetDetailを検知
+      'data.communityResults.result.ranked_community_timeline.timeline.instructions', // CommunityTweetsTimelineを検知
+      'data.communityResults.result.community_filtered_timeline.timeline.instructions', // CommunityTweetSearchModuleQueryを検知
+      'data.user.result.timeline.timeline.instructions' // UserTweetsとUserTweetsAndRepliesを検知
+    ];
+
+    for (const pattern of knownPatterns) {
+      const value = this.getNestedValue(obj, pattern);
+      if (value && Array.isArray(value)) {
+        console.log(`Comiketter: 既知パターンでinstructionsを発見: ${pattern}`);
+        return value;
+      }
+    }
+
+    // 再帰的に探索
+    for (const key in obj) {
+      if (obj[key] && typeof obj[key] === 'object') {
+        const result = this.findInstructionsRecursively(obj[key], maxDepth - 1);
+        if (result) {
+          console.log(`Comiketter: 再帰探索でinstructionsを発見: ${key}`);
+          return result;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * ネストしたオブジェクトから指定されたパスで値を取得
+   * @param obj 対象オブジェクト
+   * @param path ドット区切りのパス
+   * @returns 取得された値、またはundefined
+   */
+  private getNestedValue(obj: any, path: string): any {
+    return path.split('.').reduce((current, key) => {
+      return current && current[key] !== undefined ? current[key] : undefined;
+    }, obj);
   }
 
   /**

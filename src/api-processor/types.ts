@@ -86,6 +86,8 @@ export type ApiType =
   | 'CommunityTweetSearchModuleQuery'
   | 'Bookmarks'
   | 'BookmarkSearchTimeline'
+  | 'UserTweets'
+  | 'UserTweetsAndReplies'
   | 'CreateBookmarks'
   | 'DeleteBookmark'
   | 'FavoriteTweet'

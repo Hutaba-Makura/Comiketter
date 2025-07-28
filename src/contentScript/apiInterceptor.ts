@@ -27,7 +27,7 @@ const requestPathWeakMap = new WeakMap<XMLHttpRequest, TxTarget>();
 
 const Pattern = Object.freeze({
   tweetRelated:
-    /^(?:\/i\/api)?\/graphql\/(?<queryId>.+)?\/(?<queryName>TweetDetail|HomeTimeline|HomeLatestTimeline|ListLatestTweetsTimeline|SearchTimeline|CommunityTweetsTimeline|CommunityTweetSearchModuleQuery|Bookmarks|BookmarkSearchTimeline|CreateBookmarks|DeleteBookmark|FavoriteTweet|UnfavoriteTweet|CreateRetweet|DeleteRetweet|CreateTweet|useUpsellTrackingMutation)$/,
+    /^(?:\/i\/api)?\/graphql\/(?<queryId>.+)?\/(?<queryName>TweetDetail|HomeTimeline|HomeLatestTimeline|ListLatestTweetsTimeline|SearchTimeline|CommunityTweetsTimeline|CommunityTweetSearchModuleQuery|Bookmarks|BookmarkSearchTimeline|UserTweets|UserTweetsAndReplies|CreateBookmarks|DeleteBookmark|FavoriteTweet|UnfavoriteTweet|CreateRetweet|DeleteRetweet|CreateTweet|useUpsellTrackingMutation)$/,
 });
 
 // API種類の定義
@@ -41,6 +41,8 @@ const ApiTypes = {
   CommunityTweetSearchModuleQuery: 'CommunityTweetSearchModuleQuery',
   Bookmarks: 'Bookmarks',
   BookmarkSearchTimeline: 'BookmarkSearchTimeline',
+  UserTweets: 'UserTweets',
+  UserTweetsAndReplies: 'UserTweetsAndReplies',
   CreateBookmarks: 'CreateBookmarks',
   DeleteBookmark: 'DeleteBookmark',
   FavoriteTweet: 'FavoriteTweet',
@@ -62,6 +64,8 @@ const ApiTypeLabels: Record<string, string> = {
   [ApiTypes.CommunityTweetSearchModuleQuery]: 'コミュニティ検索タイムライン',
   [ApiTypes.Bookmarks]: 'ブックマークタイムライン',
   [ApiTypes.BookmarkSearchTimeline]: 'ブックマーク検索タイムライン',
+  [ApiTypes.UserTweets]: 'ユーザーツイート',
+  [ApiTypes.UserTweetsAndReplies]: 'ユーザー返信',
   [ApiTypes.CreateBookmarks]: 'ブックマーク作成',
   [ApiTypes.DeleteBookmark]: 'ブックマーク削除',
   [ApiTypes.FavoriteTweet]: 'ツイートいいね',
