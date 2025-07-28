@@ -14,6 +14,8 @@ import type { ApiResponseMessage } from '../api-processor/types';
 export class MessageHandler {
   private downloadManager: DownloadManager;
   private apiProcessor: ApiProcessor;
+  private recentApiCalls: Map<string, number> = new Map(); // API重複防止用
+  private readonly API_CALL_COOLDOWN = 1000; // 1秒間のクールダウン
 
   constructor() {
     this.downloadManager = new DownloadManager();
@@ -45,6 +47,13 @@ export class MessageHandler {
     sendResponse: (response: any) => void
   ): Promise<void> {
     try {
+      // メッセージの基本検証
+      if (!message || typeof message !== 'object') {
+        console.error('Comiketter: 無効なメッセージ形式:', message);
+        sendResponse({ success: false, error: 'Invalid message format' });
+        return;
+      }
+
       switch (message.type) {
         case 'LOG':
           // ログメッセージは既にバックグラウンドスクリプトで処理されているため、
@@ -110,19 +119,15 @@ export class MessageHandler {
           await this.handleTestDownload(message.payload, sendResponse);
           break;
 
-        case 'OPEN_BOOKMARK_PAGE':
-          await this.handleOpenBookmarkPage(sendResponse);
-          break;
-
         case 'BOOKMARK_ACTION':
           try {
             const result = await this.handleBookmarkMessage(message.payload);
             sendResponse({ success: true, data: result });
           } catch (error) {
-            console.error('Bookmark action failed:', error);
+            console.error('Comiketter: Bookmark action error:', error);
             sendResponse({ 
               success: false, 
-              error: error instanceof Error ? error.message : 'Unknown error' 
+              error: error instanceof Error ? error.message : 'Bookmark action failed' 
             });
           }
           break;
@@ -132,20 +137,28 @@ export class MessageHandler {
             const result = await this.handleCacheAction(message.payload);
             sendResponse({ success: true, data: result });
           } catch (error) {
-            console.error('Cache action failed:', error);
+            console.error('Comiketter: Cache action error:', error);
             sendResponse({ 
               success: false, 
-              error: error instanceof Error ? error.message : 'Unknown error' 
+              error: error instanceof Error ? error.message : 'Cache action failed' 
             });
           }
           break;
 
+        case 'OPEN_BOOKMARK_PAGE':
+          await this.handleOpenBookmarkPage(sendResponse);
+          break;
+
         default:
-          console.warn('Comiketter: Unknown message type:', message.type);
-          sendResponse({ success: false, error: 'Unknown message type' });
+          console.warn('Comiketter: 未対応のメッセージタイプ:', message.type);
+          sendResponse({ 
+            success: false, 
+            error: `Unsupported message type: ${message.type}` 
+          });
+          break;
       }
     } catch (error) {
-      console.error('Comiketter: Message handling error:', error);
+      console.error('Comiketter: Message handler error:', error);
       sendResponse({ 
         success: false, 
         error: error instanceof Error ? error.message : 'Unknown error' 
@@ -486,10 +499,45 @@ export class MessageHandler {
   }
 
   /**
+   * 古いAPI呼び出し記録をクリーンアップ
+   */
+  private cleanupOldApiCalls(currentTime: number): void {
+    const cutoffTime = currentTime - (this.API_CALL_COOLDOWN * 5); // 5倍の時間を保持（より効率的）
+    let cleanedCount = 0;
+    for (const [key, timestamp] of this.recentApiCalls.entries()) {
+      if (timestamp < cutoffTime) {
+        this.recentApiCalls.delete(key);
+        cleanedCount++;
+      }
+    }
+    
+    // クリーンアップした場合はログ出力（デバッグ用）
+    if (cleanedCount > 0) {
+      console.log(`Comiketter: API呼び出し記録をクリーンアップ - ${cleanedCount}件削除`);
+    }
+  }
+
+  /**
    * APIレスポンスキャプチャを処理（キャッシュ機能付き）
    */
   private async handleApiResponseCaptured(payload: ApiResponseMessage): Promise<void> {
     const title = this.extractApiTitle(payload.path);
+    const apiKey = payload.path; // パスのみで重複を判定
+    const currentTime = Date.now();
+    
+    // 重複チェック
+    const lastCallTime = this.recentApiCalls.get(apiKey);
+    if (lastCallTime && (currentTime - lastCallTime) < this.API_CALL_COOLDOWN) {
+      console.log(`Comiketter: API重複呼び出しをスキップ - ${title} (${payload.path})`);
+      return;
+    }
+    
+    // 重複防止用のタイムスタンプを記録
+    this.recentApiCalls.set(apiKey, currentTime);
+    
+    // 古いエントリをクリーンアップ（メモリリーク防止）
+    this.cleanupOldApiCalls(currentTime);
+    
     console.log('Comiketter: API傍受:', title, '(', payload.path, ')');
     
     try {
@@ -503,8 +551,12 @@ export class MessageHandler {
         console.error('Comiketter: API処理エラー:', result.errors);
       }
 
-      // ダウンロードマネージャーにも処理を委譲（既存の機能との互換性）
-      await this.downloadManager.processApiResponse(payload);
+      // 操作系APIの場合はダウンロードマネージャーへの処理委譲もスキップ
+      const apiType = this.extractApiType(payload.path);
+      if (!this.isOperationApi(apiType)) {
+        // ダウンロードマネージャーにも処理を委譲（既存の機能との互換性）
+        await this.downloadManager.processApiResponse(payload);
+      }
     } catch (error) {
       console.error('Comiketter: Failed to process API response:', error);
     }
@@ -515,6 +567,19 @@ export class MessageHandler {
    */
   private async handleApiResponseProcessed(payload: ApiResponseMessage): Promise<void> {
     const title = this.extractApiTitle(payload.path);
+    const apiKey = payload.path; // パスのみで重複を判定
+    const currentTime = Date.now();
+    
+    // 重複チェック
+    const lastCallTime = this.recentApiCalls.get(apiKey);
+    if (lastCallTime && (currentTime - lastCallTime) < this.API_CALL_COOLDOWN) {
+      console.log(`Comiketter: API処理済み重複呼び出しをスキップ - ${title} (${payload.path})`);
+      return;
+    }
+    
+    // 重複防止用のタイムスタンプを記録
+    this.recentApiCalls.set(apiKey, currentTime);
+    
     console.log('Comiketter: API処理済み:', title, '(', payload.path, ')');
     
     try {
@@ -550,6 +615,55 @@ export class MessageHandler {
     
     // デフォルト
     return 'API';
+  }
+
+  /**
+   * APIパスからタイプを抽出
+   */
+  private extractApiType(path: string): string {
+    if (path.includes('/graphql/')) {
+      // GraphQLエンドポイントの場合は操作名を抽出
+      if (path.includes('HomeLatestTimeline')) return 'HomeLatestTimeline';
+      if (path.includes('HomeTimeline')) return 'HomeTimeline';
+      if (path.includes('TweetDetail')) return 'TweetDetail';
+      if (path.includes('ListLatestTweetsTimeline')) return 'ListLatestTweetsTimeline';
+      if (path.includes('SearchTimeline')) return 'SearchTimeline';
+      if (path.includes('CommunityTweetsTimeline')) return 'CommunityTweetsTimeline';
+      if (path.includes('CommunityTweetSearchModuleQuery')) return 'CommunityTweetSearchModuleQuery';
+      if (path.includes('Bookmarks')) return 'Bookmarks';
+      if (path.includes('BookmarkSearchTimeline')) return 'BookmarkSearchTimeline';
+      if (path.includes('UserTweets')) return 'UserTweets';
+      if (path.includes('UserTweetsAndReplies')) return 'UserTweetsAndReplies';
+      if (path.includes('CreateBookmarks')) return 'CreateBookmarks';
+      if (path.includes('DeleteBookmark')) return 'DeleteBookmark';
+      if (path.includes('FavoriteTweet')) return 'FavoriteTweet';
+      if (path.includes('UnfavoriteTweet')) return 'UnfavoriteTweet';
+      if (path.includes('CreateRetweet')) return 'CreateRetweet';
+      if (path.includes('DeleteRetweet')) return 'DeleteRetweet';
+      if (path.includes('CreateTweet')) return 'CreateTweet';
+      if (path.includes('useUpsellTrackingMutation')) return 'useUpsellTrackingMutation';
+      return 'GraphQL';
+    }
+    
+    if (path.includes('/favorites/create')) return 'FavoriteTweet';
+    if (path.includes('/favorites/destroy')) return 'UnfavoriteTweet';
+    if (path.includes('/retweet/create')) return 'CreateRetweet';
+    
+    return 'Other';
+  }
+
+  /**
+   * 操作系APIかどうかを判定
+   */
+  private isOperationApi(apiType: string): boolean {
+    return [
+      'FavoriteTweet',
+      'UnfavoriteTweet',
+      'CreateRetweet',
+      'DeleteRetweet',
+      'CreateTweet',
+      'useUpsellTrackingMutation'
+    ].includes(apiType);
   }
 
   /**

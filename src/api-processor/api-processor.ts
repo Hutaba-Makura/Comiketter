@@ -43,6 +43,12 @@ export class ApiProcessor {
       const apiType = this.extractApiType(message.path);
       console.log(`Comiketter: API処理開始 - ${apiType} (${message.path})`);
 
+      // 操作系APIは早期リターン（重複処理を避ける）
+      if (this.isOperationApi(apiType)) {
+        console.log(`Comiketter: 操作系APIスキップ - ${apiType}`);
+        return result;
+      }
+
       // APIタイプに応じて処理を分岐
       switch (apiType) {
         case 'HomeTimeline':
@@ -72,19 +78,7 @@ export class ApiProcessor {
           result.tweets = [...cacheResult.cached_tweets, ...cacheResult.new_tweets];
           result.errors = cacheResult.errors;
 
-          console.log(`Comiketter: キャッシュ処理結果 - 新規: ${cacheResult.new_tweets.length}件, キャッシュ: ${cacheResult.cached_tweets.length}件`);
-          break;
-
-        case 'CreateBookmarks':
-        case 'DeleteBookmark':
-        case 'FavoriteTweet':
-        case 'UnfavoriteTweet':
-        case 'CreateRetweet':
-        case 'DeleteRetweet':
-        case 'CreateTweet':
-        case 'useUpsellTrackingMutation':
-          // 一旦処理しない（別途処理が必要）
-          console.log(`Comiketter: ${apiType} APIは別途処理が必要です`);
+          console.log(`Comiketter: キャッシュ処理結果 - 新規: ${cacheResult.new_tweets.length}件, キャッシュ済み: ${cacheResult.cached_tweets.length}件`);
           break;
 
         default:
@@ -92,7 +86,15 @@ export class ApiProcessor {
           break;
       }
 
-      console.log(`Comiketter: API処理完了 - ${apiType} (ツイート数: ${result.tweets.length})`);
+      console.log(`Comiketter: API処理完了 - ${apiType} (キャッシュした総ツイート数: ${result.tweets.length})`);
+      
+      // キャッシュ統計を出力（デバッグ用）
+      try {
+        const cacheStats = await ApiCacheManager.getCacheStats();
+        console.log(`Comiketter: キャッシュ統計 - 総エントリ: ${cacheStats.totalEntries}, 総ツイート: ${cacheStats.totalTweets}`);
+      } catch (error) {
+        console.error('Comiketter: キャッシュ統計取得エラー:', error);
+      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       result.errors.push(`API処理エラー: ${errorMessage}`);
@@ -115,6 +117,12 @@ export class ApiProcessor {
       const apiType = this.extractApiType(message.path);
       console.log(`Comiketter: API処理開始（キャッシュ無効） - ${apiType} (${message.path})`);
 
+      // 操作系APIは早期リターン（重複処理を避ける）
+      if (this.isOperationApi(apiType)) {
+        console.log(`Comiketter: 操作系APIスキップ（キャッシュ無効） - ${apiType}`);
+        return result;
+      }
+
       // APIタイプに応じて処理を分岐
       switch (apiType) {
         case 'HomeTimeline':
@@ -136,18 +144,6 @@ export class ApiProcessor {
           result.tweets = processedTweets;
           break;
           
-        case 'CreateBookmarks':
-        case 'DeleteBookmark':
-        case 'FavoriteTweet':
-        case 'UnfavoriteTweet':
-        case 'CreateRetweet':
-        case 'DeleteRetweet':
-        case 'CreateTweet':
-        case 'useUpsellTrackingMutation':
-          // 一旦処理しない（別途処理が必要）
-          console.log(`Comiketter: ${apiType} APIは別途処理が必要です`);
-          break;
-
         default:
           console.log(`Comiketter: 未対応のAPIタイプ: ${apiType}`);
           break;
@@ -347,7 +343,7 @@ export class ApiProcessor {
    * @param maxDepth 最大探索深度（デフォルト: 5）
    * @returns 見つかったinstructions配列、またはnull
    */
-  private findInstructionsRecursively(obj: any, maxDepth: number = 5): any[] | null {
+  private findInstructionsRecursively(obj: any, maxDepth: number = 7): any[] | null {
     if (!obj || typeof obj !== 'object' || maxDepth <= 0) {
       return null;
     }
@@ -422,5 +418,19 @@ export class ApiProcessor {
     newestEntry: number | null;
   }> {
     return await ApiCacheManager.getCacheStats();
+  }
+
+  /**
+   * 操作系APIかどうかを判定
+   */
+  private isOperationApi(apiType: ApiType): boolean {
+    return [
+      'FavoriteTweet',
+      'UnfavoriteTweet',
+      'CreateRetweet',
+      'DeleteRetweet',
+      'CreateTweet',
+      'useUpsellTrackingMutation'
+    ].includes(apiType);
   }
 } 

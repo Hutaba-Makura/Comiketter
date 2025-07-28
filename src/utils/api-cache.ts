@@ -37,9 +37,12 @@ export class ApiCacheManager {
     timestamp: number
   ): Promise<void> {
     try {
+      // 重複ツイートを除去（id_strで判定）
+      const uniqueTweets = this.removeDuplicateTweets(tweets);
+      
       const cacheEntry: ApiCacheEntry = {
         id: this.generateCacheId(apiType, apiPath, timestamp),
-        tweets: tweets.map(tweet => ({
+        tweets: uniqueTweets.map(tweet => ({
           ...tweet,
           cached_at: timestamp,
           api_source: apiPath,
@@ -52,7 +55,7 @@ export class ApiCacheManager {
 
       const existingCache = await this.getCacheEntries();
       
-      // 同じAPIタイプとパスの古いキャッシュを削除
+      // 同じAPIタイプとパスの古いキャッシュを削除（APIタイプも含めて判定）
       const filteredCache = existingCache.filter(
         entry => !(entry.api_type === apiType && entry.api_path === apiPath)
       );
@@ -70,7 +73,7 @@ export class ApiCacheManager {
         [CACHE_CONFIG.STORAGE_KEY]: filteredCache
       });
 
-      console.log(`Comiketter: APIキャッシュを保存しました - ${apiType} (${tweets.length}件)`);
+      console.log(`Comiketter: APIキャッシュを保存しました - ${apiType} (${uniqueTweets.length}件)`);
     } catch (error) {
       console.error('Comiketter: APIキャッシュ保存エラー:', error);
     }
@@ -96,6 +99,7 @@ export class ApiCacheManager {
       );
 
       if (validEntries.length === 0) {
+        console.log(`Comiketter: キャッシュ未発見 - ${apiType} (${apiPath})`);
         return [];
       }
 
@@ -105,6 +109,7 @@ export class ApiCacheManager {
       );
 
       console.log(`Comiketter: APIキャッシュから取得 - ${apiType} (${latestEntry.tweets.length}件)`);
+      console.log(`Comiketter: キャッシュ詳細 - タイプ: ${apiType}, パス: ${apiPath}, タイムスタンプ: ${latestEntry.timestamp}`);
       return latestEntry.tweets;
     } catch (error) {
       console.error('Comiketter: APIキャッシュ取得エラー:', error);
@@ -133,18 +138,23 @@ export class ApiCacheManager {
       const cachedTweetIds = new Set(cachedTweets.map(tweet => tweet.id_str));
       console.log('Comiketter: cachedTweetIds length', cachedTweetIds.size); // キャッシュされているツイート数
 
+      // デバッグ情報を追加
+      console.log(`Comiketter: キャッシュ処理詳細 - ${apiType} (${apiPath})`);
+      console.log(`Comiketter: 新規ツイート数: ${newTweets.length}, キャッシュ済みツイート数: ${cachedTweets.length}`);
+
       // 新しいツイートのみを抽出
       const newTweetsOnly = newTweets.filter(tweet => !cachedTweetIds.has(tweet.id_str));
+      console.log(`Comiketter: 重複除去後の新規ツイート数: ${newTweetsOnly.length}`);
 
       result.cached_tweets = cachedTweets;
       result.new_tweets = newTweetsOnly;
 
       // 新しいツイートがある場合のみキャッシュを更新
       if (newTweetsOnly.length > 0) {
-        await this.saveCache(apiType, apiPath, newTweets, timestamp);
+        // キャッシュ済みツイートと新しいツイートを統合して保存
+        const allTweets = [...cachedTweets, ...newTweetsOnly];
+        await this.saveCache(apiType, apiPath, allTweets, timestamp);
       }
-
-      console.log(`Comiketter: キャッシュ処理完了 - 新規: ${newTweetsOnly.length}件, キャッシュ: ${cachedTweets.length}件`);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       result.errors.push(`キャッシュ処理エラー: ${errorMessage}`);
@@ -263,5 +273,19 @@ export class ApiCacheManager {
       hash = hash & hash; // 32ビット整数に変換
     }
     return Math.abs(hash).toString(36);
+  }
+
+  /**
+   * 重複ツイートを除去
+   */
+  private static removeDuplicateTweets(tweets: ProcessedTweet[]): ProcessedTweet[] {
+    const seenIds = new Set<string>();
+    return tweets.filter(tweet => {
+      if (seenIds.has(tweet.id_str)) {
+        return false;
+      }
+      seenIds.add(tweet.id_str);
+      return true;
+    });
   }
 } 
