@@ -528,7 +528,7 @@ export class MessageHandler {
     // 重複チェック
     const lastCallTime = this.recentApiCalls.get(apiKey);
     if (lastCallTime && (currentTime - lastCallTime) < this.API_CALL_COOLDOWN) {
-      console.log(`Comiketter: API重複呼び出しをスキップ - ${title} (${payload.path})`);
+      console.log(`Comiketter: API重複呼び出しをスキップ - ${title}`);
       return;
     }
     
@@ -538,13 +538,11 @@ export class MessageHandler {
     // 古いエントリをクリーンアップ（メモリリーク防止）
     this.cleanupOldApiCalls(currentTime);
     
-    console.log('Comiketter: API傍受:', title, '(', payload.path, ')');
+    console.log(`Comiketter: API傍受 - ${title}`);
     
     try {
       // APIプロセッサーでキャッシュ機能付き処理
       const result = await this.apiProcessor.processApiResponse(payload);
-      
-      console.log(`Comiketter: API処理完了 - ${title} (ツイート数: ${result.tweets.length}, エラー数: ${result.errors.length})`);
       
       // エラーがある場合はログ出力
       if (result.errors.length > 0) {
@@ -573,14 +571,14 @@ export class MessageHandler {
     // 重複チェック
     const lastCallTime = this.recentApiCalls.get(apiKey);
     if (lastCallTime && (currentTime - lastCallTime) < this.API_CALL_COOLDOWN) {
-      console.log(`Comiketter: API処理済み重複呼び出しをスキップ - ${title} (${payload.path})`);
+      console.log(`Comiketter: API処理済み重複呼び出しをスキップ - ${title}`);
       return;
     }
     
     // 重複防止用のタイムスタンプを記録
     this.recentApiCalls.set(apiKey, currentTime);
     
-    console.log('Comiketter: API処理済み:', title, '(', payload.path, ')');
+    console.log(`Comiketter: API処理済み - ${title}`);
     
     try {
       // 既に処理済みの場合はダウンロードマネージャーのみ実行

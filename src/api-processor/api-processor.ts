@@ -41,8 +41,7 @@ export class ApiProcessor {
 
     try {
       const apiType = this.extractApiType(message.path);
-      console.log(`Comiketter: API処理開始 - ${apiType} (${message.path})`);
-      console.log(`Comiketter: APIタイプ詳細 - 抽出されたタイプ: ${apiType}, パス: ${message.path}`);
+      console.log(`Comiketter: API処理開始 - ${apiType}`);
 
       // 操作系APIは早期リターン（重複処理を避ける）
       if (this.isOperationApi(apiType)) {
@@ -79,22 +78,12 @@ export class ApiProcessor {
           result.tweets = [...cacheResult.cached_tweets, ...cacheResult.new_tweets];
           result.errors = cacheResult.errors;
 
-          console.log(`Comiketter: キャッシュ処理結果 - 新規: ${cacheResult.new_tweets.length}件, キャッシュ済み: ${cacheResult.cached_tweets.length}件`);
+          console.log(`Comiketter: 処理完了 - 新規: ${cacheResult.new_tweets.length}件, キャッシュ済み: ${cacheResult.cached_tweets.length}件`);
           break;
 
         default:
           console.log(`Comiketter: 未対応のAPIタイプ: ${apiType}`);
           break;
-      }
-
-      console.log(`Comiketter: API処理完了 - ${apiType} (キャッシュした総ツイート数: ${result.tweets.length})`);
-      
-      // キャッシュ統計を出力（デバッグ用）
-      try {
-        const cacheStats = await ApiCacheManager.getCacheStats();
-        console.log(`Comiketter: キャッシュ統計 - 総エントリ: ${cacheStats.totalEntries}, 総ツイート: ${cacheStats.totalTweets}`);
-      } catch (error) {
-        console.error('Comiketter: キャッシュ統計取得エラー:', error);
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
