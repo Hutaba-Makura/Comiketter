@@ -52,6 +52,8 @@ export class ApiProcessor {
         case 'SearchTimeline':
         case 'CommunityTweetsTimeline':
         case 'CommunityTweetSearchModuleQuery':
+        case 'Bookmarks':
+        case 'BookmarkSearchTimeline':
           // processTweetRelatedApiが期待する形式に変換
           const tweetData = { data: message.data };
           const processedTweets = this.processTweetRelatedApi(tweetData);
@@ -120,6 +122,8 @@ export class ApiProcessor {
         case 'SearchTimeline':
         case 'CommunityTweetsTimeline':
         case 'CommunityTweetSearchModuleQuery':
+        case 'Bookmarks':
+        case 'BookmarkSearchTimeline':
           console.log(`Comiketter: ツイート関連API処理開始 - ${apiType}`);
           // processTweetRelatedApiが期待する形式に変換
           const tweetData = { data: message.data };
@@ -167,6 +171,8 @@ export class ApiProcessor {
       if (path.includes('SearchTimeline')) return 'SearchTimeline';
       if (path.includes('CommunityTweetsTimeline')) return 'CommunityTweetsTimeline';
       if (path.includes('CommunityTweetSearchModuleQuery')) return 'CommunityTweetSearchModuleQuery';
+      if (path.includes('Bookmarks')) return 'Bookmarks';
+      if (path.includes('BookmarkSearchTimeline')) return 'BookmarkSearchTimeline';
       if (path.includes('CreateBookmarks')) return 'CreateBookmarks';
       if (path.includes('DeleteBookmark')) return 'DeleteBookmark';
       if (path.includes('FavoriteTweet')) return 'FavoriteTweet';
@@ -214,22 +220,25 @@ export class ApiProcessor {
       // data.data.bookmark_timeline_v2.timeline.instructions または data.bookmark_timeline_v2.timeline.instructions
       let instructions = null;
       
-      if (response.data?.data?.home?.home_timeline_urt?.instructions) { // 検知実績あり
+      if (response.data?.data?.home?.home_timeline_urt?.instructions) { // HomeTimelineを検知
         console.log('Comiketter: data.data.home.home_timeline_urt.instructionsが存在します');
         instructions = response.data.data.home.home_timeline_urt.instructions;
-      } else if (response.data?.data?.bookmark_timeline_v2?.timeline?.instructions) { // 検知実績あり
+      } else if (response.data?.data?.bookmark_timeline_v2?.timeline?.instructions) { // Bookmarksを検知
         console.log('Comiketter: data.data.bookmark_timeline_v2.timeline.instructionsが存在します');
         instructions = response.data.data.bookmark_timeline_v2.timeline.instructions;
-      } else if (response.data?.data?.list?.tweets_timeline?.timeline?.instructions) { // 検出実績あり
+      } else if (response.data?.data?.search_by_raw_query?.bookmarks_search_timeline?.timeline?.instructions) { // BookmarkSearchTimelineを検知
+        console.log('Comiketter: data.data.search_by_raw_query.bookmarks_search_timeline.timeline.instructionsが存在します');
+        instructions = response.data.data.search_by_raw_query.bookmarks_search_timeline.timeline.instructions;
+      } else if (response.data?.data?.list?.tweets_timeline?.timeline?.instructions) { // ListLatestTweetsTimelineを検知
         console.log('Comiketter: data.data.list.tweets_timeline.timeline.instructionsが存在します');
         instructions = response.data.data.list.tweets_timeline.timeline.instructions;
-      } else if (response.data?.data?.threaded_conversation_with_injections_v2?.instructions) { // 検知実績あり
+      } else if (response.data?.data?.threaded_conversation_with_injections_v2?.instructions) { // TweetDetailを検知
         console.log('Comiketter: data.data.threaded_conversation_with_injections_v2.instructionsが存在します');
         instructions = response.data.data.threaded_conversation_with_injections_v2.instructions;
-      } else if (response.data?.data?.communityResults?.result?.ranked_community_timeline?.timeline?.instructions) {
+      } else if (response.data?.data?.communityResults?.result?.ranked_community_timeline?.timeline?.instructions) { // CommunityTweetsTimelineを検知
         console.log('Comiketter: data.data.communityResults.result.ranked_community_timeline.timeline.instructionsが存在します');
         instructions = response.data.data.communityResults.result.ranked_community_timeline.timeline.instructions;
-      } else if (response.data?.data?.communityResults?.result?.community_filtered_timeline?.timeline?.instructions) {
+      } else if (response.data?.data?.communityResults?.result?.community_filtered_timeline?.timeline?.instructions) { // CommunityTweetSearchModuleQueryを検知
         console.log('Comiketter: data.data.communityResults.result.community_filtered_timeline.timeline.instructionsが存在します');
         instructions = response.data.data.communityResults.result.community_filtered_timeline.timeline.instructions;
       } else {

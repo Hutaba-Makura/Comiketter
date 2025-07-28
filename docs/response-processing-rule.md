@@ -50,8 +50,10 @@ interface ApiProcessingResult {
   - `SearchTimeline` - 検索タイムライン
   - `CommunityTweetsTimeline` - コミュニティのタイムライン
   - `CommunityTweetSearchModuleQuery` - コミュニティの検索タイムライン
-- 使われているのが確認出来なかったAPI
+  - `Bookmarks` - ブックマークのタイムライン
+  - `BookmarkSearchTimeline` - ブックマークの検索タイムライン
   - `UserTweets` - ユーザーのツイート
+- 使われているのが確認出来なかったAPI
   - `UserTweetsAndReplies` - ユーザーのツイートとリプライ
   - `UserHighlightsTweets` - ユーザーのハイライトツイート
   - `UserArticlesTweets` - ユーザーの記事ツイート
