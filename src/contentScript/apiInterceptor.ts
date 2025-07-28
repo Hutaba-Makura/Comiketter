@@ -27,7 +27,7 @@ const requestPathWeakMap = new WeakMap<XMLHttpRequest, TxTarget>();
 
 const Pattern = Object.freeze({
   tweetRelated:
-    /^(?:\/i\/api)?\/graphql\/(?<queryId>.+)?\/(?<queryName>TweetDetail|TweetResultByRestId|UserTweets|UserMedia|HomeTimeline|HomeLatestTimeline|UserTweetsAndReplies|UserHighlightsTweets|UserArticlesTweets|Bookmarks|Likes|CommunitiesExploreTimeline|ListLatestTweetsTimeline|SearchTimeline|UserByScreenName|UserByRestId|FavoriteTweet|CreateRetweet|UnfavoriteTweet|useUpsellTrackingMutation)$/,
+    /^(?:\/i\/api)?\/graphql\/(?<queryId>.+)?\/(?<queryName>TweetDetail|TweetResultByRestId|UserTweets|UserMedia|HomeTimeline|HomeLatestTimeline|UserTweetsAndReplies|UserHighlightsTweets|UserArticlesTweets|Bookmarks|Likes|CommunitiesExploreTimeline|ListLatestTweetsTimeline|SearchTimeline|UserByScreenName|UserByRestId|FavoriteTweet|CreateRetweet|UnfavoriteTweet|useUpsellTrackingMutation|CreateBookmark|DeleteBookmark)$/,
 });
 
 // API種類の定義

@@ -57,15 +57,17 @@ interface ApiProcessingResult {
 
 ### 2.2 処理対象外API
 - 使われているのが確認できたAPI
-  - `CreateBookmarks` - ブックマーク
-  - `FavoriteTweet` - 一旦処理しない（抽出不要）
-  - `CreateRetweet` - リツイート処理は別途実装予定
+  - `CreateBookmarks` - ブックマーク 一旦処理しない（抽出不要）
+  - `DeleteBookmark` - ブックマーク解除 一旦処理しない（抽出不要）
+  - `FavoriteTweet` - いいね 一旦処理しない（抽出不要）
+  - `UnfavoriteTweet` - いいね解除 一旦処理しない（抽出不要）
+  - `CreateRetweet` - リツイート 一旦処理しない（抽出不要）
+  - `DeleteRetweet` - リツイート解除 一旦処理しない（抽出不要）
   - `useUpsellTrackingMutation` - 画面の縦横比を変えた際に送信
   - `SearchTimeline` - 検索タイムライン
   - `NotificationsTimeline` - 通知欄の読み込み
   - `dm/conversation/` - DMの会話履歴
   - `UserMedia` - 一旦処理しない（抽出不要）
-  - `UnfavoriteTweet` - 一旦処理しない（抽出不要）
 - 使われているのが確認出来なかったAPI
   - `Likes` - いいね
   - `UserByScreenName` - ユーザー情報のみのため処理対象外

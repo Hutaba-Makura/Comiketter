@@ -201,20 +201,21 @@ export class ApiProcessor {
     const response = data as any;
 
     try {
-      // デバッグ: レスポンス構造をログ出力
-      console.log('Comiketter: レスポンス構造デバッグ:', {
-        hasData: !!response.data,
-        dataKeys: response.data ? Object.keys(response.data) : [],
-        dataDataKeys: response.data?.data ? Object.keys(response.data.data) : [],
-        homeKeys: response.data?.home ? Object.keys(response.data.home) : [],
-        homeTimelineKeys: response.data?.home?.home_timeline_urt ? Object.keys(response.data.home.home_timeline_urt) : [],
-        threadedKeys: response.data?.threaded_conversation_with_injections_v2 ? Object.keys(response.data.threaded_conversation_with_injections_v2) : [],
-        dataDataHomeKeys: response.data?.data?.home ? Object.keys(response.data.data.home) : [],
-        dataDataHomeTimelineKeys: response.data?.data?.home?.home_timeline_urt ? Object.keys(response.data.data.home.home_timeline_urt) : [],
-        dataDataThreadedKeys: response.data?.data?.threaded_conversation_with_injections_v2 ? Object.keys(response.data.data.threaded_conversation_with_injections_v2) : [],
-        bookmarkKeys: response.data?.bookmark_timeline_v2 ? Object.keys(response.data.bookmark_timeline_v2) : [],
-        dataDataBookmarkKeys: response.data?.data?.bookmark_timeline_v2 ? Object.keys(response.data.data.bookmark_timeline_v2) : []
-      });
+              // デバッグ: レスポンス構造をログ出力
+        console.log('Comiketter: レスポンス構造デバッグ:', {
+          hasData: !!response.data,
+          dataKeys: response.data ? Object.keys(response.data) : [],
+          dataDataKeys: response.data?.data ? Object.keys(response.data.data) : [],
+          homeKeys: response.data?.home ? Object.keys(response.data.home) : [],
+          homeTimelineKeys: response.data?.home?.home_timeline_urt ? Object.keys(response.data.home.home_timeline_urt) : [],
+          threadedKeys: response.data?.threaded_conversation_with_injections_v2 ? Object.keys(response.data.threaded_conversation_with_injections_v2) : [],
+          dataDataHomeKeys: response.data?.data?.home ? Object.keys(response.data.data.home) : [],
+          dataDataHomeTimelineKeys: response.data?.data?.home?.home_timeline_urt ? Object.keys(response.data.data.home.home_timeline_urt) : [],
+          dataDataThreadedKeys: response.data?.data?.threaded_conversation_with_injections_v2 ? Object.keys(response.data.data.threaded_conversation_with_injections_v2) : [],
+          bookmarkKeys: response.data?.bookmark_timeline_v2 ? Object.keys(response.data.bookmark_timeline_v2) : [],
+          dataDataBookmarkKeys: response.data?.data?.bookmark_timeline_v2 ? Object.keys(response.data.data.bookmark_timeline_v2) : [],
+          listKeys: response.data?.data?.list ? Object.keys(response.data.data.list) : []
+        });
 
       // 実際のAPIレスポンス構造に対応
       // data.data.home.home_timeline_urt.instructions または data.data.threaded_conversation_with_injections_v2.instructions または data.data.instructions
@@ -227,7 +228,10 @@ export class ApiProcessor {
       } else if (response.data?.data?.bookmark_timeline_v2?.timeline?.instructions) { // 検知実績あり
         console.log('Comiketter: data.data.bookmark_timeline_v2.timeline.instructionsが存在します');
         instructions = response.data.data.bookmark_timeline_v2.timeline.instructions;
-      } else if (response.data?.data?.threaded_conversation_with_injections_v2?.instructions) {
+      } else if (response.data?.data?.list?.tweets_timeline?.timeline?.instructions) { // 検出実績あり
+        console.log('Comiketter: data.data.list.tweets_timeline.timeline.instructionsが存在します');
+        instructions = response.data.data.list.tweets_timeline.timeline.instructions;
+      } else if (response.data?.data?.threaded_conversation_with_injections_v2?.instructions) { // 検知実績あり
         console.log('Comiketter: data.data.threaded_conversation_with_injections_v2.instructionsが存在します');
         instructions = response.data.data.threaded_conversation_with_injections_v2.instructions;
       } else if (response.data?.data?.instructions) {
