@@ -23,7 +23,26 @@ type TxTarget = {
   path: string;
 };
 
+// リクエストパスを保存するWeakMap
 const requestPathWeakMap = new WeakMap<XMLHttpRequest, TxTarget>();
+
+// リスナー登録済みのXMLHttpRequestインスタンスを管理するWeakMap
+const listenerAddedWeakMap = new WeakMap<XMLHttpRequest, boolean>();
+
+// fetch APIの重複処理を防ぐための管理
+const processingFetchRequests = new Map<string, number>();
+
+// 古いリクエスト記録をクリーンアップする関数
+function cleanupOldFetchRequests(): void {
+  const currentTime = Date.now();
+  const cutoffTime = currentTime - 5000; // 5秒前より古い記録を削除
+  
+  for (const [key, timestamp] of processingFetchRequests.entries()) {
+    if (timestamp < cutoffTime) {
+      processingFetchRequests.delete(key);
+    }
+  }
+}
 
 const Pattern = Object.freeze({
   tweetRelated:
@@ -120,7 +139,12 @@ XMLHttpRequest.prototype.open = new Proxy(XMLHttpRequest.prototype.open, {
         const apiLabel = ApiTypeLabels[apiType] || apiType;
         console.log(`🔍 Comiketter: XMLHttpRequest傍受 - ${apiLabel} (${method} ${url})`);
         
-        thisArg.addEventListener('load', captureResponse);
+        // 重複リスナー登録を防ぐため、既に登録されているかチェック
+        if (!listenerAddedWeakMap.get(thisArg)) {
+          thisArg.addEventListener('load', captureResponse);
+          listenerAddedWeakMap.set(thisArg, true);
+        }
+        
         requestPathWeakMap.set(thisArg, {
           method,
           path: validUrl.pathname,
@@ -332,6 +356,21 @@ window.fetch = new Proxy(originalFetch, {
         if (validUrl && matchedUrl) {
           const apiType = extractApiType(validUrl.pathname);
           const apiLabel = ApiTypeLabels[apiType] || apiType;
+          
+          // 古いリクエスト記録をクリーンアップ
+          cleanupOldFetchRequests();
+          
+          // 重複処理を防ぐため、同じURLの処理中リクエストをチェック
+          const requestKey = `${method}:${validUrl.pathname}`;
+          const currentTime = Date.now();
+          const lastProcessTime = processingFetchRequests.get(requestKey);
+          
+          if (lastProcessTime && (currentTime - lastProcessTime) < 1000) {
+            console.log(`🔍 Comiketter: fetch API重複処理をスキップ - ${apiLabel} (${method} ${input})`);
+            return Reflect.apply(target, thisArg, args);
+          }
+          
+          processingFetchRequests.set(requestKey, currentTime);
           console.log(`🔍 Comiketter: fetch API傍受 - ${apiLabel} (${method} ${input})`);
           
           // レスポンスを傍受するためにPromiseをラップ
@@ -372,13 +411,33 @@ window.fetch = new Proxy(originalFetch, {
 // MAIN環境での初期化
 console.log('Comiketter: API Interceptor initialized in MAIN world');
 
+// イベントリスナー登録済みフラグ
+let isEventListenerRegistered = false;
+
 /**
  * X（Twitter）のAPI呼び出しを傍受し、レスポンスを処理するクラス
  * MAIN環境で実行されるため、Chrome APIは使用不可
  */
 export class ApiInterceptor {
+  private static instance: ApiInterceptor | null = null;
+
   constructor() {
-    this.init();
+    // シングルトンパターンでインスタンスを管理
+    if (ApiInterceptor.instance) {
+      return ApiInterceptor.instance;
+    }
+    ApiInterceptor.instance = this;
+    // コンストラクタではinit()を呼ばない（明示的に呼ぶ）
+  }
+
+  /**
+   * シングルトンインスタンスを取得
+   */
+  static getInstance(): ApiInterceptor {
+    if (!ApiInterceptor.instance) {
+      ApiInterceptor.instance = new ApiInterceptor();
+    }
+    return ApiInterceptor.instance;
   }
 
   /**
@@ -387,13 +446,19 @@ export class ApiInterceptor {
    */
   async init(): Promise<void> {
     try {
-      // APIレスポンスイベントリスナーを設定
-      document.addEventListener(ComiketterEvent.ApiResponse, (event) => {
-        const detail = (event as CustomEvent<Comiketter.ApiResponseDetail>).detail;
-        this.handleApiResponse(detail);
-      });
+      // 重複リスナー登録を防ぐため、既に登録されているかチェック
+      if (!isEventListenerRegistered) {
+        // APIレスポンスイベントリスナーを設定
+        document.addEventListener(ComiketterEvent.ApiResponse, (event) => {
+          const detail = (event as CustomEvent<Comiketter.ApiResponseDetail>).detail;
+          this.handleApiResponse(detail);
+        });
 
-      console.log('Comiketter: API Interceptor initialized in browser environment');
+        isEventListenerRegistered = true;
+        console.log('Comiketter: API Interceptor initialized in browser environment');
+      } else {
+        console.log('Comiketter: API Interceptor already initialized, skipping duplicate registration');
+      }
     } catch (error) {
       console.error('Comiketter: Failed to initialize API Interceptor:', error);
     }
@@ -506,4 +571,4 @@ export class ApiInterceptor {
       return false;
     }
   }
-} 
+}
