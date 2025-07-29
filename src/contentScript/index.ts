@@ -47,7 +47,7 @@ class ContentScript {
 
   constructor() {
     this.tweetObserver = new TweetObserver();
-    this.apiInterceptor = new ApiInterceptor();
+    this.apiInterceptor = ApiInterceptor.getInstance(); // シングルトンインスタンスを取得
     this.sidebarButton = SidebarButton.getInstance();
   }
 

@@ -23,11 +23,30 @@ type TxTarget = {
   path: string;
 };
 
+// リクエストパスを保存するWeakMap
 const requestPathWeakMap = new WeakMap<XMLHttpRequest, TxTarget>();
+
+// リスナー登録済みのXMLHttpRequestインスタンスを管理するWeakMap
+const listenerAddedWeakMap = new WeakMap<XMLHttpRequest, boolean>();
+
+// fetch APIの重複処理を防ぐための管理
+const processingFetchRequests = new Map<string, number>();
+
+// 古いリクエスト記録をクリーンアップする関数
+function cleanupOldFetchRequests(): void {
+  const currentTime = Date.now();
+  const cutoffTime = currentTime - 5000; // 5秒前より古い記録を削除
+  
+  for (const [key, timestamp] of processingFetchRequests.entries()) {
+    if (timestamp < cutoffTime) {
+      processingFetchRequests.delete(key);
+    }
+  }
+}
 
 const Pattern = Object.freeze({
   tweetRelated:
-    /^(?:\/i\/api)?\/graphql\/(?<queryId>.+)?\/(?<queryName>TweetDetail|TweetResultByRestId|UserTweets|UserMedia|HomeTimeline|HomeLatestTimeline|UserTweetsAndReplies|UserHighlightsTweets|UserArticlesTweets|Bookmarks|Likes|CommunitiesExploreTimeline|ListLatestTweetsTimeline|SearchTimeline|UserByScreenName|UserByRestId|FavoriteTweet|CreateRetweet)$/,
+    /^(?:\/i\/api)?\/graphql\/(?<queryId>.+)?\/(?<queryName>TweetDetail|HomeTimeline|HomeLatestTimeline|ListLatestTweetsTimeline|SearchTimeline|CommunityTweetsTimeline|CommunityTweetSearchModuleQuery|Bookmarks|BookmarkSearchTimeline|UserTweets|UserTweetsAndReplies|CreateBookmarks|DeleteBookmark|FavoriteTweet|UnfavoriteTweet|CreateRetweet|DeleteRetweet|CreateTweet|useUpsellTrackingMutation)$/,
 });
 
 // API種類の定義
@@ -35,21 +54,22 @@ const ApiTypes = {
   HomeTimeline: 'HomeTimeline',
   HomeLatestTimeline: 'HomeLatestTimeline',
   TweetDetail: 'TweetDetail',
-  TweetResultByRestId: 'TweetResultByRestId',
-  UserTweets: 'UserTweets',
-  UserMedia: 'UserMedia',
-  UserTweetsAndReplies: 'UserTweetsAndReplies',
-  UserHighlightsTweets: 'UserHighlightsTweets',
-  UserArticlesTweets: 'UserArticlesTweets',
-  Bookmarks: 'Bookmarks',
-  Likes: 'Likes',
-  CommunitiesExploreTimeline: 'CommunitiesExploreTimeline',
   ListLatestTweetsTimeline: 'ListLatestTweetsTimeline',
   SearchTimeline: 'SearchTimeline',
-  UserByScreenName: 'UserByScreenName',
-  UserByRestId: 'UserByRestId',
+  CommunityTweetsTimeline: 'CommunityTweetsTimeline',
+  CommunityTweetSearchModuleQuery: 'CommunityTweetSearchModuleQuery',
+  Bookmarks: 'Bookmarks',
+  BookmarkSearchTimeline: 'BookmarkSearchTimeline',
+  UserTweets: 'UserTweets',
+  UserTweetsAndReplies: 'UserTweetsAndReplies',
+  CreateBookmarks: 'CreateBookmarks',
+  DeleteBookmark: 'DeleteBookmark',
   FavoriteTweet: 'FavoriteTweet',
+  UnfavoriteTweet: 'UnfavoriteTweet',
   CreateRetweet: 'CreateRetweet',
+  DeleteRetweet: 'DeleteRetweet',
+  CreateTweet: 'CreateTweet',
+  useUpsellTrackingMutation: 'useUpsellTrackingMutation',
 } as const;
 
 // API種類を日本語で表示するマッピング
@@ -57,21 +77,22 @@ const ApiTypeLabels: Record<string, string> = {
   [ApiTypes.HomeTimeline]: 'ホームタイムライン',
   [ApiTypes.HomeLatestTimeline]: 'ホーム最新タイムライン',
   [ApiTypes.TweetDetail]: 'ツイート詳細',
-  [ApiTypes.TweetResultByRestId]: 'REST IDによるツイート取得',
-  [ApiTypes.UserTweets]: 'ユーザーのツイート',
-  [ApiTypes.UserMedia]: 'ユーザーのメディア',
-  [ApiTypes.UserTweetsAndReplies]: 'ユーザーのツイートとリプライ',
-  [ApiTypes.UserHighlightsTweets]: 'ユーザーのハイライトツイート',
-  [ApiTypes.UserArticlesTweets]: 'ユーザーの記事ツイート',
-  [ApiTypes.Bookmarks]: 'ブックマーク',
-  [ApiTypes.Likes]: 'いいね',
-  [ApiTypes.CommunitiesExploreTimeline]: 'コミュニティ探索タイムライン',
   [ApiTypes.ListLatestTweetsTimeline]: 'リスト最新ツイートタイムライン',
   [ApiTypes.SearchTimeline]: '検索タイムライン',
-  [ApiTypes.UserByScreenName]: 'スクリーンネームによるユーザー取得',
-  [ApiTypes.UserByRestId]: 'REST IDによるユーザー取得',
+  [ApiTypes.CommunityTweetsTimeline]: 'コミュニティタイムライン',
+  [ApiTypes.CommunityTweetSearchModuleQuery]: 'コミュニティ検索タイムライン',
+  [ApiTypes.Bookmarks]: 'ブックマークタイムライン',
+  [ApiTypes.BookmarkSearchTimeline]: 'ブックマーク検索タイムライン',
+  [ApiTypes.UserTweets]: 'ユーザーツイート',
+  [ApiTypes.UserTweetsAndReplies]: 'ユーザー返信',
+  [ApiTypes.CreateBookmarks]: 'ブックマーク作成',
+  [ApiTypes.DeleteBookmark]: 'ブックマーク削除',
   [ApiTypes.FavoriteTweet]: 'ツイートいいね',
+  [ApiTypes.UnfavoriteTweet]: 'ツイートいいね解除',
   [ApiTypes.CreateRetweet]: 'リツイート作成',
+  [ApiTypes.DeleteRetweet]: 'リツイート削除',
+  [ApiTypes.CreateTweet]: 'ツイート作成',
+  [ApiTypes.useUpsellTrackingMutation]: '画面縦横比変更追跡',
 };
 
 const enum ComiketterEvent {
@@ -118,7 +139,12 @@ XMLHttpRequest.prototype.open = new Proxy(XMLHttpRequest.prototype.open, {
         const apiLabel = ApiTypeLabels[apiType] || apiType;
         console.log(`🔍 Comiketter: XMLHttpRequest傍受 - ${apiLabel} (${method} ${url})`);
         
-        thisArg.addEventListener('load', captureResponse);
+        // 重複リスナー登録を防ぐため、既に登録されているかチェック
+        if (!listenerAddedWeakMap.get(thisArg)) {
+          thisArg.addEventListener('load', captureResponse);
+          listenerAddedWeakMap.set(thisArg, true);
+        }
+        
         requestPathWeakMap.set(thisArg, {
           method,
           path: validUrl.pathname,
@@ -330,6 +356,21 @@ window.fetch = new Proxy(originalFetch, {
         if (validUrl && matchedUrl) {
           const apiType = extractApiType(validUrl.pathname);
           const apiLabel = ApiTypeLabels[apiType] || apiType;
+          
+          // 古いリクエスト記録をクリーンアップ
+          cleanupOldFetchRequests();
+          
+          // 重複処理を防ぐため、同じURLの処理中リクエストをチェック
+          const requestKey = `${method}:${validUrl.pathname}`;
+          const currentTime = Date.now();
+          const lastProcessTime = processingFetchRequests.get(requestKey);
+          
+          if (lastProcessTime && (currentTime - lastProcessTime) < 1000) {
+            console.log(`🔍 Comiketter: fetch API重複処理をスキップ - ${apiLabel} (${method} ${input})`);
+            return Reflect.apply(target, thisArg, args);
+          }
+          
+          processingFetchRequests.set(requestKey, currentTime);
           console.log(`🔍 Comiketter: fetch API傍受 - ${apiLabel} (${method} ${input})`);
           
           // レスポンスを傍受するためにPromiseをラップ
@@ -370,13 +411,33 @@ window.fetch = new Proxy(originalFetch, {
 // MAIN環境での初期化
 console.log('Comiketter: API Interceptor initialized in MAIN world');
 
+// イベントリスナー登録済みフラグ
+let isEventListenerRegistered = false;
+
 /**
  * X（Twitter）のAPI呼び出しを傍受し、レスポンスを処理するクラス
  * MAIN環境で実行されるため、Chrome APIは使用不可
  */
 export class ApiInterceptor {
+  private static instance: ApiInterceptor | null = null;
+
   constructor() {
-    this.init();
+    // シングルトンパターンでインスタンスを管理
+    if (ApiInterceptor.instance) {
+      return ApiInterceptor.instance;
+    }
+    ApiInterceptor.instance = this;
+    // コンストラクタではinit()を呼ばない（明示的に呼ぶ）
+  }
+
+  /**
+   * シングルトンインスタンスを取得
+   */
+  static getInstance(): ApiInterceptor {
+    if (!ApiInterceptor.instance) {
+      ApiInterceptor.instance = new ApiInterceptor();
+    }
+    return ApiInterceptor.instance;
   }
 
   /**
@@ -385,13 +446,19 @@ export class ApiInterceptor {
    */
   async init(): Promise<void> {
     try {
-      // APIレスポンスイベントリスナーを設定
-      document.addEventListener(ComiketterEvent.ApiResponse, (event) => {
-        const detail = (event as CustomEvent<Comiketter.ApiResponseDetail>).detail;
-        this.handleApiResponse(detail);
-      });
+      // 重複リスナー登録を防ぐため、既に登録されているかチェック
+      if (!isEventListenerRegistered) {
+        // APIレスポンスイベントリスナーを設定
+        document.addEventListener(ComiketterEvent.ApiResponse, (event) => {
+          const detail = (event as CustomEvent<Comiketter.ApiResponseDetail>).detail;
+          this.handleApiResponse(detail);
+        });
 
-      console.log('Comiketter: API Interceptor initialized in browser environment');
+        isEventListenerRegistered = true;
+        console.log('Comiketter: API Interceptor initialized in browser environment');
+      } else {
+        console.log('Comiketter: API Interceptor already initialized, skipping duplicate registration');
+      }
     } catch (error) {
       console.error('Comiketter: Failed to initialize API Interceptor:', error);
     }
@@ -504,4 +571,4 @@ export class ApiInterceptor {
       return false;
     }
   }
-} 
+}
