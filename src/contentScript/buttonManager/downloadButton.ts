@@ -151,13 +151,27 @@ export class DownloadButton extends BaseButton {
         throw new Error('Chrome runtime is not available');
       }
 
+      // メディアタイプを判定して適切なメッセージタイプを選択
+      // tweetInfo.mediaは'image'または'video'の型だが、
+      // 実際のダウンロード処理ではAPIキャッシュからProcessedMediaを取得する
+      const hasVideo = tweetInfo.media?.some(m => m.type === 'video');
+      const hasImage = tweetInfo.media?.some(m => m.type === 'image');
+      
+      let messageType: string;
+      if (hasVideo) {
+        messageType = 'DOWNLOAD_VIDEO';
+      } else if (hasImage) {
+        messageType = 'DOWNLOAD_IMAGE';
+      } else {
+        throw new Error('ダウンロード可能なメディアが見つかりません');
+      }
+
       // バックグラウンドスクリプトにダウンロード要求を送信
       const response = await chrome.runtime.sendMessage({
-        type: 'DOWNLOAD_TWEET_MEDIA',
+        type: messageType,
         payload: {
           tweetId: tweetInfo.id,
           screenName: tweetInfo.author.username,
-          mediaUrls: tweetInfo.media?.map(m => m.url) || [],
         },
       });
 

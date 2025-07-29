@@ -9,6 +9,7 @@
 import { TweetObserver } from './tweetObserver';
 import { ApiInterceptor } from './apiInterceptor';
 import { SidebarButton } from './sidebarButton';
+import { extractTweetInfoFromDOM } from './tweetInfoExtractor';
 
 // ログ送信関数
 const sendLog = (message: string, data?: any) => {
@@ -49,6 +50,9 @@ class ContentScript {
     this.tweetObserver = new TweetObserver();
     this.apiInterceptor = ApiInterceptor.getInstance(); // シングルトンインスタンスを取得
     this.sidebarButton = SidebarButton.getInstance();
+    
+    // メッセージリスナーを設定
+    this.setupMessageListener();
   }
 
   async init(): Promise<void> {
@@ -78,6 +82,94 @@ class ContentScript {
 
     } catch (error) {
       sendLog('Failed to initialize ContentScript:', error);
+    }
+  }
+
+  /**
+   * メッセージリスナーを設定
+   */
+  private setupMessageListener(): void {
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+      this.handleMessage(message, sender, sendResponse);
+      return true; // 非同期レスポンスのためtrueを返す
+    });
+  }
+
+  /**
+   * メッセージを処理
+   */
+  private async handleMessage(
+    message: any,
+    sender: chrome.runtime.MessageSender,
+    sendResponse: (response: any) => void
+  ): Promise<void> {
+    try {
+      if (!message || typeof message !== 'object') {
+        sendResponse({ success: false, error: 'Invalid message format' });
+        return;
+      }
+
+      switch (message.type) {
+        case 'EXTRACT_TWEET_FROM_DOM':
+          await this.handleExtractTweetFromDOM(message.payload, sendResponse);
+          break;
+        default:
+          sendResponse({ success: false, error: 'Unknown message type' });
+      }
+    } catch (error) {
+      console.error('Comiketter: Error handling message:', error);
+      sendResponse({ success: false, error: 'Internal error' });
+    }
+  }
+
+  /**
+   * Web要素からツイート情報を抽出
+   */
+  private async handleExtractTweetFromDOM(
+    payload: { tweetId: string },
+    sendResponse: (response: any) => void
+  ): Promise<void> {
+    try {
+      console.log('Comiketter: Web要素からツイート情報を抽出開始:', payload.tweetId);
+      
+      const tweet = extractTweetInfoFromDOM(payload.tweetId);
+      if (tweet) {
+        console.log('Comiketter: ツイート情報を抽出成功:', tweet);
+        
+        // メディア情報をより詳細に取得
+        if (tweet.media && tweet.media.length > 0) {
+          console.log('Comiketter: メディア情報を詳細化:', tweet.media);
+          
+          // 各メディアの詳細情報を取得
+          const detailedMedia = tweet.media.map((media, index) => {
+            console.log(`Comiketter: メディア${index + 1}の詳細化:`, media);
+            return {
+              ...media,
+              // 確実にmedia_url_httpsを設定
+              media_url_https: (media as any).media_url_https || media.url,
+              // 追加のデバッグ情報
+              debug_info: {
+                original_type: media.type,
+                has_url: !!media.url,
+                has_media_url_https: !!(media as any).media_url_https,
+                url_value: media.url,
+                media_url_https_value: (media as any).media_url_https
+              }
+            };
+          });
+          
+          tweet.media = detailedMedia;
+          console.log('Comiketter: 詳細化されたメディア情報:', detailedMedia);
+        }
+        
+        sendResponse({ success: true, data: tweet });
+      } else {
+        console.warn('Comiketter: ツイートが見つかりません:', payload.tweetId);
+        sendResponse({ success: false, error: 'Tweet not found in DOM' });
+      }
+    } catch (error) {
+      console.error('Comiketter: Error extracting tweet from DOM:', error);
+      sendResponse({ success: false, error: 'Failed to extract tweet' });
     }
   }
 

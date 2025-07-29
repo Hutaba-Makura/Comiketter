@@ -9,6 +9,7 @@
 
 import type { ProcessedTweet, ProcessedMedia } from '../api-processor/types';
 import type { TweetMediaFileProps, AppSettings, DownloadHistory } from '../types';
+import { PatternToken, AggregationToken } from '../types';
 import { ApiCacheManager } from '../utils/api-cache';
 import { FilenameGenerator } from '../utils/filenameGenerator';
 import { StorageManager } from '../utils/storage';
@@ -135,19 +136,101 @@ export class VideoDownloader {
 
   /**
    * キャッシュからツイート情報を取得
+   * キャッシュにない場合はWeb要素から取得を試行
    */
   private async getTweetFromCache(tweetId: string): Promise<ProcessedTweet | null> {
     try {
       const cachedTweet = await ApiCacheManager.findTweetById(tweetId);
-      if (!cachedTweet) {
-        console.warn(`🎬 Comiketter: キャッシュにツイートが見つかりません: ${tweetId}`);
+      if (cachedTweet) {
+        console.log(`🎬 Comiketter: キャッシュからツイートを取得: ${tweetId}`);
+        return cachedTweet;
+      }
+
+      console.warn(`🎬 Comiketter: キャッシュにツイートが見つかりません: ${tweetId}`);
+      
+      // キャッシュにない場合はWeb要素から取得を試行
+      const domTweet = await this.getTweetFromDOM(tweetId);
+      if (domTweet) {
+        console.log(`🎬 Comiketter: Web要素からツイートを取得: ${tweetId}`);
+        return domTweet;
+      }
+
+      return null;
+    } catch (error) {
+      console.error('🎬 Comiketter: キャッシュ取得エラー:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Web要素からツイート情報を取得
+   */
+  private async getTweetFromDOM(tweetId: string): Promise<ProcessedTweet | null> {
+    try {
+      // コンテンツスクリプトにメッセージを送信してWeb要素から取得
+      const response = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (response.length === 0) {
+        console.warn('🎬 Comiketter: アクティブなタブが見つかりません');
         return null;
       }
 
-      console.log(`🎬 Comiketter: キャッシュからツイートを取得: ${tweetId}`);
-      return cachedTweet;
+      const tab = response[0];
+      if (!tab.id) {
+        console.warn('🎬 Comiketter: タブIDが取得できません');
+        return null;
+      }
+
+      const result = await chrome.tabs.sendMessage(tab.id, {
+        type: 'EXTRACT_TWEET_FROM_DOM',
+        payload: { tweetId }
+      });
+
+      if (result && result.success && result.data) {
+        // TweetオブジェクトをProcessedTweetに変換
+        const tweet = result.data;
+        const processedTweet: ProcessedTweet = {
+          id_str: tweet.id,
+          full_text: tweet.text,
+          created_at: tweet.createdAt,
+          favorite_count: 0,
+          retweet_count: 0,
+          reply_count: 0,
+          quote_count: 0,
+          bookmarked: false,
+          favorited: false,
+          retweeted: false,
+          possibly_sensitive: false,
+          user: {
+            name: tweet.author.displayName,
+            screen_name: tweet.author.username,
+            avatar_url: tweet.author.profileImageUrl || ''
+          }
+        };
+
+        // メディア情報を追加
+        if (tweet.media && tweet.media.length > 0) {
+          processedTweet.media = tweet.media.map((media: any) => {
+            console.log('🎬 Comiketter: Web要素からメディア情報を変換:', media);
+            return {
+              id_str: `dom_${Date.now()}_${Math.random()}`,
+              type: media.type === 'image' ? 'photo' : 'video',
+              // media_url_httpsを優先的に使用し、なければurlを使用
+              media_url_https: media.media_url_https || media.url,
+              // 動画情報がある場合は追加
+              ...(media.type === 'video' && media.video_info ? {
+                video_info: media.video_info
+              } : {})
+            };
+          });
+          console.log('🎬 Comiketter: 変換後のメディア情報:', processedTweet.media);
+        }
+
+        return processedTweet;
+      }
+
+      return null;
     } catch (error) {
-      console.error('🎬 Comiketter: キャッシュ取得エラー:', error);
+      console.error('🎬 Comiketter: Web要素からの取得エラー:', error);
       return null;
     }
   }
@@ -309,11 +392,45 @@ export class VideoDownloader {
    */
   private async getSettings(): Promise<AppSettings | null> {
     try {
-      const result = await chrome.storage.local.get('comiketter_settings');
-      return result.comiketter_settings || null;
+      const settings = await StorageManager.getSettings();
+      if (!settings) {
+        console.warn('🎬 Comiketter: 設定が見つかりません。デフォルト設定を使用します。');
+        // デフォルト設定を返す
+        return {
+          tlAutoUpdateDisabled: false,
+          downloadMethod: 'chrome_downloads',
+          saveFormat: 'url',
+          saveDirectory: '',
+          autoDownloadConditions: {
+            retweet: false,
+            like: false,
+            both: false
+          },
+          autoSaveTriggers: {
+            retweet: false,
+            like: false,
+            retweetAndLike: false
+          },
+          filenameSettings: {
+            directory: '{account}',
+            noSubDirectory: false,
+            filenamePattern: [PatternToken.TweetId, PatternToken.Serial],
+            fileAggregation: false,
+            groupBy: AggregationToken.Account
+          },
+          mediaDownloadSettings: {
+            includeVideoThumbnail: false,
+            excludeProfileImages: true,
+            excludeBannerImages: true
+          },
+          timelineAutoUpdate: true,
+          showCustomBookmarks: true
+        };
+      }
+      return settings;
     } catch (error) {
       console.error('🎬 Comiketter: 設定取得エラー:', error);
-      return null;
+      throw new Error('設定を取得できませんでした');
     }
   }
 

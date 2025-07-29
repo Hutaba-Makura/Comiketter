@@ -3,14 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  * 
- * Comiketter: Modified and adapted from TwitterMediaHarvest article.ts
+ * Comiketter: ツイート情報抽出機能
  */
 
-/// <reference lib="dom" />
-
-import type { Tweet } from '../types';
-
-// グローバル型定義
+// TypeScriptの型定義拡張
 declare global {
   interface HTMLElement {
     matches(selector: string): boolean;
@@ -22,6 +18,8 @@ declare global {
     textContent: string | null;
   }
 }
+
+import type { Tweet } from '../types';
 
 /**
  * ツイート要素からツイート情報を抽出
@@ -50,6 +48,8 @@ export function getTweetInfoFromArticle(article: HTMLElement): Tweet | null {
         type: 'image' as const,
         url,
         originalUrl: url,
+        // ProcessedMediaとの互換性のため、media_url_httpsも追加
+        media_url_https: url,
       }));
     } else if (hasVideo) {
       // 動画がある場合はダミーエントリを追加（実際のURLはAPI傍受で取得）
@@ -57,6 +57,8 @@ export function getTweetInfoFromArticle(article: HTMLElement): Tweet | null {
         type: 'video' as const,
         url: 'video://placeholder',
         originalUrl: 'video://placeholder',
+        // ProcessedMediaとの互換性のため、media_url_httpsも追加
+        media_url_https: 'video://placeholder',
       }];
     }
 
@@ -78,6 +80,105 @@ export function getTweetInfoFromArticle(article: HTMLElement): Tweet | null {
     console.error('Comiketter: Error extracting tweet info:', error);
     return null;
   }
+}
+
+/**
+ * TwitterMediaHarvestスタイルのツイート情報抽出
+ * キャッシュにツイートが見つからない場合のフォールバック機能
+ */
+export function extractTweetInfoFromDOM(tweetId: string): Tweet | null {
+  try {
+    // ツイートIDから該当するarticle要素を検索
+    const article = findArticleByTweetId(tweetId);
+    if (!article) {
+      console.warn(`Comiketter: Article not found for tweet ID: ${tweetId}`);
+      return null;
+    }
+
+    return getTweetInfoFromArticle(article);
+  } catch (error) {
+    console.error('Comiketter: Error extracting tweet info from DOM:', error);
+    return null;
+  }
+}
+
+/**
+ * ツイートIDから該当するarticle要素を検索
+ */
+function findArticleByTweetId(tweetId: string): HTMLElement | null {
+  // 複数の方法でツイート要素を検索
+  const selectors = [
+    `a[href*="/status/${tweetId}"]`,
+    `[data-testid="tweet"][data-tweet-id="${tweetId}"]`,
+    `article[data-tweet-id="${tweetId}"]`,
+  ];
+
+  for (const selector of selectors) {
+    const element = document.querySelector(selector);
+    if (element) {
+      // 親のarticle要素を取得
+      const article = element.closest('article');
+      if (article) {
+        return article;
+      }
+    }
+  }
+
+  // より広範囲な検索
+  const allArticles = document.querySelectorAll('article');
+  for (const article of allArticles) {
+    const links = article.querySelectorAll('a[href*="/status/"]');
+    for (const link of links) {
+      const href = link.getAttribute('href');
+      if (href && href.includes(`/status/${tweetId}`)) {
+        return article;
+      }
+    }
+  }
+
+  return null;
+}
+
+/**
+ * TwitterMediaHarvestスタイルのリンク抽出
+ */
+function getLinksFromArticle(article: HTMLElement): string[] {
+  const links: string[] = [];
+  
+  // User-Nameセクションからリンクを取得
+  const userNameSection = article.querySelector('[data-testid="User-Name"]');
+  if (userNameSection) {
+    const anchors = userNameSection.querySelectorAll('a[href]');
+    anchors.forEach(anchor => {
+      const href = anchor.getAttribute('href');
+      if (href) links.push(href);
+    });
+  }
+
+  // 時間要素からリンクを取得
+  const timeElement = article.querySelector('a > time');
+  if (timeElement?.parentElement?.tagName === 'A') {
+    const href = timeElement.parentElement.getAttribute('href');
+    if (href) links.push(href);
+  }
+
+  return links.filter(link => link && link.length > 0);
+}
+
+/**
+ * リンクからツイートIDを抽出
+ */
+function getTweetIdFromLink(link: string): string | null {
+  const match = link.match(/(?:status\/)(\d+)/);
+  return match ? match[1] : null;
+}
+
+/**
+ * リンクからスクリーンネームを抽出
+ */
+function getScreenNameFromLink(link: string): string | null {
+  const match = link.match(/(\w+)\/(?:status\/)/);
+  return match ? match[1] : null;
 }
 
 /**
@@ -142,25 +243,13 @@ function extractScreenName(article: HTMLElement): string | null {
     }
   }
 
-  // 直接リンクから取得
+  // 代替方法: リンクから直接抽出
   const links = article.querySelectorAll('a[href*="/status/"]');
   for (const link of links) {
     const href = link.getAttribute('href');
     if (href) {
-      const match = href.match(/^\/([^\/]+)\/status\//);
+      const match = href.match(/([^\/]+)\/status\//);
       if (match) {
-        return match[1];
-      }
-    }
-  }
-
-  // ユーザーリンクから取得
-  const userLinks = article.querySelectorAll('a[href^="/"]');
-  for (const link of userLinks) {
-    const href = link.getAttribute('href');
-    if (href && href.match(/^\/[^\/]+\/?$/)) {
-      const match = href.match(/^\/([^\/]+)/);
-      if (match && match[1] !== 'status' && match[1] !== 'i' && match[1] !== 'home') {
         return match[1];
       }
     }
@@ -175,22 +264,39 @@ function extractScreenName(article: HTMLElement): string | null {
 function extractDisplayName(article: HTMLElement): string | null {
   const userNameElement = article.querySelector('[data-testid="User-Name"]');
   if (userNameElement) {
-    const displayNameElement = userNameElement.querySelector('span');
-    if (displayNameElement) {
-      return displayNameElement.textContent?.trim() || null;
+    // 表示名は通常、span要素に含まれている
+    const spans = userNameElement.querySelectorAll('span');
+    for (const span of spans) {
+      const text = span.textContent?.trim();
+      if (text && text.length > 0 && !text.startsWith('@')) {
+        return text;
+      }
     }
   }
   return null;
 }
 
 /**
- * ツイート本文を抽出
+ * ツイートテキストを抽出
  */
 function extractText(article: HTMLElement): string | null {
-  const textElement = article.querySelector('[data-testid="tweetText"]');
-  if (textElement) {
-    return textElement.textContent?.trim() || null;
+  // ツイートテキスト要素を検索
+  const textSelectors = [
+    '[data-testid="tweetText"]',
+    '[lang]', // 言語属性を持つ要素（通常テキスト）
+    'div[dir="ltr"]', // 左から右のテキスト方向
+  ];
+
+  for (const selector of textSelectors) {
+    const elements = article.querySelectorAll(selector);
+    for (const element of elements) {
+      const text = element.textContent?.trim();
+      if (text && text.length > 0) {
+        return text;
+      }
+    }
   }
+
   return null;
 }
 
@@ -209,145 +315,112 @@ function extractCreatedAt(article: HTMLElement): string | null {
 }
 
 /**
- * メディアの存在をチェック
+ * メディアの有無をチェック
  */
 function checkHasMedia(article: HTMLElement): boolean {
-  // 画像の存在チェック（プロフィール画像とバナー画像を除外）
-  // より具体的なセレクターを使用してツイート内の画像を検出
-  const images = article.querySelectorAll('img[src*="pbs.twimg.com/media/"]');
-  let hasValidImage = false;
-  
-  images.forEach(img => {
-    const src = img.getAttribute('src');
-    if (src) {
-      // プロフィール画像とバナー画像を除外
-      if (!isProfileOrBannerImage(src) && !isVideoThumbnail(src)) {
-        hasValidImage = true;
-      }
+  // 画像要素をチェック
+  const imageSelectors = [
+    '[data-testid="tweetPhoto"]',
+    'img[src*="pbs.twimg.com"]',
+    '[data-testid="image"]',
+  ];
+
+  for (const selector of imageSelectors) {
+    if (article.querySelector(selector)) {
+      return true;
     }
-  });
-  
-  // 画像が見つからない場合は、より広い範囲で検索
-  if (!hasValidImage) {
-    const allImages = article.querySelectorAll('img[src*="pbs.twimg.com"]');
-    allImages.forEach(img => {
-      const src = img.getAttribute('src');
-      if (src && src.includes('/media/') && !isProfileOrBannerImage(src) && !isVideoThumbnail(src)) {
-        hasValidImage = true;
-      }
-    });
   }
-  
-  // 動画の存在チェック
-  const hasVideo = article.querySelector('[data-testid="videoPlayer"]') !== null ||
-                  article.querySelector('[data-testid="playButton"]') !== null;
-  
-  // 引用ツイート内のメディアは除外
-  const isInQuotedTweet = article.closest('[role="link"]') !== null;
-  
-  const hasMedia = hasValidImage || hasVideo;
-  
-  return hasMedia && !isInQuotedTweet;
+
+  // 動画要素をチェック
+  const videoSelectors = [
+    '[data-testid="videoPlayer"]',
+    'video',
+    '[data-testid="video"]',
+  ];
+
+  for (const selector of videoSelectors) {
+    if (article.querySelector(selector)) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 /**
- * メディアURLを抽出（TwitterMediaHarvest準拠）
+ * メディアURLを抽出
  */
 function extractMediaUrls(article: HTMLElement): string[] {
-  const mediaUrls: string[] = [];
+  const urls: string[] = [];
 
-  // 画像URLを抽出（プロフィール画像とバナー画像を除外）
-  const images = article.querySelectorAll('img[src*="pbs.twimg.com/media/"]');
+  // 画像URLを抽出
+  const images = article.querySelectorAll('img[src*="pbs.twimg.com"]');
   images.forEach(img => {
     const src = img.getAttribute('src');
-    if (src && !mediaUrls.includes(src)) {
-      // プロフィール画像とバナー画像を除外
-      if (isProfileOrBannerImage(src)) {
-        return;
-      }
-      
-      // 動画サムネイルを除外
-      if (isVideoThumbnail(src)) {
-        return;
-      }
-      
-      // 高解像度版のURLに変換
-      const highResUrl = src.replace(/&name=\w+/, '&name=orig');
-      mediaUrls.push(highResUrl);
+    if (src && !isProfileOrBannerImage(src)) {
+      urls.push(src);
     }
   });
 
-  // 動画URLはAPI傍受で取得されるため、ここでは追加しない
-  // 実際の動画URLは background/downloadManager.ts の extractMediaFromTweet で取得される
-  const videos = article.querySelectorAll('[data-testid="videoPlayer"], [data-testid="playButton"]');
-  if (videos.length > 0) {
+  return urls;
+}
+
+/**
+ * 動画の有無をチェック
+ */
+function checkHasVideo(article: HTMLElement): boolean {
+  const videoSelectors = [
+    '[data-testid="videoPlayer"]',
+    'video',
+    '[data-testid="video"]',
+    '[data-testid="videoPlayer"] video',
+  ];
+
+  for (const selector of videoSelectors) {
+    if (article.querySelector(selector)) {
+      return true;
+    }
   }
 
-  return mediaUrls;
+  return false;
 }
 
 /**
  * プロフィール画像やバナー画像かどうかを判定
  */
 function isProfileOrBannerImage(url: string): boolean {
-  const urlLower = url.toLowerCase();
-  
-  // プロフィール画像のパターン
   const profilePatterns = [
-    '/profile_images/',
-    '/profile_banners/',
-    '/profile_images_normal/',
-    '/profile_images_bigger/',
-    '/profile_images_mini/',
+    'profile_images',
+    'profile_banners',
+    'banner_images',
+    '_normal',
+    '_bigger',
+    '_mini',
   ];
-  
-  // バナー画像のパターン
-  const bannerPatterns = [
-    '/profile_banners/',
-    '/banner_images/',
-  ];
-  
-  return profilePatterns.some(pattern => urlLower.includes(pattern)) ||
-         bannerPatterns.some(pattern => urlLower.includes(pattern));
-}
 
-/**
- * 動画の存在をチェック
- */
-function checkHasVideo(article: HTMLElement): boolean {
-  // 動画プレイヤーや再生ボタンの存在をチェック
-  const hasVideo = article.querySelector('[data-testid="videoPlayer"]') !== null ||
-                  article.querySelector('[data-testid="playButton"]') !== null;
-  
-  return hasVideo;
+  return profilePatterns.some(pattern => url.includes(pattern));
 }
 
 /**
  * 動画サムネイルかどうかを判定
  */
 function isVideoThumbnail(url: string): boolean {
-  const urlLower = url.toLowerCase();
-  
-  // 動画サムネイルのパターン（より具体的に）
-  const thumbnailPatterns = [
-    'ext_tw_video_thumb',
-    'video_thumb',
-  ];
-  
-  return thumbnailPatterns.some(pattern => urlLower.includes(pattern));
+  return url.includes('tweet_video_thumb') || url.includes('video_thumb');
 }
 
 /**
- * ツイート要素が有効かチェック
+ * 有効なツイート要素かどうかを判定
  */
 export function isValidTweetElement(element: HTMLElement): boolean {
-  return element.matches('article[data-testid="tweet"]') &&
-         !element.querySelector('.comiketter-download-button');
+  return element.tagName === 'ARTICLE' || element.closest('article') !== null;
 }
 
 /**
- * ツイート要素から親ツイートを取得
+ * 親のツイート要素を取得
  */
 export function getParentTweet(element: HTMLElement): HTMLElement | null {
-  return element.closest('article[data-testid="tweet"]');
+  if (element.tagName === 'ARTICLE') {
+    return element;
+  }
+  return element.closest('article');
 }
