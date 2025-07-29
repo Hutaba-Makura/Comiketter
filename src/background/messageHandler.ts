@@ -9,17 +9,23 @@
 import { DownloadManager, DownloadRequest } from './downloadManager';
 import { StorageManager } from '../utils/storage';
 import { ApiProcessor } from '../api-processor/api-processor';
+import { VideoDownloader, type VideoDownloadRequest } from '../downloaders/video-downloader';
+import { ImageDownloader, type ImageDownloadRequest } from '../downloaders/image-downloader';
 import type { ApiResponseMessage } from '../api-processor/types';
 
 export class MessageHandler {
   private downloadManager: DownloadManager;
   private apiProcessor: ApiProcessor;
+  private videoDownloader: VideoDownloader;
+  private imageDownloader: ImageDownloader;
   private recentApiCalls: Map<string, number> = new Map(); // API重複防止用
   private readonly API_CALL_COOLDOWN = 1000; // 1秒間のクールダウン
 
   constructor() {
     this.downloadManager = new DownloadManager();
     this.apiProcessor = new ApiProcessor();
+    this.videoDownloader = new VideoDownloader();
+    this.imageDownloader = new ImageDownloader();
     this.setupMessageListeners();
   }
 
@@ -63,6 +69,14 @@ export class MessageHandler {
 
         case 'DOWNLOAD_TWEET_MEDIA':
           await this.handleDownloadTweetMedia(message.payload, sendResponse);
+          break;
+
+        case 'DOWNLOAD_VIDEO':
+          await this.handleDownloadVideo(message.payload, sendResponse);
+          break;
+
+        case 'DOWNLOAD_IMAGE':
+          await this.handleDownloadImage(message.payload, sendResponse);
           break;
 
         case 'API_RESPONSE_CAPTURED':
@@ -200,6 +214,46 @@ export class MessageHandler {
       sendResponse({ 
         success: false, 
         error: error instanceof Error ? error.message : 'Download failed' 
+      });
+    }
+  }
+
+  /**
+   * 動画ダウンロード要求を処理
+   */
+  private async handleDownloadVideo(
+    payload: VideoDownloadRequest, 
+    sendResponse: (response: any) => void
+  ): Promise<void> {
+    try {
+      console.log('🎬 Comiketter: 動画ダウンロード要求を受信:', payload);
+      const result = await this.videoDownloader.downloadVideo(payload);
+      sendResponse(result);
+    } catch (error) {
+      console.error('🎬 Comiketter: 動画ダウンロードエラー:', error);
+      sendResponse({ 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      });
+    }
+  }
+
+  /**
+   * 画像ダウンロード要求を処理
+   */
+  private async handleDownloadImage(
+    payload: ImageDownloadRequest, 
+    sendResponse: (response: any) => void
+  ): Promise<void> {
+    try {
+      console.log('🖼️ Comiketter: 画像ダウンロード要求を受信:', payload);
+      const result = await this.imageDownloader.downloadImages(payload);
+      sendResponse(result);
+    } catch (error) {
+      console.error('🖼️ Comiketter: 画像ダウンロードエラー:', error);
+      sendResponse({ 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Unknown error' 
       });
     }
   }
