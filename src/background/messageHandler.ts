@@ -6,7 +6,7 @@
  * Comiketter: Message handler for background script
  */
 
-import { DownloadManager, DownloadRequest } from './downloadManager';
+import { DownloadManager } from './downloadManager';
 import { StorageManager } from '../utils/storage';
 import { ApiProcessor } from '../api-processor/api-processor';
 import { VideoDownloader, type VideoDownloadRequest } from '../downloaders/video-downloader';
@@ -67,9 +67,7 @@ export class MessageHandler {
           sendResponse({ success: true });
           break;
 
-        case 'DOWNLOAD_TWEET_MEDIA':
-          await this.handleDownloadTweetMedia(message.payload, sendResponse);
-          break;
+
 
         case 'DOWNLOAD_VIDEO':
           await this.handleDownloadVideo(message.payload, sendResponse);
@@ -199,24 +197,7 @@ export class MessageHandler {
     }
   }
 
-  /**
-   * ツイートメディアダウンロード要求を処理
-   */
-  private async handleDownloadTweetMedia(
-    payload: DownloadRequest, 
-    sendResponse: (response: any) => void
-  ): Promise<void> {
-    try {
-      const result = await this.downloadManager.downloadTweetMedia(payload);
-      sendResponse(result);
-    } catch (error) {
-      console.error('Comiketter: Download request failed:', error);
-      sendResponse({ 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Download failed' 
-      });
-    }
-  }
+
 
   /**
    * 動画ダウンロード要求を処理

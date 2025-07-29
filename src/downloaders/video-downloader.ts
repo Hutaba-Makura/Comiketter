@@ -9,9 +9,9 @@
 
 import type { ProcessedTweet, ProcessedMedia } from '../api-processor/types';
 import type { TweetMediaFileProps, AppSettings, DownloadHistory } from '../types';
-import { ApiCacheManager } from './api-cache';
-import { FilenameGenerator } from './filenameGenerator';
-import { StorageManager } from './storage';
+import { ApiCacheManager } from '../utils/api-cache';
+import { FilenameGenerator } from '../utils/filenameGenerator';
+import { StorageManager } from '../utils/storage';
 
 /**
  * 動画バリアント情報
