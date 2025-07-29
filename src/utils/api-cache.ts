@@ -263,6 +263,102 @@ export class ApiCacheManager {
   }
 
   /**
+   * 指定されたid_strでツイートを検索
+   */
+  static async findTweetById(id_str: string): Promise<CachedTweet | null> {
+    try {
+      const cacheEntries = await this.getCacheEntries();
+      const currentTimestamp = Date.now();
+      
+      // 有効期限が切れていないキャッシュエントリから検索
+      const validEntries = cacheEntries.filter(
+        entry => entry.expires_at > currentTimestamp
+      );
+
+      // 全ツイートをフラット化して検索
+      for (const entry of validEntries) {
+        const foundTweet = entry.tweets.find(tweet => tweet.id_str === id_str);
+        if (foundTweet) {
+          console.log(`Comiketter: キャッシュからツイートを発見 - ${id_str} (API: ${entry.api_type})`);
+          return foundTweet;
+        }
+      }
+
+      console.log(`Comiketter: キャッシュにツイートが見つかりませんでした - ${id_str}`);
+      return null;
+    } catch (error) {
+      console.error('Comiketter: ツイート検索エラー:', error);
+      return null;
+    }
+  }
+
+  /**
+   * 指定されたid_strのリストでツイートを一括検索
+   */
+  static async findTweetsByIds(id_strs: string[]): Promise<CachedTweet[]> {
+    try {
+      const cacheEntries = await this.getCacheEntries();
+      const currentTimestamp = Date.now();
+      
+      // 有効期限が切れていないキャッシュエントリから検索
+      const validEntries = cacheEntries.filter(
+        entry => entry.expires_at > currentTimestamp
+      );
+
+      const foundTweets: CachedTweet[] = [];
+      const foundIds = new Set<string>();
+
+      // 全ツイートをフラット化して検索
+      for (const entry of validEntries) {
+        for (const tweet of entry.tweets) {
+          if (id_strs.includes(tweet.id_str) && !foundIds.has(tweet.id_str)) {
+            foundTweets.push(tweet);
+            foundIds.add(tweet.id_str);
+          }
+        }
+      }
+
+      console.log(`Comiketter: キャッシュからツイートを一括検索 - 検索対象: ${id_strs.length}件, 発見: ${foundTweets.length}件`);
+      return foundTweets;
+    } catch (error) {
+      console.error('Comiketter: ツイート一括検索エラー:', error);
+      return [];
+    }
+  }
+
+  /**
+   * 指定されたユーザー名でツイートを検索
+   */
+  static async findTweetsByUsername(username: string): Promise<CachedTweet[]> {
+    try {
+      const cacheEntries = await this.getCacheEntries();
+      const currentTimestamp = Date.now();
+      
+      // 有効期限が切れていないキャッシュエントリから検索
+      const validEntries = cacheEntries.filter(
+        entry => entry.expires_at > currentTimestamp
+      );
+
+      const foundTweets: CachedTweet[] = [];
+
+      // 全ツイートをフラット化して検索
+      for (const entry of validEntries) {
+        for (const tweet of entry.tweets) {
+          if (tweet.user?.screen_name === username || tweet.user?.name === username) {
+            foundTweets.push(tweet);
+          }
+        }
+      }
+
+      console.log(`Comiketter: キャッシュからユーザーのツイートを検索 - ${username} (${foundTweets.length}件)`);
+      return foundTweets;
+    } catch (error) {
+      console.error('Comiketter: ユーザーツイート検索エラー:', error);
+      return [];
+    }
+  }
+
+  /**
    * キャッシュエントリを取得
    */
   private static async getCacheEntries(): Promise<ApiCacheEntry[]> {

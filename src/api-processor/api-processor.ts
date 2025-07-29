@@ -16,7 +16,8 @@ import type {
   ApiProcessingResult, 
   ProcessedTweet,
   ApiType,
-  ApiCacheResult
+  ApiCacheResult,
+  CachedTweet
 } from './types';
 
 export class ApiProcessor {
@@ -402,6 +403,9 @@ export class ApiProcessor {
     await ApiCacheManager.clearAllCache();
   }
 
+  /**
+   * キャッシュ統計を取得
+   */
   static async getCacheStats(): Promise<{
     totalEntries: number;
     totalTweets: number;
@@ -409,6 +413,27 @@ export class ApiProcessor {
     newestEntry: number | null;
   }> {
     return await ApiCacheManager.getCacheStats();
+  }
+
+  /**
+   * 指定されたid_strでツイートを検索
+   */
+  static async findTweetById(id_str: string): Promise<CachedTweet | null> {
+    return await ApiCacheManager.findTweetById(id_str);
+  }
+
+  /**
+   * 指定されたid_strのリストでツイートを一括検索
+   */
+  static async findTweetsByIds(id_strs: string[]): Promise<CachedTweet[]> {
+    return await ApiCacheManager.findTweetsByIds(id_strs);
+  }
+
+  /**
+   * 指定されたユーザー名でツイートを検索
+   */
+  static async findTweetsByUsername(username: string): Promise<CachedTweet[]> {
+    return await ApiCacheManager.findTweetsByUsername(username);
   }
 
   /**

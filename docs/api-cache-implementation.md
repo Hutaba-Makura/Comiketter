@@ -49,6 +49,9 @@
 - `getCacheStats`: キャッシュ統計の取得
 - `cleanupExpiredCache`: 期限切れキャッシュの削除
 - `clearAllCache`: 全キャッシュの削除
+- `findTweetById`: 指定されたid_strでツイートを検索
+- `findTweetsByIds`: 指定されたid_strのリストでツイートを一括検索
+- `findTweetsByUsername`: 指定されたユーザー名でツイートを検索
 
 ### 5. テスト実装 (`src/test/api-cache.test.ts`)
 
@@ -58,6 +61,7 @@
 - 重複ツイートの除去
 - キャッシュ統計の正確性
 - エラーハンドリング
+- ツイート検索機能の動作確認
 
 ## 使用方法
 
@@ -95,6 +99,77 @@ await ApiProcessor.cleanupExpiredCache();
 await ApiProcessor.clearAllCache();
 ```
 
+### キャッシュ検索機能
+
+```typescript
+// 指定されたid_strでツイートを検索
+const tweet = await ApiProcessor.findTweetById('1234567890');
+if (tweet) {
+  console.log(`ツイートを発見: ${tweet.full_text}`);
+  console.log(`キャッシュ保存日時: ${new Date(tweet.cached_at).toLocaleString()}`);
+  console.log(`取得元API: ${tweet.api_source}`);
+} else {
+  console.log('ツイートが見つかりませんでした');
+}
+
+// 複数のid_strでツイートを一括検索
+const tweetIds = ['1234567890', '0987654321', '1122334455'];
+const tweets = await ApiProcessor.findTweetsByIds(tweetIds);
+console.log(`検索対象: ${tweetIds.length}件, 発見: ${tweets.length}件`);
+
+// 指定されたユーザー名でツイートを検索
+const userTweets = await ApiProcessor.findTweetsByUsername('username');
+console.log(`${userTweets.length}件のツイートを発見`);
+
+// ユーザーの最新ツイートを取得（キャッシュ保存日時でソート）
+const latestUserTweets = userTweets
+  .sort((a, b) => b.cached_at - a.cached_at)
+  .slice(0, 10);
+```
+
+### メッセージ経由での使用例
+
+```typescript
+// 単一ツイート検索
+chrome.runtime.sendMessage({
+  type: 'CACHE_ACTION',
+  payload: {
+    action: 'findTweetById',
+    data: { id_str: '1234567890' }
+  }
+}, (response) => {
+  if (response.success && response.data) {
+    console.log('ツイートを発見:', response.data);
+  }
+});
+
+// 複数ツイート検索
+chrome.runtime.sendMessage({
+  type: 'CACHE_ACTION',
+  payload: {
+    action: 'findTweetsByIds',
+    data: { id_strs: ['1234567890', '0987654321'] }
+  }
+}, (response) => {
+  if (response.success) {
+    console.log('ツイート一覧:', response.data);
+  }
+});
+
+// ユーザーツイート検索
+chrome.runtime.sendMessage({
+  type: 'CACHE_ACTION',
+  payload: {
+    action: 'findTweetsByUsername',
+    data: { username: 'username' }
+  }
+}, (response) => {
+  if (response.success) {
+    console.log('ユーザーツイート:', response.data);
+  }
+});
+```
+
 ## パフォーマンス向上
 
 ### 1. 重複処理の回避
@@ -108,6 +183,11 @@ await ApiProcessor.clearAllCache();
 ### 3. ストレージ使用量の最適化
 - 期限切れキャッシュの自動削除
 - 最大エントリ数の制限
+
+### 4. 効率的な検索機能
+- 有効期限内のキャッシュからの高速検索
+- 複数条件での一括検索対応
+- 重複除去による検索結果の最適化
 
 ## エラーハンドリング
 
@@ -135,6 +215,12 @@ await ApiProcessor.clearAllCache();
 ### 3. 高度なキャッシュ戦略
 - LRU（Least Recently Used）アルゴリズムの実装
 - 優先度付きキャッシュ
+
+### 4. 検索機能の拡張
+- 全文検索機能の実装
+- 日付範囲での検索
+- メディアタイプでの絞り込み検索
+- 検索結果のソート・フィルタリング機能
 
 ## 注意事項
 

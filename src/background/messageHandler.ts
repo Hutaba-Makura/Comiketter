@@ -442,7 +442,7 @@ export class MessageHandler {
    * キャッシュ関連のメッセージを処理
    */
   private async handleCacheAction(message: any): Promise<any> {
-    const { action } = message;
+    const { action, data } = message;
 
     try {
       switch (action) {
@@ -456,6 +456,24 @@ export class MessageHandler {
         case 'clearAllCache':
           await ApiProcessor.clearAllCache();
           return { success: true, message: '全キャッシュを削除しました' };
+
+        case 'findTweetById':
+          if (!data?.id_str) {
+            throw new Error('id_str is required');
+          }
+          return await ApiProcessor.findTweetById(data.id_str);
+
+        case 'findTweetsByIds':
+          if (!data?.id_strs || !Array.isArray(data.id_strs)) {
+            throw new Error('id_strs array is required');
+          }
+          return await ApiProcessor.findTweetsByIds(data.id_strs);
+
+        case 'findTweetsByUsername':
+          if (!data?.username) {
+            throw new Error('username is required');
+          }
+          return await ApiProcessor.findTweetsByUsername(data.username);
 
         default:
           throw new Error(`Unknown cache action: ${action}`);
