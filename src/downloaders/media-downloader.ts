@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  * 
- * Comiketter: 画像ダウンロード専用クラス
- * キャッシュからツイート情報を取得し、画像URLを選択してダウンロード
+ * Comiketter: 統合メディアダウンローダー
+ * 画像と動画を同時にダウンロード
  */
 
 import type { ProcessedTweet, ProcessedMedia } from '../api-processor/types';
@@ -15,38 +15,54 @@ import { FilenameGenerator } from '../utils/filenameGenerator';
 import { StorageManager } from '../utils/storage';
 
 /**
- * 画像ダウンロード要求
+ * メディアダウンロード要求
  */
-export interface ImageDownloadRequest {
+export interface MediaDownloadRequest {
   tweetId: string;
   screenName?: string;
 }
 
 /**
- * 画像ダウンロード結果
+ * メディアダウンロード結果
  */
-export interface ImageDownloadResult {
+export interface MediaDownloadResult {
   success: boolean;
   error?: string;
-  downloadedFiles?: string[];
+  downloadedFiles?: {
+    images: string[];
+    videos: string[];
+  };
   tweetInfo?: {
     id: string;
     author: string;
     content: string;
     date: string;
   };
+  mediaCount?: {
+    images: number;
+    videos: number;
+  };
 }
 
+/**
+ * 動画バリアント情報
+ */
+interface VideoVariant {
+  bitrate?: number;
+  content_type: string;
+  url: string;
+}
+
+/**
+ * 統合メディアダウンローダー
+ */
+export class MediaDownloader {
   /**
-   * メディアダウンロード専用クラス（画像・動画対応）
+   * メディアダウンロードを実行（画像・動画同時対応）
    */
-  export class ImageDownloader {
-  /**
-   * メディアダウンロードを実行（画像・動画対応）
-   */
-  async downloadImages(request: ImageDownloadRequest): Promise<ImageDownloadResult> {
+  async downloadMedia(request: MediaDownloadRequest): Promise<MediaDownloadResult> {
     try {
-      console.log(`🖼️ Comiketter: 画像ダウンロード開始 - TweetID: ${request.tweetId}`);
+      console.log(`📱 Comiketter: 統合メディアダウンロード開始 - TweetID: ${request.tweetId}`);
 
       // 1. キャッシュからツイート情報を取得
       let cachedTweet = await this.getTweetFromCache(request.tweetId);
@@ -60,34 +76,17 @@ export interface ImageDownloadResult {
           };
         }
 
-        // DOMから取得したツイートのメディアタイプをチェック
-        const mediaType = await this.checkMediaTypeFromDOM(request.tweetId);
-        if (mediaType === 'video' || mediaType === 'animated_gif') {
-          const mediaTypeText = mediaType === 'video' ? '動画' : 'GIF';
-          alert(`このツイートには${mediaTypeText}が含まれています。${mediaTypeText}はDOMから直接ダウンロードできません。API傍受機能を使用してください。`);
-          return {
-            success: false,
-            error: `${mediaTypeText}はDOMから直接ダウンロードできません`
-          };
-        }
-
         // DOMから取得したツイートを使用
         cachedTweet = domTweet;
       }
 
-      // 2. 画像メディアを抽出
-      const imageMedia = this.extractImageMedia(cachedTweet);
-      if (imageMedia.length === 0) {
+      // 2. メディアを抽出（画像・動画）
+      const mediaItems = this.extractAllMedia(cachedTweet);
+      if (mediaItems.length === 0) {
         return {
           success: false,
-          error: 'このツイートには画像が含まれていません'
+          error: 'このツイートにはダウンロード可能なメディアが含まれていません'
         };
-      }
-
-      // 動画が含まれている場合は警告を表示
-      const hasVideo = cachedTweet.media?.some((media: any) => media.type === 'video');
-      if (hasVideo) {
-        console.warn('🖼️ Comiketter: 動画が含まれていますが、画像のみダウンロードします');
       }
 
       // 3. 設定を取得
@@ -99,52 +98,66 @@ export interface ImageDownloadResult {
         };
       }
 
-      // 4. 各画像をダウンロード
+      // 4. 各メディアをダウンロード
       const downloadResults = await Promise.allSettled(
-        imageMedia.map(media => this.downloadSingleImage(media, cachedTweet, settings))
+        mediaItems.map(media => this.downloadSingleMedia(media, cachedTweet, settings))
       );
 
       // 5. 結果を集計
-      const successfulDownloads: string[] = [];
+      const successfulImages: string[] = [];
+      const successfulVideos: string[] = [];
       const errors: string[] = [];
 
       downloadResults.forEach((result, index) => {
         if (result.status === 'fulfilled' && result.value.success && result.value.filename) {
-          successfulDownloads.push(result.value.filename);
+          if (result.value.mediaType === 'image') {
+            successfulImages.push(result.value.filename);
+          } else if (result.value.mediaType === 'video') {
+            successfulVideos.push(result.value.filename);
+          }
         } else {
           const error = result.status === 'rejected' 
             ? result.reason?.message || 'Unknown error'
             : result.value?.error || 'Download failed';
-          errors.push(`画像${index + 1}: ${error}`);
+          const mediaType = mediaItems[index]?.type === 'photo' ? '画像' : '動画';
+          errors.push(`${mediaType}${index + 1}: ${error}`);
         }
       });
 
-      if (successfulDownloads.length === 0) {
+      const totalSuccess = successfulImages.length + successfulVideos.length;
+      if (totalSuccess === 0) {
         return {
           success: false,
-          error: `すべての画像ダウンロードが失敗しました: ${errors.join(', ')}`
+          error: `すべてのメディアダウンロードが失敗しました: ${errors.join(', ')}`
         };
       }
 
-      console.log(`🖼️ Comiketter: 画像ダウンロード完了 - ${successfulDownloads.length}件成功`);
+      console.log(`📱 Comiketter: 統合メディアダウンロード完了 - 画像${successfulImages.length}件、動画${successfulVideos.length}件成功`);
 
       return {
         success: true,
-        downloadedFiles: successfulDownloads,
+        downloadedFiles: {
+          images: successfulImages,
+          videos: successfulVideos
+        },
         tweetInfo: {
           id: cachedTweet.id_str,
           author: cachedTweet.user.screen_name,
           content: cachedTweet.full_text,
           date: cachedTweet.created_at
+        },
+        mediaCount: {
+          images: successfulImages.length,
+          videos: successfulVideos.length
         }
       };
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error('🖼️ Comiketter: 画像ダウンロードエラー:', error);
+      console.error('📱 Comiketter: 統合メディアダウンロードエラー:', error);
       return {
         success: false,
-        error: `画像ダウンロード中にエラーが発生しました: ${errorMessage}`
+        error: `メディアダウンロード中にエラーが発生しました: ${errorMessage}`
       };
     }
   }
@@ -156,14 +169,14 @@ export interface ImageDownloadResult {
     try {
       const cachedTweet = await ApiCacheManager.findTweetById(tweetId);
       if (cachedTweet) {
-        console.log(`🖼️ Comiketter: キャッシュからツイートを取得: ${tweetId}`);
+        console.log(`📱 Comiketter: キャッシュからツイートを取得: ${tweetId}`);
         return cachedTweet;
       }
 
-      console.warn(`🖼️ Comiketter: キャッシュにツイートが見つかりません: ${tweetId}`);
+      console.warn(`📱 Comiketter: キャッシュにツイートが見つかりません: ${tweetId}`);
       return null;
     } catch (error) {
-      console.error('🖼️ Comiketter: キャッシュ取得エラー:', error);
+      console.error('📱 Comiketter: キャッシュ取得エラー:', error);
       return null;
     }
   }
@@ -176,13 +189,13 @@ export interface ImageDownloadResult {
       // コンテンツスクリプトにメッセージを送信してWeb要素から取得
       const response = await chrome.tabs.query({ active: true, currentWindow: true });
       if (response.length === 0) {
-        console.warn('🖼️ Comiketter: アクティブなタブが見つかりません');
+        console.warn('📱 Comiketter: アクティブなタブが見つかりません');
         return null;
       }
 
       const tab = response[0];
       if (!tab.id) {
-        console.warn('🖼️ Comiketter: タブIDが取得できません');
+        console.warn('📱 Comiketter: タブIDが取得できません');
         return null;
       }
 
@@ -216,28 +229,21 @@ export interface ImageDownloadResult {
         // メディア情報を追加
         if (tweet.media && tweet.media.length > 0) {
           processedTweet.media = tweet.media.map((media: any) => {
-            console.log('🖼️ Comiketter: Web要素からメディア情報を変換:', media);
-            
-            // デバッグ情報があれば出力
-            if (media.debug_info) {
-              console.log('🖼️ Comiketter: メディアデバッグ情報:', media.debug_info);
-            }
+            console.log('📱 Comiketter: Web要素からメディア情報を変換:', media);
             
             const mediaUrl = media.media_url_https || media.url;
-            console.log('🖼️ Comiketter: 使用するメディアURL:', mediaUrl);
+            console.log('📱 Comiketter: 使用するメディアURL:', mediaUrl);
             
             return {
               id_str: `dom_${Date.now()}_${Math.random()}`,
               type: media.type === 'image' ? 'photo' : 'video',
-              // media_url_httpsを優先的に使用し、なければurlを使用
               media_url_https: mediaUrl,
-              // 動画情報がある場合は追加
               ...(media.type === 'video' && media.video_info ? {
                 video_info: media.video_info
               } : {})
             };
           });
-          console.log('🖼️ Comiketter: 変換後のメディア情報:', processedTweet.media);
+          console.log('📱 Comiketter: 変換後のメディア情報:', processedTweet.media);
         }
 
         return processedTweet;
@@ -245,111 +251,139 @@ export interface ImageDownloadResult {
 
       return null;
     } catch (error) {
-      console.error('🖼️ Comiketter: Web要素からの取得エラー:', error);
+      console.error('📱 Comiketter: Web要素からの取得エラー:', error);
       return null;
     }
   }
 
   /**
-   * ツイートから画像メディアを抽出
+   * ツイートから全メディアを抽出（画像・動画）
    */
-  private extractImageMedia(tweet: ProcessedTweet): ProcessedMedia[] {
-    console.log('🖼️ Comiketter: 画像メディア抽出開始', tweet);
+  private extractAllMedia(tweet: ProcessedTweet): ProcessedMedia[] {
+    console.log('📱 Comiketter: 全メディア抽出開始', tweet);
     
     if (!tweet.media || !Array.isArray(tweet.media)) {
-      console.warn('🖼️ Comiketter: ツイートにメディアが存在しません');
+      console.warn('📱 Comiketter: ツイートにメディアが存在しません');
       return [];
     }
 
-    console.log('🖼️ Comiketter: メディア配列:', tweet.media);
+    console.log('📱 Comiketter: メディア配列:', tweet.media);
     
-    const imageMedia = tweet.media.filter(media => {
-      console.log('🖼️ Comiketter: メディアタイプチェック:', media.type, media);
-      return media.type === 'photo';
+    // 画像と動画の両方を抽出
+    const allMedia = tweet.media.filter(media => {
+      console.log('📱 Comiketter: メディアタイプチェック:', media.type, media);
+      return media.type === 'photo' || media.type === 'video' || media.type === 'animated_gif';
     });
 
-    console.log(`🖼️ Comiketter: 画像メディアを抽出 - ${imageMedia.length}件`);
-    
-    // 画像メディアが見つからない場合、Web要素から直接取得を試行
-    if (imageMedia.length === 0) {
-      console.log('🖼️ Comiketter: キャッシュから画像メディアが見つかりません。Web要素から直接取得を試行します。');
-      return this.extractImageMediaFromDOM(tweet.id_str);
-    }
-    
-    return imageMedia;
-  }
-
-  /**
-   * Web要素から直接画像メディアを抽出（バックグラウンドスクリプトでは使用不可）
-   */
-  private extractImageMediaFromDOM(tweetId: string): ProcessedMedia[] {
-    console.warn('🖼️ Comiketter: バックグラウンドスクリプトではDOMアクセスできません');
-    return [];
+    console.log(`📱 Comiketter: 全メディアを抽出 - ${allMedia.length}件`);
+    return allMedia;
   }
 
   /**
    * 最適な画像URLを取得
    */
   private getBestImageUrl(media: ProcessedMedia): string | null {
-    console.log('🖼️ Comiketter: 画像URL取得開始', media);
+    console.log('📱 Comiketter: 画像URL取得開始', media);
     
     if (!media.media_url_https) {
-      console.warn('🖼️ Comiketter: 画像URLが見つかりません - media_url_httpsが存在しません');
-      console.log('🖼️ Comiketter: メディアオブジェクト:', media);
+      console.warn('📱 Comiketter: 画像URLが見つかりません - media_url_httpsが存在しません');
       return null;
     }
 
     // サムネイル画像を除外
     const url = media.media_url_https;
-    console.log(`🖼️ Comiketter: 画像URLをチェック: ${url}`);
+    console.log(`📱 Comiketter: 画像URLをチェック: ${url}`);
     
     if (this.isThumbnailImage(url)) {
-      console.warn('🖼️ Comiketter: サムネイル画像は除外されます');
+      console.warn('📱 Comiketter: サムネイル画像は除外されます');
       return null;
     }
 
     // プロフィール画像やバナー画像を除外
     if (this.isProfileOrBannerImage(url)) {
-      console.warn('🖼️ Comiketter: プロフィール画像は除外されます');
+      console.warn('📱 Comiketter: プロフィール画像は除外されます');
       return null;
     }
 
-    console.log(`🖼️ Comiketter: 画像URLを選択: ${url}`);
+    console.log(`📱 Comiketter: 画像URLを選択: ${url}`);
     return url;
   }
 
   /**
-   * 単一画像をダウンロード
+   * 最高ビットレートの動画URLを取得
    */
-  private async downloadSingleImage(
+  private getBestVideoUrl(media: ProcessedMedia): string | null {
+    if (!media.video_info?.variants || media.video_info.variants.length === 0) {
+      console.warn('📱 Comiketter: 動画バリアントが見つかりません');
+      return null;
+    }
+
+    // MP4形式のバリアントのみをフィルタリング
+    const mp4Variants = media.video_info.variants.filter(
+      variant => variant.content_type === 'video/mp4'
+    );
+
+    if (mp4Variants.length === 0) {
+      console.warn('📱 Comiketter: MP4形式の動画バリアントが見つかりません');
+      return null;
+    }
+
+    // 最高ビットレートのバリアントを選択
+    const bestVariant = mp4Variants.reduce((best, current) => {
+      const bestBitrate = best.bitrate || 0;
+      const currentBitrate = current.bitrate || 0;
+      return currentBitrate > bestBitrate ? current : best;
+    });
+
+    console.log(`📱 Comiketter: 最高ビットレート動画を選択 - ${bestVariant.bitrate || 0}bps`);
+    return bestVariant.url;
+  }
+
+  /**
+   * 単一メディアをダウンロード
+   */
+  private async downloadSingleMedia(
     media: ProcessedMedia,
     tweet: ProcessedTweet,
     settings: AppSettings
-  ): Promise<{ success: boolean; filename?: string; error?: string }> {
+  ): Promise<{ success: boolean; filename?: string; mediaType?: 'image' | 'video'; error?: string }> {
     try {
-      // 最適な画像URLを取得
-      const imageUrl = this.getBestImageUrl(media);
-      if (!imageUrl) {
+      let mediaUrl: string | null = null;
+      let mediaType: 'image' | 'video' = 'image';
+      let fileExt = 'jpg';
+
+      if (media.type === 'photo') {
+        mediaUrl = this.getBestImageUrl(media);
+        mediaType = 'image';
+        fileExt = this.getImageFileExtension(mediaUrl || '');
+      } else if (media.type === 'video' || media.type === 'animated_gif') {
+        mediaUrl = this.getBestVideoUrl(media);
+        mediaType = 'video';
+        fileExt = 'mp4';
+      }
+
+      if (!mediaUrl) {
         return {
           success: false,
-          error: '有効な画像URLを取得できませんでした'
+          mediaType,
+          error: '有効なメディアURLを取得できませんでした'
         };
       }
 
       // TweetMediaFilePropsを作成
       const mediaFile: TweetMediaFileProps = {
         tweetId: tweet.id_str,
-        source: imageUrl,
+        source: mediaUrl,
         tweetUser: {
           screenName: tweet.user.screen_name,
           userId: '', // 必要に応じて設定
           displayName: tweet.user.name,
           isProtected: false
         },
-        type: 'image',
-        ext: this.getImageFileExtension(imageUrl),
-        serial: 1, // 複数画像がある場合は適切に設定
-        hash: this.generateHash(imageUrl),
+        type: mediaType,
+        ext: fileExt,
+        serial: 1, // 複数メディアがある場合は適切に設定
+        hash: this.generateHash(mediaUrl),
         createdAt: new Date(),
         tweetContent: tweet.full_text,
         tweetDate: tweet.created_at,
@@ -360,7 +394,7 @@ export interface ImageDownloadResult {
       const filename = FilenameGenerator.makeFilename(mediaFile, settings.filenameSettings);
 
       // Chrome APIを使用してダウンロード
-      const downloadId = await this.executeDownload(imageUrl, filename);
+      const downloadId = await this.executeDownload(mediaUrl, filename);
       if (downloadId === undefined) {
         throw new Error('Chrome download API failed');
       }
@@ -373,9 +407,9 @@ export interface ImageDownloadResult {
         authorDisplayName: tweet.user.name,
         filename: filename,
         filepath: filename,
-        originalUrl: imageUrl,
+        originalUrl: mediaUrl,
         downloadMethod: 'chrome_downloads',
-        fileType: this.getImageFileType(imageUrl),
+        fileType: mediaType === 'image' ? this.getImageFileType(mediaUrl) : 'video/mp4',
         downloadedAt: new Date().toISOString(),
         status: 'pending', // 初期状態はpending
         tweetContent: tweet.full_text,
@@ -384,15 +418,16 @@ export interface ImageDownloadResult {
 
       await StorageManager.addDownloadHistory(downloadHistory);
 
-      console.log(`🖼️ Comiketter: 画像ダウンロード成功 - ${filename}`);
+      console.log(`📱 Comiketter: ${mediaType === 'image' ? '画像' : '動画'}ダウンロード成功 - ${filename}`);
       return {
         success: true,
-        filename: filename
+        filename: filename,
+        mediaType: mediaType
       };
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error('🖼️ Comiketter: 単一画像ダウンロードエラー:', error);
+      console.error('📱 Comiketter: 単一メディアダウンロードエラー:', error);
       return {
         success: false,
         error: errorMessage
@@ -413,7 +448,7 @@ export interface ImageDownloadResult {
     return new Promise((resolve) => {
       chrome.downloads.download(downloadOptions, (downloadId) => {
         if (chrome.runtime.lastError) {
-          console.error('🖼️ Comiketter: Chrome download error:', chrome.runtime.lastError);
+          console.error('📱 Comiketter: Chrome download error:', chrome.runtime.lastError);
           resolve(undefined);
         } else {
           resolve(downloadId);
@@ -429,7 +464,7 @@ export interface ImageDownloadResult {
     try {
       const settings = await StorageManager.getSettings();
       if (!settings) {
-        console.warn('🖼️ Comiketter: 設定が見つかりません。デフォルト設定を使用します。');
+        console.warn('📱 Comiketter: 設定が見つかりません。デフォルト設定を使用します。');
         // デフォルト設定を返す
         return {
           tlAutoUpdateDisabled: false,
@@ -464,7 +499,7 @@ export interface ImageDownloadResult {
       }
       return settings;
     } catch (error) {
-      console.error('🖼️ Comiketter: 設定取得エラー:', error);
+      console.error('📱 Comiketter: 設定取得エラー:', error);
       throw new Error('設定を取得できませんでした');
     }
   }
@@ -548,46 +583,5 @@ export interface ImageDownloadResult {
       hash = hash & hash; // 32bit整数に変換
     }
     return Math.abs(hash).toString(16);
-  }
-
-  /**
-   * DOMからメディアタイプをチェック
-   */
-  private async checkMediaTypeFromDOM(tweetId: string): Promise<string | null> {
-    try {
-      const response = await chrome.tabs.query({ active: true, currentWindow: true });
-      if (response.length === 0) {
-        console.warn('🖼️ Comiketter: アクティブなタブが見つかりません');
-        return null;
-      }
-
-      const tab = response[0];
-      if (!tab.id) {
-        console.warn('🖼️ Comiketter: タブIDが取得できません');
-        return null;
-      }
-
-      return new Promise((resolve) => {
-        if (!tab.id) {
-          resolve(null);
-          return;
-        }
-        
-        chrome.tabs.sendMessage(tab.id, {
-          type: 'CHECK_MEDIA_TYPE_FROM_DOM',
-          payload: { tweetId }
-        }, (response) => {
-          if (chrome.runtime.lastError) {
-            console.error('🖼️ Comiketter: DOMからメディアタイプチェックエラー:', chrome.runtime.lastError);
-            resolve(null);
-          } else {
-            resolve(response?.mediaType || null);
-          }
-        });
-      });
-    } catch (error) {
-      console.error('🖼️ Comiketter: DOMからメディアタイプチェックエラー:', error);
-      return null;
-    }
   }
 } 

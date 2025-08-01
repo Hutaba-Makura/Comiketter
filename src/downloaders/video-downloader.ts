@@ -330,9 +330,9 @@ export class VideoDownloader {
         throw new Error('Chrome download API failed');
       }
 
-      // ダウンロード履歴を保存
+      // ダウンロード履歴を保存（Chrome APIのダウンロードIDを使用）
       const downloadHistory: DownloadHistory = {
-        id: downloadId.toString(),
+        id: downloadId.toString(), // Chrome APIのダウンロードIDを文字列として保存
         tweetId: tweet.id_str,
         authorUsername: tweet.user.screen_name,
         authorDisplayName: tweet.user.name,
@@ -342,7 +342,7 @@ export class VideoDownloader {
         downloadMethod: 'chrome_downloads',
         fileType: 'video/mp4',
         downloadedAt: new Date().toISOString(),
-        status: 'success',
+        status: 'pending', // 初期状態はpending
         tweetContent: tweet.full_text,
         tweetDate: tweet.created_at
       };

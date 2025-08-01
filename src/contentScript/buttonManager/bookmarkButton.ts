@@ -756,6 +756,8 @@ export class BookmarkButton extends BaseButton {
     return Array.from(checkboxes).map(checkbox => checkbox.id.replace('bookmark-', ''));
   }
 
+
+
   /**
    * ボタンの状態を設定（ブックマーク専用）
    */

@@ -11,6 +11,7 @@ import { StorageManager } from '../utils/storage';
 import { ApiProcessor } from '../api-processor/api-processor';
 import { VideoDownloader, type VideoDownloadRequest } from '../downloaders/video-downloader';
 import { ImageDownloader, type ImageDownloadRequest } from '../downloaders/image-downloader';
+import { MediaDownloader, type MediaDownloadRequest } from '../downloaders/media-downloader';
 import type { ApiResponseMessage } from '../api-processor/types';
 
 export class MessageHandler {
@@ -18,6 +19,7 @@ export class MessageHandler {
   private apiProcessor: ApiProcessor;
   private videoDownloader: VideoDownloader;
   private imageDownloader: ImageDownloader;
+  private mediaDownloader: MediaDownloader;
   private recentApiCalls: Map<string, number> = new Map(); // API重複防止用
   private readonly API_CALL_COOLDOWN = 1000; // 1秒間のクールダウン
 
@@ -26,6 +28,7 @@ export class MessageHandler {
     this.apiProcessor = new ApiProcessor();
     this.videoDownloader = new VideoDownloader();
     this.imageDownloader = new ImageDownloader();
+    this.mediaDownloader = new MediaDownloader();
     this.setupMessageListeners();
   }
 
@@ -75,6 +78,10 @@ export class MessageHandler {
 
         case 'DOWNLOAD_IMAGE':
           await this.handleDownloadImage(message.payload, sendResponse);
+          break;
+
+        case 'DOWNLOAD_MEDIA':
+          await this.handleDownloadMedia(message.payload, sendResponse);
           break;
 
         case 'API_RESPONSE_CAPTURED':
@@ -232,6 +239,26 @@ export class MessageHandler {
       sendResponse(result);
     } catch (error) {
       console.error('🖼️ Comiketter: 画像ダウンロードエラー:', error);
+      sendResponse({ 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      });
+    }
+  }
+
+  /**
+   * 統合メディアダウンロード要求を処理
+   */
+  private async handleDownloadMedia(
+    payload: MediaDownloadRequest, 
+    sendResponse: (response: any) => void
+  ): Promise<void> {
+    try {
+      console.log('📱 Comiketter: 統合メディアダウンロード要求を受信:', payload);
+      const result = await this.mediaDownloader.downloadMedia(payload);
+      sendResponse(result);
+    } catch (error) {
+      console.error('📱 Comiketter: 統合メディアダウンロードエラー:', error);
       sendResponse({ 
         success: false, 
         error: error instanceof Error ? error.message : 'Unknown error' 
