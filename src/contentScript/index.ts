@@ -9,7 +9,7 @@
 import { TweetObserver } from './tweetObserver';
 import { ApiInterceptor } from './apiInterceptor';
 import { SidebarButton } from './sidebarButton';
-import { extractTweetInfoFromDOM } from './tweetInfoExtractor';
+import { extractTweetInfoFromDOM, getMediaType } from './tweetInfoExtractor';
 
 // ログ送信関数
 const sendLog = (message: string, data?: any) => {
@@ -113,6 +113,9 @@ class ContentScript {
         case 'EXTRACT_TWEET_FROM_DOM':
           await this.handleExtractTweetFromDOM(message.payload, sendResponse);
           break;
+        case 'CHECK_MEDIA_TYPE_FROM_DOM':
+          await this.handleCheckMediaTypeFromDOM(message.payload, sendResponse);
+          break;
         default:
           sendResponse({ success: false, error: 'Unknown message type' });
       }
@@ -170,6 +173,65 @@ class ContentScript {
     } catch (error) {
       console.error('Comiketter: Error extracting tweet from DOM:', error);
       sendResponse({ success: false, error: 'Failed to extract tweet' });
+    }
+  }
+
+  /**
+   * DOMからメディアタイプをチェック
+   */
+  private async handleCheckMediaTypeFromDOM(
+    payload: { tweetId: string },
+    sendResponse: (response: any) => void
+  ): Promise<void> {
+    try {
+      console.log('Comiketter: DOMからメディアタイプをチェック開始:', payload.tweetId);
+      
+      // ツイートIDから該当するarticle要素を検索
+      const selectors = [
+        `a[href*="/status/${payload.tweetId}"]`,
+        `[data-testid="tweet"][data-tweet-id="${payload.tweetId}"]`,
+        `article[data-tweet-id="${payload.tweetId}"]`,
+      ];
+
+      let article: HTMLElement | null = null;
+      for (const selector of selectors) {
+        const element = document.querySelector(selector);
+        if (element) {
+          article = element.closest('article');
+          if (article) break;
+        }
+      }
+
+      if (!article) {
+        // より広範囲な検索
+        const allArticles = document.querySelectorAll('article');
+        for (const art of allArticles) {
+          const links = art.querySelectorAll('a[href*="/status/"]');
+          for (const link of links) {
+            const href = link.getAttribute('href');
+            if (href && href.includes(`/status/${payload.tweetId}`)) {
+              article = art;
+              break;
+            }
+          }
+          if (article) break;
+        }
+      }
+
+      if (!article) {
+        console.warn('Comiketter: Article not found for tweet ID:', payload.tweetId);
+        sendResponse({ success: false, error: 'Tweet not found in DOM' });
+        return;
+      }
+
+      // メディアタイプを判定
+      const mediaType = getMediaType(article);
+      console.log('Comiketter: メディアタイプを判定:', mediaType);
+      
+      sendResponse({ success: true, mediaType });
+    } catch (error) {
+      console.error('Comiketter: Error checking media type from DOM:', error);
+      sendResponse({ success: false, error: 'Failed to check media type' });
     }
   }
 
