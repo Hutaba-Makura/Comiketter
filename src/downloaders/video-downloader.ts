@@ -84,9 +84,12 @@ export class VideoDownloader {
         };
       }
 
-      // 4. 各動画をダウンロード
+      // 4. 各動画をダウンロード（シリアル番号を割り当て）
       const downloadResults = await Promise.allSettled(
-        videoMedia.map(media => this.downloadSingleVideo(media, cachedTweet, settings))
+        videoMedia.map((media, index) => {
+          const serial = index + 1; // 1から始まるシリアル番号
+          return this.downloadSingleVideo(media, cachedTweet, settings, serial);
+        })
       );
 
       // 5. 結果を集計
@@ -289,7 +292,8 @@ export class VideoDownloader {
   private async downloadSingleVideo(
     media: ProcessedMedia,
     tweet: ProcessedTweet,
-    settings: AppSettings
+    settings: AppSettings,
+    serial: number
   ): Promise<{ success: boolean; filename?: string; error?: string }> {
     try {
       // 最高ビットレートの動画URLを取得
@@ -313,7 +317,7 @@ export class VideoDownloader {
         },
         type: 'video',
         ext: 'mp4',
-        serial: 1, // 複数動画がある場合は適切に設定
+        serial: serial, // 引数で渡されたシリアル番号を使用
         hash: this.generateHash(videoUrl),
         createdAt: new Date(),
         tweetContent: tweet.full_text,

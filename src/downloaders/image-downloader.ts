@@ -99,9 +99,12 @@ export interface ImageDownloadResult {
         };
       }
 
-      // 4. 各画像をダウンロード
+      // 4. 各画像をダウンロード（シリアル番号を割り当て）
       const downloadResults = await Promise.allSettled(
-        imageMedia.map(media => this.downloadSingleImage(media, cachedTweet, settings))
+        imageMedia.map((media, index) => {
+          const serial = index + 1; // 1から始まるシリアル番号
+          return this.downloadSingleImage(media, cachedTweet, settings, serial);
+        })
       );
 
       // 5. 結果を集計
@@ -324,7 +327,8 @@ export interface ImageDownloadResult {
   private async downloadSingleImage(
     media: ProcessedMedia,
     tweet: ProcessedTweet,
-    settings: AppSettings
+    settings: AppSettings,
+    serial: number
   ): Promise<{ success: boolean; filename?: string; error?: string }> {
     try {
       // 最適な画像URLを取得
@@ -348,7 +352,7 @@ export interface ImageDownloadResult {
         },
         type: 'image',
         ext: this.getImageFileExtension(imageUrl),
-        serial: 1, // 複数画像がある場合は適切に設定
+        serial: serial, // 引数で渡されたシリアル番号を使用
         hash: this.generateHash(imageUrl),
         createdAt: new Date(),
         tweetContent: tweet.full_text,
