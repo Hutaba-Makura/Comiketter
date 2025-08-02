@@ -322,7 +322,7 @@ export class BookmarkButton extends BaseButton {
   /**
    * サンプルボタン（ブックマークボタン等）を取得
    */
-  protected getSampleButton(): HTMLElement | null {
+  protected getBookmarkButton(): HTMLElement | null {
     const selectors = [
       '[data-testid="bookmark"] > div',
     ];
@@ -344,7 +344,7 @@ export class BookmarkButton extends BaseButton {
     // サンプルボタン（ブックマークボタン等）を取得してスタイルをコピー
     const sampleButton = this.getSampleButton();
     if (!sampleButton) {
-      throw new Error('Failed to get sample button');
+      throw new Error('Failed to get bookmark button');
     }
 
     // ボタンのベースを作成
