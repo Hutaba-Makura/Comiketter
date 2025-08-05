@@ -98,17 +98,22 @@ export class SettingsDatabase {
 
   // Chrome Storage用のフォールバック関数
   private async getSettingsFromStorage(): Promise<SettingsDB[]> {
-    return new Promise((resolve) => {
-      chrome.storage.local.get(['settings'], (result) => {
-        resolve(result.settings || []);
-      });
-    });
+    try {
+      const result = await chrome.storage.local.get(['settings']);
+      return result.settings || [];
+    } catch (error) {
+      console.error('Failed to get settings from storage:', error);
+      return [];
+    }
   }
 
   private async saveSettingsToStorage(settings: SettingsDB[]): Promise<void> {
-    return new Promise((resolve) => {
-      chrome.storage.local.set({ settings }, resolve);
-    });
+    try {
+      await chrome.storage.local.set({ settings });
+    } catch (error) {
+      console.error('Failed to save settings to storage:', error);
+      throw error;
+    }
   }
 
   /**
@@ -283,10 +288,16 @@ export class SettingsDatabase {
    * テスト用リセット
    */
   async resetForTesting(): Promise<void> {
-    await this.clearAllData();
-    // IndexedDBを使用していない場合は削除をスキップ
     if (this.useIndexedDB) {
+      await this.clearAllData();
       await this.deleteDatabase();
+    } else {
+      // Chrome Storageモードでは直接ストレージをクリア
+      if (chrome?.storage?.local?.clear) {
+        await chrome.storage.local.clear();
+      } else {
+        await this.saveSettingsToStorage({});
+      }
     }
   }
 

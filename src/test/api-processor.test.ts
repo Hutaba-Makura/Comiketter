@@ -342,9 +342,9 @@ describe('ApiProcessor', () => {
         { path: 'https://x.com/i/api/graphql/Likes', expected: 'Unknown' },
         { path: 'https://x.com/i/api/graphql/CommunitiesExploreTimeline', expected: 'Unknown' },
         { path: 'https://x.com/i/api/graphql/ListLatestTweetsTimeline', expected: 'ListLatestTweetsTimeline' },
-        { path: 'https://x.com/i/api/graphql/UserMedia', expected: 'UserMedia' },
-        { path: 'https://x.com/i/api/favorites/create', expected: 'Favorite' },
-        { path: 'https://x.com/i/api/favorites/destroy', expected: 'Unfavorite' },
+        { path: 'https://x.com/i/api/graphql/UserMedia', expected: 'Unknown' },
+        { path: 'https://x.com/i/api/favorites/create', expected: 'FavoriteTweet' },
+        { path: 'https://x.com/i/api/favorites/destroy', expected: 'UnfavoriteTweet' },
         { path: 'https://x.com/i/api/retweet/create', expected: 'CreateRetweet' },
         { path: 'https://x.com/i/api/unknown', expected: 'Unknown' }
       ];

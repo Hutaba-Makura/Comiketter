@@ -9,6 +9,45 @@
 import { ImageDownloader } from '../../downloaders/image-downloader';
 import type { ProcessedTweet, ProcessedMedia } from '../../api-processor/types';
 
+// モック設定
+jest.mock('../../utils/api-cache', () => ({
+  ApiCacheManager: {
+    findTweetById: jest.fn()
+  }
+}));
+
+jest.mock('../../utils/storage', () => ({
+  StorageManager: {
+    addDownloadHistory: jest.fn().mockResolvedValue(undefined)
+  }
+}));
+
+jest.mock('../../utils/filenameGenerator', () => ({
+  FilenameGenerator: {
+    makeFilename: jest.fn().mockReturnValue('test_filename.jpg')
+  }
+}));
+
+// ImageDownloaderのgetSettingsメソッドをモック（より安全な方法）
+const mockGetSettings = jest.fn().mockResolvedValue({
+  downloadDirectory: 'test_dir',
+  filenamePattern: '{username}_{tweet_id}_{media_id}',
+  conflictAction: 'rename'
+});
+
+jest.mock('../../downloaders/image-downloader', () => {
+  const originalModule = jest.requireActual('../../downloaders/image-downloader');
+  const MockedImageDownloader = jest.fn().mockImplementation(() => {
+    const instance = new originalModule.ImageDownloader();
+    instance.getSettings = mockGetSettings;
+    return instance;
+  });
+  return {
+    ...originalModule,
+    ImageDownloader: MockedImageDownloader
+  };
+});
+
 // モックデータ
 const mockImageTweet: ProcessedTweet = {
   id_str: '1234567890',
@@ -123,19 +162,18 @@ describe('ImageDownloader', () => {
       } as any
     } as any;
 
-    // ApiCacheManager のモック
-    jest.doMock('../../utils/api-cache', () => ({
-      ApiCacheManager: {
-        findTweetById: jest.fn()
-      }
-    }));
+    // ApiCacheManager のモックをリセット
+    const { ApiCacheManager } = require('../../utils/api-cache');
+    ApiCacheManager.findTweetById.mockClear();
 
-    // StorageManager のモック
-    jest.doMock('../../utils/storage', () => ({
-      StorageManager: {
-        addDownloadHistory: jest.fn().mockResolvedValue(undefined)
-      }
-    }));
+    // StorageManager のモックをリセット
+    const { StorageManager } = require('../../utils/storage');
+    StorageManager.addDownloadHistory.mockClear();
+
+    // FilenameGenerator のモックをリセット
+    const { FilenameGenerator } = require('../../utils/filenameGenerator');
+    FilenameGenerator.makeFilename.mockClear();
+    FilenameGenerator.makeFilename.mockReturnValue('test_filename.jpg');
   });
 
   describe('extractImageMedia', () => {
@@ -213,17 +251,12 @@ describe('ImageDownloader', () => {
       const { ApiCacheManager } = require('../../utils/api-cache');
       ApiCacheManager.findTweetById.mockResolvedValue(mockImageTweet);
 
-      // getSettingsメソッドをモック
-      jest.spyOn(imageDownloader as any, 'getSettings').mockResolvedValue({
-        filenameSettings: {
-          pattern: '{author}_{date}_{tweetId}',
-          directory: 'Comiketter'
-        },
-        downloadMethod: 'chrome_downloads'
-      });
-
       const request = { tweetId: '1234567890' };
       const result = await imageDownloader.downloadImages(request);
+
+      if (!result.success) {
+        console.log('ImageDownloader test error:', result.error);
+      }
 
       expect(result.success).toBe(true);
       expect(result.downloadedFiles).toBeDefined();
@@ -243,13 +276,7 @@ describe('ImageDownloader', () => {
 
     it('画像がないツイートの場合はエラーを返す', async () => {
       const { ApiCacheManager } = require('../../utils/api-cache');
-      ApiCacheManager.findTweetById.mockResolvedValue(null); // キャッシュにない場合
-      
-      // getTweetFromDOMメソッドをモック
-      jest.spyOn(imageDownloader as any, 'getTweetFromDOM').mockResolvedValue(mockTextTweet);
-      
-      // checkMediaTypeFromDOMメソッドをモック
-      jest.spyOn(imageDownloader as any, 'checkMediaTypeFromDOM').mockResolvedValue(null);
+      ApiCacheManager.findTweetById.mockResolvedValue(mockTextTweet); // テキストのみのツイート
 
       const request = { tweetId: '1234567892' };
       const result = await imageDownloader.downloadImages(request);

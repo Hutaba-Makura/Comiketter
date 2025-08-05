@@ -133,17 +133,22 @@ export class DownloadHistoryDatabase {
 
   // Chrome Storage用のフォールバック関数
   private async getDownloadHistoryFromStorage(): Promise<DownloadHistoryDB[]> {
-    return new Promise((resolve) => {
-      chrome.storage.local.get(['downloadHistory'], (result) => {
-        resolve(result.downloadHistory || []);
-      });
-    });
+    try {
+      const result = await chrome.storage.local.get(['downloadHistory']);
+      return result.downloadHistory || [];
+    } catch (error) {
+      console.error('Failed to get download history from storage:', error);
+      return [];
+    }
   }
 
   private async saveDownloadHistoryToStorage(history: DownloadHistoryDB[]): Promise<void> {
-    return new Promise((resolve) => {
-      chrome.storage.local.set({ downloadHistory: history }, resolve);
-    });
+    try {
+      await chrome.storage.local.set({ downloadHistory: history });
+    } catch (error) {
+      console.error('Failed to save download history to storage:', error);
+      throw error;
+    }
   }
 
   /**
@@ -493,10 +498,16 @@ export class DownloadHistoryDatabase {
    * テスト用リセット
    */
   async resetForTesting(): Promise<void> {
-    await this.clearAllData();
-    // IndexedDBを使用していない場合は削除をスキップ
     if (this.useIndexedDB) {
+      await this.clearAllData();
       await this.deleteDatabase();
+    } else {
+      // Chrome Storageモードでは直接ストレージをクリア
+      if (chrome?.storage?.local?.clear) {
+        await chrome.storage.local.clear();
+      } else {
+        await this.saveDownloadHistoryToStorage([]);
+      }
     }
   }
 

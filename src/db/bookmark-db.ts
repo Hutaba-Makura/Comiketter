@@ -143,31 +143,41 @@ export class BookmarkDatabase {
 
   // Chrome Storage用のフォールバック関数
   private async getBookmarksFromStorage(): Promise<BookmarkDB[]> {
-    return new Promise((resolve) => {
-      chrome.storage.local.get(['bookmarks'], (result) => {
-        resolve(result.bookmarks || []);
-      });
-    });
+    try {
+      const result = await chrome.storage.local.get(['bookmarks']);
+      return result.bookmarks || [];
+    } catch (error) {
+      console.error('Failed to get bookmarks from storage:', error);
+      return [];
+    }
   }
 
   private async saveBookmarksToStorage(bookmarks: BookmarkDB[]): Promise<void> {
-    return new Promise((resolve) => {
-      chrome.storage.local.set({ bookmarks }, resolve);
-    });
+    try {
+      await chrome.storage.local.set({ bookmarks });
+    } catch (error) {
+      console.error('Failed to save bookmarks to storage:', error);
+      throw error;
+    }
   }
 
   private async getBookmarkedTweetsFromStorage(): Promise<BookmarkedTweetDB[]> {
-    return new Promise((resolve) => {
-      chrome.storage.local.get(['bookmarkedTweets'], (result) => {
-        resolve(result.bookmarkedTweets || []);
-      });
-    });
+    try {
+      const result = await chrome.storage.local.get(['bookmarkedTweets']);
+      return result.bookmarkedTweets || [];
+    } catch (error) {
+      console.error('Failed to get bookmarked tweets from storage:', error);
+      return [];
+    }
   }
 
   private async saveBookmarkedTweetsToStorage(tweets: BookmarkedTweetDB[]): Promise<void> {
-    return new Promise((resolve) => {
-      chrome.storage.local.set({ bookmarkedTweets: tweets }, resolve);
-    });
+    try {
+      await chrome.storage.local.set({ bookmarkedTweets: tweets });
+    } catch (error) {
+      console.error('Failed to save bookmarked tweets to storage:', error);
+      throw error;
+    }
   }
 
   /**
@@ -617,10 +627,17 @@ export class BookmarkDatabase {
    * テスト用リセット
    */
   async resetForTesting(): Promise<void> {
-    await this.clearAllData();
-    // IndexedDBを使用していない場合は削除をスキップ
     if (this.useIndexedDB) {
+      await this.clearAllData();
       await this.deleteDatabase();
+    } else {
+      // Chrome Storageモードでは直接ストレージをクリア
+      if (chrome?.storage?.local?.clear) {
+        await chrome.storage.local.clear();
+      } else {
+        await this.saveBookmarksToStorage([]);
+        await this.saveBookmarkedTweetsToStorage([]);
+      }
     }
   }
 

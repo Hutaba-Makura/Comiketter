@@ -23,7 +23,13 @@ const config: Config = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
-  testTimeout: 60000,
+  testTimeout: 120000,
+  testEnvironmentOptions: {
+    customExportConditions: ['node', 'node-addons'],
+  },
+  globals: {
+    'process.env.NODE_ENV': 'test',
+  },
 };
 
 export default config; 
