@@ -15,15 +15,7 @@ export class DownloadButton extends BaseButton {
       className: 'download',
       testId: 'download-button',
       ariaLabel: 'Comiketter Download',
-      iconSVG: `
-        <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
-             x="0px" y="0px" viewBox="0 0 24 24" style="enable-background:new 0 0 24 24;" xml:space="preserve">
-          <g>
-            <path d="M12,16l-5.7-5.7l1.4-1.4l3.3,3.3V2.6h2v9.6l3.3-3.3l1.4,1.4L12,16z M21,15l0,3.5c0,1.4-1.1,2.5-2.5,2.5h-13
-              C4.1,21,3,19.9,3,18.5V15h2v3.5C5,18.8,5.2,19,5.5,19h13c0.3,0,0.5-0.2,0.5-0.5l0-3.5H21z"/>
-          </g>
-        </svg>
-      `,
+      iconSVG: '', // アイコンは動的に読み込むため空文字列
       position: 'right',
     };
     super(config);
@@ -91,7 +83,9 @@ export class DownloadButton extends BaseButton {
   /**
    * DLボタンを作成
    */
-  createButton(tweetInfo: Tweet): HTMLElement {
+  async createButton(tweetInfo: Tweet): Promise<HTMLElement> {
+    console.log('Comiketter: DLボタン作成開始');
+    
     // サンプルボタン（いいねボタン等）を取得してスタイルをコピー
     const sampleButton = this.getSampleButton();
     if (!sampleButton) {
@@ -103,7 +97,7 @@ export class DownloadButton extends BaseButton {
     const buttonElement = this.createButtonElement(sampleButton);
     
     // アイコンを設定
-    const iconElement = this.createIconElement(sampleButton);
+    const iconElement = await this.createIconElement('download', sampleButton);
     buttonElement.appendChild(iconElement);
     
     // ボタン要素をラッパーに追加
@@ -117,6 +111,8 @@ export class DownloadButton extends BaseButton {
     
     // 初期状態を設定
     this.setButtonStatus(buttonWrapper, ButtonStatus.Idle);
+    
+    console.log('Comiketter: DLボタン作成完了');
     
     return buttonWrapper;
   }
@@ -151,13 +147,20 @@ export class DownloadButton extends BaseButton {
         throw new Error('Chrome runtime is not available');
       }
 
-      // バックグラウンドスクリプトにダウンロード要求を送信
+      // メディアタイプをチェック
+      const hasVideo = tweetInfo.media?.some(m => m.type === 'video');
+      const hasImage = tweetInfo.media?.some(m => m.type === 'image');
+      
+      if (!hasVideo && !hasImage) {
+        throw new Error('ダウンロード可能なメディアが見つかりません');
+      }
+
+      // 統合メディアダウンロード要求を送信（画像・動画同時ダウンロード）
       const response = await chrome.runtime.sendMessage({
-        type: 'DOWNLOAD_TWEET_MEDIA',
+        type: 'DOWNLOAD_MEDIA',
         payload: {
           tweetId: tweetInfo.id,
           screenName: tweetInfo.author.username,
-          mediaUrls: tweetInfo.media?.map(m => m.url) || [],
         },
       });
 

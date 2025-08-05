@@ -52,7 +52,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["injected.js"],
+      "resources": ["injected.js", "icons/*.svg"],
       "matches": [
         "https://twitter.com/*",
         "https://x.com/*"

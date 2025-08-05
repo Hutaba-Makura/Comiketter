@@ -3,14 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  * 
- * Comiketter: Modified and adapted from TwitterMediaHarvest article.ts
+ * Comiketter: ツイート情報抽出機能
  */
 
-/// <reference lib="dom" />
-
-import type { Tweet } from '../types';
-
-// グローバル型定義
+// TypeScriptの型定義拡張
 declare global {
   interface HTMLElement {
     matches(selector: string): boolean;
@@ -23,6 +19,8 @@ declare global {
   }
 }
 
+import type { Tweet } from '../types';
+
 /**
  * ツイート要素からツイート情報を抽出
  */
@@ -34,6 +32,7 @@ export function getTweetInfoFromArticle(article: HTMLElement): Tweet | null {
     const hasMedia = checkHasMedia(article);
     const mediaUrls = hasMedia ? extractMediaUrls(article) : undefined;
     const hasVideo = checkHasVideo(article);
+    const hasGif = checkHasGif(article);
     const createdAt = extractCreatedAt(article);
     const text = extractText(article);
 
@@ -50,6 +49,8 @@ export function getTweetInfoFromArticle(article: HTMLElement): Tweet | null {
         type: 'image' as const,
         url,
         originalUrl: url,
+        // ProcessedMediaとの互換性のため、media_url_httpsも追加
+        media_url_https: url,
       }));
     } else if (hasVideo) {
       // 動画がある場合はダミーエントリを追加（実際のURLはAPI傍受で取得）
@@ -57,6 +58,17 @@ export function getTweetInfoFromArticle(article: HTMLElement): Tweet | null {
         type: 'video' as const,
         url: 'video://placeholder',
         originalUrl: 'video://placeholder',
+        // ProcessedMediaとの互換性のため、media_url_httpsも追加
+        media_url_https: 'video://placeholder',
+      }];
+    } else if (hasGif) {
+      // GIFがある場合はダミーエントリを追加
+      media = [{
+        type: 'animated_gif' as const,
+        url: 'gif://placeholder',
+        originalUrl: 'gif://placeholder',
+        // ProcessedMediaとの互換性のため、media_url_httpsも追加
+        media_url_https: 'gif://placeholder',
       }];
     }
 
@@ -78,6 +90,63 @@ export function getTweetInfoFromArticle(article: HTMLElement): Tweet | null {
     console.error('Comiketter: Error extracting tweet info:', error);
     return null;
   }
+}
+
+/**
+ * TwitterMediaHarvestスタイルのツイート情報抽出
+ * キャッシュにツイートが見つからない場合のフォールバック機能
+ */
+export function extractTweetInfoFromDOM(tweetId: string): Tweet | null {
+  try {
+    // ツイートIDから該当するarticle要素を検索
+    const article = findArticleByTweetId(tweetId);
+    if (!article) {
+      console.warn(`Comiketter: Article not found for tweet ID: ${tweetId}`);
+      return null;
+    }
+
+    return getTweetInfoFromArticle(article);
+  } catch (error) {
+    console.error('Comiketter: Error extracting tweet info from DOM:', error);
+    return null;
+  }
+}
+
+/**
+ * ツイートIDから該当するarticle要素を検索
+ */
+function findArticleByTweetId(tweetId: string): HTMLElement | null {
+  // 複数の方法でツイート要素を検索
+  const selectors = [
+    `a[href*="/status/${tweetId}"]`,
+    `[data-testid="tweet"][data-tweet-id="${tweetId}"]`,
+    `article[data-tweet-id="${tweetId}"]`,
+  ];
+
+  for (const selector of selectors) {
+    const element = document.querySelector(selector);
+    if (element) {
+      // 親のarticle要素を取得
+      const article = element.closest('article');
+      if (article) {
+        return article;
+      }
+    }
+  }
+
+  // より広範囲な検索
+  const allArticles = document.querySelectorAll('article');
+  for (const article of allArticles) {
+    const links = article.querySelectorAll('a[href*="/status/"]');
+    for (const link of links) {
+      const href = link.getAttribute('href');
+      if (href && href.includes(`/status/${tweetId}`)) {
+        return article;
+      }
+    }
+  }
+
+  return null;
 }
 
 /**
@@ -242,10 +311,14 @@ function checkHasMedia(article: HTMLElement): boolean {
   const hasVideo = article.querySelector('[data-testid="videoPlayer"]') !== null ||
                   article.querySelector('[data-testid="playButton"]') !== null;
   
+  // GIFの存在チェック
+  const hasGif = article.querySelector('[data-testid="videoPlayer"] video[src*=".mp4"]') !== null ||
+                 article.querySelector('video[src*=".mp4"]') !== null;
+  
   // 引用ツイート内のメディアは除外
   const isInQuotedTweet = article.closest('[role="link"]') !== null;
   
-  const hasMedia = hasValidImage || hasVideo;
+  const hasMedia = hasValidImage || hasVideo || hasGif;
   
   return hasMedia && !isInQuotedTweet;
 }
@@ -281,9 +354,33 @@ function extractMediaUrls(article: HTMLElement): string[] {
   // 実際の動画URLは background/downloadManager.ts の extractMediaFromTweet で取得される
   const videos = article.querySelectorAll('[data-testid="videoPlayer"], [data-testid="playButton"]');
   if (videos.length > 0) {
+    // 動画の場合はプレースホルダーを追加
+    mediaUrls.push('video://placeholder');
   }
 
   return mediaUrls;
+}
+
+/**
+ * 動画の存在をチェック
+ */
+function checkHasVideo(article: HTMLElement): boolean {
+  // 動画プレイヤーや再生ボタンの存在をチェック
+  const hasVideo = article.querySelector('[data-testid="videoPlayer"]') !== null ||
+                  article.querySelector('[data-testid="playButton"]') !== null;
+  
+  return hasVideo;
+}
+
+/**
+ * GIFの存在をチェック
+ */
+function checkHasGif(article: HTMLElement): boolean {
+  // GIF動画の存在をチェック
+  const hasGif = article.querySelector('[data-testid="videoPlayer"] video[src*=".mp4"]') !== null ||
+                 article.querySelector('video[src*=".mp4"]') !== null;
+  
+  return hasGif;
 }
 
 /**
@@ -312,17 +409,6 @@ function isProfileOrBannerImage(url: string): boolean {
 }
 
 /**
- * 動画の存在をチェック
- */
-function checkHasVideo(article: HTMLElement): boolean {
-  // 動画プレイヤーや再生ボタンの存在をチェック
-  const hasVideo = article.querySelector('[data-testid="videoPlayer"]') !== null ||
-                  article.querySelector('[data-testid="playButton"]') !== null;
-  
-  return hasVideo;
-}
-
-/**
  * 動画サムネイルかどうかを判定
  */
 function isVideoThumbnail(url: string): boolean {
@@ -338,7 +424,7 @@ function isVideoThumbnail(url: string): boolean {
 }
 
 /**
- * ツイート要素が有効かチェック
+ * 有効なツイート要素かどうかを判定
  */
 export function isValidTweetElement(element: HTMLElement): boolean {
   return element.matches('article[data-testid="tweet"]') &&
@@ -346,8 +432,27 @@ export function isValidTweetElement(element: HTMLElement): boolean {
 }
 
 /**
- * ツイート要素から親ツイートを取得
+ * 親のツイート要素を取得
  */
 export function getParentTweet(element: HTMLElement): HTMLElement | null {
-  return element.closest('article[data-testid="tweet"]');
+  if (element.tagName === 'ARTICLE') {
+    return element;
+  }
+  return element.closest('article');
+}
+
+/**
+ * メディアタイプを判定
+ */
+export function getMediaType(article: HTMLElement): 'image' | 'video' | 'animated_gif' | null {
+  if (checkHasVideo(article)) {
+    return 'video';
+  }
+  if (checkHasGif(article)) {
+    return 'animated_gif';
+  }
+  if (checkHasMedia(article)) {
+    return 'image';
+  }
+  return null;
 }

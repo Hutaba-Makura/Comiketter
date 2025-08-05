@@ -43,8 +43,8 @@ interface ApiProcessingResult {
 
 ### 2.1 処理対象API
 - 使われているのが確認できたAPI
-  - `HomeTimeline` - ホームタイムライン（従来版）
-  - `HomeLatestTimeline` - ホームタイムライン
+  - `HomeTimeline` - ホームタイムライン（おすすめ）
+  - `HomeLatestTimeline` - ホームタイムライン（フォロー中）
   - `TweetDetail` - ツイート詳細
   - `ListLatestTweetsTimeline` - リストタイムライン
   - `SearchTimeline` - 検索タイムライン

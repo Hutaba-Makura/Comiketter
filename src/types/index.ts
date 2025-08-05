@@ -14,7 +14,7 @@ export interface Tweet {
 }
 
 export interface MediaItem {
-  type: 'image' | 'video';
+  type: 'image' | 'video' | 'animated_gif';
   url: string;
   originalUrl?: string;
   thumbnailUrl?: string;
