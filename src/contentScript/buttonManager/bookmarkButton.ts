@@ -321,6 +321,8 @@ export class BookmarkButton extends BaseButton {
    * ブックマークボタンを作成
    */
   async createButton(tweetInfo: Tweet): Promise<HTMLElement> {
+    console.log('Comiketter: CBボタン作成開始');
+    
     // サンプルボタン（ブックマークボタン等）を取得してスタイルをコピー
     const sampleButton = this.getSampleButton();
     if (!sampleButton) {
@@ -343,6 +345,8 @@ export class BookmarkButton extends BaseButton {
     
     // クリックイベントを設定
     this.setupBookmarkClickHandler(buttonWrapper, tweetInfo);
+    
+    console.log('Comiketter: CBボタン作成完了');
     
     return buttonWrapper;
   }

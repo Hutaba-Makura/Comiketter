@@ -161,6 +161,13 @@ export abstract class BaseButton {
     // サンプルボタンをクローンして不要な要素を削除
     const button = sampleButton.cloneNode(true) as HTMLElement;
     
+    // 既存のSVGアイコンをすべて削除
+    const existingSvgs = button.querySelectorAll('svg');
+    if (existingSvgs.length > 0) {
+      console.log(`Comiketter: ${existingSvgs.length}個の既存SVGアイコンを削除`);
+      existingSvgs.forEach(svg => svg.remove());
+    }
+    
     // テキスト要素を削除
     const textContainer = button.querySelector('[data-testid="app-text-transition-container"] > span > span');
     if (textContainer) {
@@ -177,6 +184,8 @@ export abstract class BaseButton {
     const theme = this.detectTheme();
     const iconColor = this.getButtonColor(theme);
     
+    console.log(`Comiketter: アイコン作成開始 - ${iconName} (テーマ: ${theme}, 色: ${iconColor})`);
+    
     // アイコンファイルを読み込み
     const iconSVG = await this.loadIcon(iconName);
     
@@ -191,6 +200,8 @@ export abstract class BaseButton {
     
     // 色を設定
     icon.style.color = iconColor;
+    
+    console.log(`Comiketter: アイコン作成完了 - ${iconName}`);
     
     return icon;
   }

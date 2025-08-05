@@ -84,6 +84,8 @@ export class DownloadButton extends BaseButton {
    * DLボタンを作成
    */
   async createButton(tweetInfo: Tweet): Promise<HTMLElement> {
+    console.log('Comiketter: DLボタン作成開始');
+    
     // サンプルボタン（いいねボタン等）を取得してスタイルをコピー
     const sampleButton = this.getSampleButton();
     if (!sampleButton) {
@@ -109,6 +111,8 @@ export class DownloadButton extends BaseButton {
     
     // 初期状態を設定
     this.setButtonStatus(buttonWrapper, ButtonStatus.Idle);
+    
+    console.log('Comiketter: DLボタン作成完了');
     
     return buttonWrapper;
   }
