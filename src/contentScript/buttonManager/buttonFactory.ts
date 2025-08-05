@@ -27,13 +27,11 @@ export class ButtonFactory {
   /**
    * ツイートに必要なボタンを全て作成
    */
-  createButtonsForTweet(tweetInfo: Tweet): ButtonInfo[] {
+  async createButtonsForTweet(tweetInfo: Tweet): Promise<ButtonInfo[]> {
     const buttons: ButtonInfo[] = [];
 
-
-    
     // CBボタンを作成（常に作成）
-    const bookmarkButtonElement = this.bookmarkButton.createButton(tweetInfo);
+    const bookmarkButtonElement = await this.bookmarkButton.createButton(tweetInfo);
     buttons.push({
       element: bookmarkButtonElement,
       position: 'right',
@@ -41,7 +39,7 @@ export class ButtonFactory {
 
     // DLボタンを作成（メディアがある場合のみ）
     if (this.shouldCreateDownloadButton(tweetInfo)) {
-      const downloadButtonElement = this.downloadButton.createButton(tweetInfo);
+      const downloadButtonElement = await this.downloadButton.createButton(tweetInfo);
       buttons.push({
         element: downloadButtonElement,
         position: 'right',

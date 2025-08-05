@@ -70,29 +70,14 @@ export class TweetObserver {
    * 既存のツイートにボタンを追加
    */
   private initializeExistingTweets(): void {
-    // 複数のセレクターを試行
-    const tweetSelectors = [
-      'article[data-testid="tweet"]',
-      'article[role="article"]',
-      '[data-testid="tweet"]',
-      'article',
-    ];
-
-    let articles: NodeListOf<Element> | null = null;
-    let usedSelector = '';
-
-    for (const selector of tweetSelectors) {
-      articles = document.querySelectorAll(selector);
-      if (articles.length > 0) {
-        usedSelector = selector;
-        break;
-      }
-    }
+    const articles = document.querySelectorAll('article[data-testid="tweet"]');
     
     if (articles && articles.length > 0) {
       articles.forEach((article) => {
         if (this.shouldAddButtons(article as HTMLElement)) {
-          this.addButtonsToTweet(article as HTMLElement);
+          this.addButtonsToTweet(article as HTMLElement).catch(error => {
+            console.error('Comiketter: Failed to add buttons to existing tweet:', error);
+          });
         }
       });
     }
@@ -190,7 +175,6 @@ export class TweetObserver {
 
     // 処理済みノードをクリア
     this.pendingNodes = [];
-    this.processingTimeout = null;
   }
 
   /**
@@ -205,7 +189,7 @@ export class TweetObserver {
     // 処理済みとしてマーク
     this.processedElements.add(node);
 
-    // ツイートセレクターを試行
+    // ツイート要素のセレクター
     const tweetSelectors = [
       'article[data-testid="tweet"]',
       'article[role="article"]',
@@ -216,7 +200,9 @@ export class TweetObserver {
     for (const selector of tweetSelectors) {
       if (node.matches(selector)) {
         if (this.shouldAddButtons(node)) {
-          this.addButtonsToTweet(node);
+          this.addButtonsToTweet(node).catch(error => {
+            console.error('Comiketter: Failed to add buttons to tweet:', error);
+          });
         }
         return;
       }
@@ -228,7 +214,9 @@ export class TweetObserver {
       if (tweets.length > 0) {
         tweets.forEach((tweet) => {
           if (this.shouldAddButtons(tweet as HTMLElement)) {
-            this.addButtonsToTweet(tweet as HTMLElement);
+            this.addButtonsToTweet(tweet as HTMLElement).catch(error => {
+              console.error('Comiketter: Failed to add buttons to tweet:', error);
+            });
           }
         });
         return;
@@ -252,17 +240,13 @@ export class TweetObserver {
   /**
    * ツイートにボタンを追加
    */
-  private addButtonsToTweet(article: HTMLElement): void {
+  private async addButtonsToTweet(article: HTMLElement): Promise<void> {
     try {
-
-      
       // ツイート情報を取得
       const tweetInfo = getTweetInfoFromArticle(article);
       if (!tweetInfo) {
         return;
       }
-
-
 
       // アクションバー（いいね、RT等のボタン群）を取得
       const actionBar = this.getActionBar(article);
@@ -270,17 +254,12 @@ export class TweetObserver {
         return;
       }
 
-
-
       // ボタンを作成
-      const buttons = this.buttonFactory.createButtonsForTweet(tweetInfo);
-
-
+      const buttons = await this.buttonFactory.createButtonsForTweet(tweetInfo);
 
       // アクションバーに挿入（順序を制御）
       this.buttonFactory.insertButtonsToActionBar(actionBar, buttons);
       
-
     } catch (error) {
       console.error('Comiketter: Failed to add buttons:', error);
       sendLog('Failed to add buttons:', error);

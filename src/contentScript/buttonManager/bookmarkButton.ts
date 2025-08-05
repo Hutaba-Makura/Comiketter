@@ -31,29 +31,6 @@ const sendLog = (message: string, data?: any) => {
   }
 };
 
-// テーマ検出関数（BookmarkSelectorから移植）
-const detectTheme = (): 'light' | 'darkBlue' | 'black' => {
-  // body要素のbackground-colorを計算されたスタイルから取得
-  const computedStyle = getComputedStyle(document.body);
-  const backgroundColor = computedStyle.backgroundColor;
-  
-  // 直接スタイル属性も確認
-  const inlineStyle = document.body.style.backgroundColor;
-  
-  // 両方の値をチェック
-  const colorToCheck = backgroundColor || inlineStyle;
-  
-  if (colorToCheck === 'rgb(255, 255, 255)') {
-    return 'light';
-  } else if (colorToCheck === 'rgb(21, 32, 43)') {
-    return 'darkBlue';
-  } else if (colorToCheck === 'rgb(0, 0, 0)') {
-    return 'black';
-  }
-  
-  return 'light';
-};
-
 export enum BookmarkButtonStatus {
   Idle = 'idle',
   Loading = 'loading',
@@ -64,20 +41,14 @@ export enum BookmarkButtonStatus {
 export class BookmarkButton extends BaseButton {
   private bookmarkSelector: HTMLElement | null = null;
   private currentTweetInfo: Tweet | null = null;
+  private currentIconElement: HTMLElement | null = null;
 
   constructor() {
     const config: ButtonConfig = {
       className: 'bookmark',
       testId: 'bookmark-button',
       ariaLabel: 'Comiketter Bookmark',
-      iconSVG: `
-        <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
-             x="0px" y="0px" viewBox="0 0 24 24" style="enable-background:new 0 0 24 24;" xml:space="preserve">
-          <g>
-            <path d="M4 4.5C4 3.12 5.119 2 6.5 2h11C18.881 2 20 3.12 20 4.5v18.44l-8-5.71-8 5.71V4.5zM6.5 4c-.276 0-.5.22-.5.5v14.56l6-4.29 6 4.29V4.5c0-.28-.224-.5-.5-.5h-11z"></path>
-          </g>
-        </svg>
-      `,
+      iconSVG: '', // アイコンは動的に読み込むため空文字列
       position: 'right',
     };
     super(config);
@@ -90,7 +61,7 @@ export class BookmarkButton extends BaseButton {
    * テーマ変更を監視
    */
   private observeThemeChanges(): void {
-    // MutationObserverでbody要素の属性変更を監視
+    // MutationObserverでhtml要素の属性変更を監視
     const observer = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
         if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
@@ -100,8 +71,8 @@ export class BookmarkButton extends BaseButton {
       });
     });
     
-    // body要素の属性変更を監視開始
-    observer.observe(document.body, {
+    // html要素の属性変更を監視開始
+    observer.observe(document.documentElement, {
       attributes: true,
       attributeFilter: ['style']
     });
@@ -113,12 +84,43 @@ export class BookmarkButton extends BaseButton {
   private updateThemeIfNeeded(): void {
     if (this.bookmarkSelector) {
       const currentTheme = this.bookmarkSelector.getAttribute('data-theme');
-      const newTheme = detectTheme();
+      const newTheme = this.detectTheme();
       
       if (currentTheme !== newTheme) {
         this.bookmarkSelector.setAttribute('data-theme', newTheme);
       }
     }
+    
+    // アイコンの色も更新
+    if (this.currentIconElement) {
+      const theme = this.detectTheme();
+      const iconColor = this.getButtonColor(theme);
+      this.currentIconElement.style.color = iconColor;
+    }
+  }
+
+  /**
+   * アイコンを更新
+   */
+  private async updateIcon(iconName: string): Promise<void> {
+    if (!this.currentIconElement) return;
+    
+    const theme = this.detectTheme();
+    const iconColor = this.getButtonColor(theme);
+    
+    // アイコンファイルを読み込み
+    const iconSVG = await this.loadIcon(iconName);
+    
+    // 新しいSVG要素を作成
+    const newIcon = this.createElementFromHTML(iconSVG);
+    
+    // 既存のクラスとスタイルをコピー
+    newIcon.setAttribute('class', this.currentIconElement.className);
+    newIcon.style.color = iconColor;
+    
+    // 既存のアイコンを置き換え
+    this.currentIconElement.replaceWith(newIcon);
+    this.currentIconElement = newIcon;
   }
 
   /**
@@ -273,48 +275,26 @@ export class BookmarkButton extends BaseButton {
         color: rgb(15, 20, 25);
       }
       
-      .comiketter-bookmark-selector[data-theme="darkBlue"] {
+      .comiketter-bookmark-selector[data-theme="dark"] {
         background: rgb(21, 32, 43);
         color: rgb(247, 249, 249);
         }
         
-      .comiketter-bookmark-selector[data-theme="darkBlue"] .comiketter-bookmark-selector-header {
+      .comiketter-bookmark-selector[data-theme="dark"] .comiketter-bookmark-selector-header {
           border-bottom-color: #38444d;
         }
         
-      .comiketter-bookmark-selector[data-theme="darkBlue"] .comiketter-bookmark-item {
+      .comiketter-bookmark-selector[data-theme="dark"] .comiketter-bookmark-item {
           border-bottom-color: #38444d;
         }
         
-      .comiketter-bookmark-selector[data-theme="darkBlue"] .comiketter-bookmark-actions {
+      .comiketter-bookmark-selector[data-theme="dark"] .comiketter-bookmark-actions {
           border-top-color: #38444d;
         }
         
-      .comiketter-bookmark-selector[data-theme="darkBlue"] .comiketter-bookmark-button-secondary {
+      .comiketter-bookmark-selector[data-theme="dark"] .comiketter-bookmark-button-secondary {
           background: #38444d;
         color: rgb(247, 249, 249);
-      }
-      
-      .comiketter-bookmark-selector[data-theme="black"] {
-        background: rgb(0, 0, 0);
-        color: rgb(231, 233, 234);
-      }
-      
-      .comiketter-bookmark-selector[data-theme="black"] .comiketter-bookmark-selector-header {
-        border-bottom-color: #2f3336;
-        }
-      
-      .comiketter-bookmark-selector[data-theme="black"] .comiketter-bookmark-item {
-        border-bottom-color: #2f3336;
-      }
-      
-      .comiketter-bookmark-selector[data-theme="black"] .comiketter-bookmark-actions {
-        border-top-color: #2f3336;
-      }
-      
-      .comiketter-bookmark-selector[data-theme="black"] .comiketter-bookmark-button-secondary {
-        background: #2f3336;
-        color: rgb(231, 233, 234);
       }
     `;
   }
@@ -340,7 +320,7 @@ export class BookmarkButton extends BaseButton {
   /**
    * ブックマークボタンを作成
    */
-  createButton(tweetInfo: Tweet): HTMLElement {
+  async createButton(tweetInfo: Tweet): Promise<HTMLElement> {
     // サンプルボタン（ブックマークボタン等）を取得してスタイルをコピー
     const sampleButton = this.getSampleButton();
     if (!sampleButton) {
@@ -352,8 +332,8 @@ export class BookmarkButton extends BaseButton {
     const buttonElement = this.createButtonElement(sampleButton);
     
     // アイコンを設定
-    const iconElement = this.createIconElement(sampleButton);
-    buttonElement.appendChild(iconElement);
+    this.currentIconElement = await this.createIconElement('bookmarks', sampleButton);
+    buttonElement.appendChild(this.currentIconElement);
     
     // ボタン要素をラッパーに追加
     const innerWrapper = buttonWrapper.querySelector('.comiketter-bookmark-button > div');
@@ -392,9 +372,9 @@ export class BookmarkButton extends BaseButton {
       // BookmarkApiClientを初期化
       const bookmarkManager = BookmarkApiClient.getInstance();
       
-      // テーマ検出を実行（BookmarkSelectorの初期化をシミュレート）
+      // テーマ検出を実行
       sendLog('BookmarkSelector初期化開始');
-      const theme = detectTheme();
+      const theme = this.detectTheme();
       sendLog('テーマ更新:', theme);
       
       // ブックマーク選択UIを表示
@@ -468,7 +448,7 @@ export class BookmarkButton extends BaseButton {
     selector.className = 'comiketter-bookmark-selector';
     
     // テーマを検出してdata-theme属性を設定
-    const theme = detectTheme();
+    const theme = this.detectTheme();
     selector.setAttribute('data-theme', theme);
     sendLog('ブックマーク選択UIにテーマ設定:', theme);
     
@@ -738,6 +718,12 @@ export class BookmarkButton extends BaseButton {
       
       console.log('Comiketter: Saved tweet to bookmarks:', selectedBookmarks);
       
+      // ブックマーク登録後のアイコン変更
+      await this.updateIcon('bookmarked');
+      if (this.currentIconElement) {
+        this.currentIconElement.style.color = '#35a6f1';
+      }
+      
       this.hideBookmarkSelector();
       
       // 成功メッセージを表示
@@ -755,8 +741,6 @@ export class BookmarkButton extends BaseButton {
     const checkboxes = document.querySelectorAll('.comiketter-bookmark-checkbox:checked') as NodeListOf<HTMLInputElement>;
     return Array.from(checkboxes).map(checkbox => checkbox.id.replace('bookmark-', ''));
   }
-
-
 
   /**
    * ボタンの状態を設定（ブックマーク専用）
