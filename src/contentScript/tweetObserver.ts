@@ -186,9 +186,6 @@ export class TweetObserver {
       return;
     }
 
-    // 処理済みとしてマーク
-    this.processedElements.add(node);
-
     // ツイート要素のセレクター
     const tweetSelectors = [
       'article[data-testid="tweet"]',
@@ -199,6 +196,9 @@ export class TweetObserver {
     // 直接ツイート要素の場合
     for (const selector of tweetSelectors) {
       if (node.matches(selector)) {
+        // 処理済みとしてマーク（判定前にマーク）
+        this.processedElements.add(node);
+        
         if (this.shouldAddButtons(node)) {
           this.addButtonsToTweet(node).catch(error => {
             console.error('Comiketter: Failed to add buttons to tweet:', error);
@@ -213,15 +213,25 @@ export class TweetObserver {
       const tweets = node.querySelectorAll(selector);
       if (tweets.length > 0) {
         tweets.forEach((tweet) => {
-          if (this.shouldAddButtons(tweet as HTMLElement)) {
-            this.addButtonsToTweet(tweet as HTMLElement).catch(error => {
-              console.error('Comiketter: Failed to add buttons to tweet:', error);
-            });
+          const tweetElement = tweet as HTMLElement;
+          
+          // 各ツイート要素を個別に処理済みとしてマーク
+          if (!this.processedElements.has(tweetElement)) {
+            this.processedElements.add(tweetElement);
+            
+            if (this.shouldAddButtons(tweetElement)) {
+              this.addButtonsToTweet(tweetElement).catch(error => {
+                console.error('Comiketter: Failed to add buttons to tweet:', error);
+              });
+            }
           }
         });
         return;
       }
     }
+    
+    // ツイート要素でない場合も処理済みとしてマーク
+    this.processedElements.add(node);
   }
 
   /**
@@ -232,9 +242,18 @@ export class TweetObserver {
     const hasBookmarkButton = !!article.querySelector('.comiketter-bookmark-button');
     const hasDownloadButton = !!article.querySelector('.comiketter-download-button');
     
-
+    // どちらかのボタンが既に存在する場合は追加しない
+    if (hasBookmarkButton || hasDownloadButton) {
+      console.log('Comiketter: 既にボタンが存在するためスキップ', {
+        hasBookmarkButton,
+        hasDownloadButton,
+        article: article.tagName,
+        tweetId: article.getAttribute('data-testid')
+      });
+      return false;
+    }
     
-    return !hasBookmarkButton;
+    return true;
   }
 
   /**
@@ -242,6 +261,15 @@ export class TweetObserver {
    */
   private async addButtonsToTweet(article: HTMLElement): Promise<void> {
     try {
+      // 最終チェック：既にボタンが存在する場合は処理を中止
+      if (!this.shouldAddButtons(article)) {
+        console.log('Comiketter: 最終チェックでボタン追加を中止', {
+          article: article.tagName,
+          tweetId: article.getAttribute('data-testid')
+        });
+        return;
+      }
+
       // ツイート情報を取得
       const tweetInfo = getTweetInfoFromArticle(article);
       if (!tweetInfo) {
@@ -257,8 +285,23 @@ export class TweetObserver {
       // ボタンを作成
       const buttons = await this.buttonFactory.createButtonsForTweet(tweetInfo);
 
+      // 最終チェック：ボタン作成後に再度チェック
+      if (!this.shouldAddButtons(article)) {
+        console.log('Comiketter: ボタン作成後の最終チェックで中止', {
+          article: article.tagName,
+          tweetId: article.getAttribute('data-testid')
+        });
+        return;
+      }
+
       // アクションバーに挿入（順序を制御）
       this.buttonFactory.insertButtonsToActionBar(actionBar, buttons);
+      
+      console.log('Comiketter: ボタン追加完了', {
+        article: article.tagName,
+        tweetId: article.getAttribute('data-testid'),
+        buttonCount: buttons.length
+      });
       
     } catch (error) {
       console.error('Comiketter: Failed to add buttons:', error);
