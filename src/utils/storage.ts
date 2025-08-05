@@ -330,7 +330,8 @@ export class StorageManager {
    */
   static async getDownloadHistoryById(id: string): Promise<DownloadHistory | undefined> {
     try {
-      return await downloadHistoryDB.getDownloadHistoryById(id);
+      const result = await downloadHistoryDB.getDownloadHistoryById(id);
+      return result || undefined;
     } catch (error) {
       console.error('Failed to get download history by ID:', error);
       throw error;

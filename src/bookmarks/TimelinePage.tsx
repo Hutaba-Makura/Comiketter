@@ -9,10 +9,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
   AppShell, 
-  Header, 
-  Navbar, 
-  Main, 
-  Aside, 
   Container, 
   Title, 
   LoadingOverlay, 
@@ -306,7 +302,7 @@ export const TimelinePage: React.FC = () => {
           ) : (
             <div style={{ textAlign: 'center', padding: '2rem' }}>
               <IconBookmark size={48} color="#ccc" />
-              <Title order={4} mt="md" color="dimmed">
+              <Title order={4} mt="md" c="dimmed">
                 ブックマークを選択してください
               </Title>
               <Text color="dimmed" mt="sm">
@@ -320,10 +316,10 @@ export const TimelinePage: React.FC = () => {
       {/* 右サイドバー - 現在は空 */}
       <AppShell.Aside p="md">
         <div style={{ textAlign: 'center', padding: '2rem' }}>
-          <Text color="dimmed" size="sm">
+          <Text c="dimmed" size="sm">
             右サイドバー
           </Text>
-          <Text color="dimmed" size="xs" mt="xs">
+          <Text c="dimmed" size="xs" mt="xs">
             将来の機能用
           </Text>
         </div>

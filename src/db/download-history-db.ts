@@ -327,6 +327,13 @@ export class DownloadHistoryDatabase {
   }
 
   /**
+   * 日付範囲でダウンロード履歴を検索
+   */
+  async getDownloadHistoryByDateRange(startDate: string, endDate: string): Promise<DownloadHistoryDB[]> {
+    return this.searchDownloadHistory({ startDate, endDate });
+  }
+
+  /**
    * ダウンロード履歴を検索
    */
   async searchDownloadHistory(params: DownloadHistorySearchParams): Promise<DownloadHistoryDB[]> {

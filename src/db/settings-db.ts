@@ -296,7 +296,7 @@ export class SettingsDatabase {
       if (chrome?.storage?.local?.clear) {
         await chrome.storage.local.clear();
       } else {
-        await this.saveSettingsToStorage({});
+        await this.saveSettingsToStorage([]);
       }
     }
   }
