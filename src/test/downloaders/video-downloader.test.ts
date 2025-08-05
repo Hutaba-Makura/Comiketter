@@ -280,6 +280,15 @@ describe('VideoDownloader', () => {
       const { ApiCacheManager } = require('../../utils/api-cache');
       ApiCacheManager.findTweetById.mockResolvedValue(mockVideoTweet);
 
+      // getSettingsメソッドをモック
+      jest.spyOn(videoDownloader as any, 'getSettings').mockResolvedValue({
+        filenameSettings: {
+          pattern: '{author}_{date}_{tweetId}',
+          directory: 'Comiketter'
+        },
+        downloadMethod: 'chrome_downloads'
+      });
+
       const request = { tweetId: '1234567890' };
       const result = await videoDownloader.downloadVideo(request);
 
@@ -301,7 +310,7 @@ describe('VideoDownloader', () => {
 
     it('動画がないツイートの場合はエラーを返す', async () => {
       const { ApiCacheManager } = require('../../utils/api-cache');
-      ApiCacheManager.findTweetById.mockResolvedValue(mockImageTweet);
+      ApiCacheManager.findTweetById.mockResolvedValue(mockTextTweet); // テキストのみのツイートを使用
 
       const request = { tweetId: '1234567892' };
       const result = await videoDownloader.downloadVideo(request);

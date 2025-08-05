@@ -37,7 +37,7 @@ beforeAll(() => {
 
 // 各テストでIndexedDBを無効化
 beforeEach(() => {
-  const { bookmarkDB } = require('../utils/bookmarkDB');
+  const { bookmarkDB } = require('../db/bookmark-db');
   bookmarkDB.setUseIndexedDBForTest(false);
 });
 

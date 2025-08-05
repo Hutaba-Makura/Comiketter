@@ -2,7 +2,7 @@
  * CB用IndexedDBテスト
  */
 
-import { bookmarkDB, type BookmarkDB, type BookmarkedTweetDB } from '../utils/bookmarkDB';
+import { bookmarkDB, type BookmarkDB, type BookmarkedTweetDB } from '../db/bookmark-db';
 
 jest.setTimeout(10000);
 

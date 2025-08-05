@@ -2,8 +2,8 @@
 import type { Settings, CustomBookmark, BookmarkedTweet, DownloadHistory, BookmarkStats } from '@/types';
 import { FilenameSettingProps, AppSettings, PatternToken, AggregationToken } from '../types';
 import { FilenameGenerator } from './filenameGenerator';
-import { downloadHistoryDB, type DownloadHistoryDB, type DownloadHistoryStats } from './downloadHistoryDB';
-import { bookmarkDB, type BookmarkDB, type BookmarkedTweetDB } from './bookmarkDB';
+import { downloadHistoryDB, type DownloadHistoryDB, type DownloadHistoryStats } from '../db/download-history-db';
+import { bookmarkDB, type BookmarkDB, type BookmarkedTweetDB } from '../db/bookmark-db';
 
 // ストレージキー定数
 const STORAGE_KEYS = {
@@ -321,6 +321,18 @@ export class StorageManager {
       return savedHistory;
     } catch (error) {
       console.error('Failed to add download history:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * IDでダウンロード履歴を取得
+   */
+  static async getDownloadHistoryById(id: string): Promise<DownloadHistory | undefined> {
+    try {
+      return await downloadHistoryDB.getDownloadHistoryById(id);
+    } catch (error) {
+      console.error('Failed to get download history by ID:', error);
       throw error;
     }
   }

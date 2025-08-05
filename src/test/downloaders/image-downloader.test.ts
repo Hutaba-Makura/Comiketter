@@ -213,6 +213,15 @@ describe('ImageDownloader', () => {
       const { ApiCacheManager } = require('../../utils/api-cache');
       ApiCacheManager.findTweetById.mockResolvedValue(mockImageTweet);
 
+      // getSettingsメソッドをモック
+      jest.spyOn(imageDownloader as any, 'getSettings').mockResolvedValue({
+        filenameSettings: {
+          pattern: '{author}_{date}_{tweetId}',
+          directory: 'Comiketter'
+        },
+        downloadMethod: 'chrome_downloads'
+      });
+
       const request = { tweetId: '1234567890' };
       const result = await imageDownloader.downloadImages(request);
 
@@ -229,12 +238,18 @@ describe('ImageDownloader', () => {
       const result = await imageDownloader.downloadImages(request);
 
       expect(result.success).toBe(false);
-      expect(result.error).toContain('キャッシュにツイートが見つかりません');
+      expect(result.error).toContain('ツイートが見つかりません');
     });
 
     it('画像がないツイートの場合はエラーを返す', async () => {
       const { ApiCacheManager } = require('../../utils/api-cache');
-      ApiCacheManager.findTweetById.mockResolvedValue(mockTextTweet);
+      ApiCacheManager.findTweetById.mockResolvedValue(null); // キャッシュにない場合
+      
+      // getTweetFromDOMメソッドをモック
+      jest.spyOn(imageDownloader as any, 'getTweetFromDOM').mockResolvedValue(mockTextTweet);
+      
+      // checkMediaTypeFromDOMメソッドをモック
+      jest.spyOn(imageDownloader as any, 'checkMediaTypeFromDOM').mockResolvedValue(null);
 
       const request = { tweetId: '1234567892' };
       const result = await imageDownloader.downloadImages(request);

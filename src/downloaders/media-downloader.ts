@@ -420,7 +420,9 @@ export class MediaDownloader {
         tweetDate: tweet.created_at
       };
 
+      // 履歴を保存してから少し待機（データベースの書き込み完了を待つ）
       await StorageManager.addDownloadHistory(downloadHistory);
+      await new Promise(resolve => setTimeout(resolve, 100)); // 100ms待機
 
       console.log(`📱 Comiketter: ${mediaType === 'image' ? '画像' : '動画'}ダウンロード成功 - ${filename}`);
       return {

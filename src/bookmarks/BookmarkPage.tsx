@@ -9,8 +9,8 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Title, Tabs, LoadingOverlay, Alert, Group, Button, Modal, TextInput, Textarea, Stack, Text } from '@mantine/core';
 import { IconAlertCircle, IconPlus, IconEdit, IconTrash, IconDatabase } from '@tabler/icons-react';
-import type { BookmarkDB, BookmarkedTweetDB } from '../utils/bookmarkDB';
-import { bookmarkDB } from '../utils/bookmarkDB';
+import type { BookmarkDB, BookmarkedTweetDB } from '../db/bookmark-db';
+import { bookmarkDB } from '../db/bookmark-db';
 import { TweetTimeline } from './TweetTimeline';
 
 export const BookmarkPage: React.FC = () => {
