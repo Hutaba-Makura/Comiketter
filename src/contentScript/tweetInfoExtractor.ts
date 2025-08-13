@@ -280,6 +280,7 @@ function extractCreatedAt(article: HTMLElement): string | null {
 /**
  * メディアの存在をチェック
  */
+/* TODO: 引用リツイート元も除外する処理を追加する */
 function checkHasMedia(article: HTMLElement): boolean {
   // 画像の存在チェック（プロフィール画像とバナー画像を除外）
   // より具体的なセレクターを使用してツイート内の画像を検出

@@ -324,8 +324,8 @@ describe('ApiProcessor', () => {
   });
 
   describe('processApiResponseWithoutCache', () => {
-    it('キャッシュ無効でツイートを抽出できる', () => {
-      const result = apiProcessor.processApiResponseWithoutCache(mockApiResponse);
+    it('キャッシュ無効でツイートを抽出できる', async () => {
+      const result = await apiProcessor.processApiResponseWithoutCache(mockApiResponse);
 
       expect(result.tweets).toHaveLength(2);
       expect(result.errors).toHaveLength(0);

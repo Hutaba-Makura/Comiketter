@@ -126,7 +126,7 @@ describe('ApiProcessor Debug with Real Data', () => {
     expect(timelineEntries.entries.length).toBeGreaterThan(0);
     
     // キャッシュ無効でテスト
-    const result = apiProcessor.processApiResponseWithoutCache(apiResponseMessage);
+    const result = await apiProcessor.processApiResponseWithoutCache(apiResponseMessage);
     
     // 結果を確認
     expect(result.tweets.length).toBeGreaterThan(0);
@@ -139,7 +139,7 @@ describe('ApiProcessor Debug with Real Data', () => {
     }
   });
 
-  it('processApiResponseWithoutCacheの詳細テスト', () => {
+  it('processApiResponseWithoutCacheの詳細テスト', async () => {
     const apiResponseMessage = {
       path: 'https://x.com/i/api/graphql/HomeLatestTimeline',
       timestamp: Date.now(),
@@ -164,7 +164,7 @@ describe('ApiProcessor Debug with Real Data', () => {
     expect(tweetResult.length).toBeGreaterThan(0);
     
     // processApiResponseWithoutCacheの動作を確認
-    const result = apiProcessor.processApiResponseWithoutCache(apiResponseMessage);
+    const result = await apiProcessor.processApiResponseWithoutCache(apiResponseMessage);
     
     expect(result.tweets.length).toBeGreaterThan(0);
     expect(result.errors.length).toBe(0);
