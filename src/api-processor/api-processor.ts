@@ -63,6 +63,8 @@ export class ApiProcessor {
         case 'BookmarkSearchTimeline':
         case 'UserTweets':
         case 'UserTweetsAndReplies':
+        case 'Likes':
+        case 'UserHighlightsTweets':
           // processTweetRelatedApiが期待する形式に変換
           const tweetData = { data: message.data };
           const processedTweets = this.processTweetRelatedApi(tweetData);
@@ -98,7 +100,7 @@ export class ApiProcessor {
   /**
    * キャッシュ機能を使用せずに直接処理（デバッグ用）
    */
-  processApiResponseWithoutCache(message: ApiResponseMessage): ApiProcessingResult {
+  async processApiResponseWithoutCache(message: ApiResponseMessage): Promise<ApiProcessingResult> {
     const result: ApiProcessingResult = {
       tweets: [],
       errors: []
@@ -118,8 +120,8 @@ export class ApiProcessor {
       switch (apiType) {
         case 'HomeTimeline':
         case 'HomeLatestTimeline':
-        case 'ListLatestTweetsTimeline':
         case 'TweetDetail':
+        case 'ListLatestTweetsTimeline':
         case 'SearchTimeline':
         case 'CommunityTweetsTimeline':
         case 'CommunityTweetSearchModuleQuery':
@@ -127,14 +129,14 @@ export class ApiProcessor {
         case 'BookmarkSearchTimeline':
         case 'UserTweets':
         case 'UserTweetsAndReplies':
+        case 'Likes':
+        case 'UserHighlightsTweets':
           console.log(`Comiketter: ツイート関連API処理開始 - ${apiType}`);
           // processTweetRelatedApiが期待する形式に変換
           const tweetData = { data: message.data };
           const processedTweets = this.processTweetRelatedApi(tweetData);
-          console.log(`Comiketter: ツイート関連API処理完了 - 抽出数: ${processedTweets.length}`);
           result.tweets = processedTweets;
           break;
-          
         default:
           console.log(`Comiketter: 未対応のAPIタイプ: ${apiType}`);
           break;
@@ -167,6 +169,8 @@ export class ApiProcessor {
       if (path.includes('HomeLatestTimeline')) return 'HomeLatestTimeline';
       if (path.includes('HomeTimeline')) return 'HomeTimeline';
       if (path.includes('TweetDetail')) return 'TweetDetail';
+      if (path.includes('Likes')) return 'Likes';
+      if (path.includes('UserHighlightsTweets')) return 'UserHighlightsTweets';
       if (path.includes('CreateBookmarks')) return 'CreateBookmarks';
       if (path.includes('DeleteBookmark')) return 'DeleteBookmark';
       if (path.includes('FavoriteTweet')) return 'FavoriteTweet';
@@ -174,6 +178,8 @@ export class ApiProcessor {
       if (path.includes('CreateRetweet')) return 'CreateRetweet';
       if (path.includes('DeleteRetweet')) return 'DeleteRetweet';
       if (path.includes('CreateTweet')) return 'CreateTweet';
+      if (path.includes('UserMedia')) return 'UserMedia';
+      if (path.includes('NotificationsTimeline')) return 'NotificationsTimeline';
       if (path.includes('useUpsellTrackingMutation')) return 'useUpsellTrackingMutation';
     }
 
@@ -441,11 +447,15 @@ export class ApiProcessor {
    */
   private isOperationApi(apiType: ApiType): boolean {
     return [
+      'CreateBookmarks',
+      'DeleteBookmark',
       'FavoriteTweet',
       'UnfavoriteTweet',
       'CreateRetweet',
       'DeleteRetweet',
       'CreateTweet',
+      'UserMedia',
+      'NotificationsTimeline',
       'useUpsellTrackingMutation'
     ].includes(apiType);
   }

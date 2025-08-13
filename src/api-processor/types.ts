@@ -88,6 +88,8 @@ export type ApiType =
   | 'BookmarkSearchTimeline'
   | 'UserTweets'
   | 'UserTweetsAndReplies'
+  | 'Likes'
+  | 'UserHighlightsTweets'
   | 'CreateBookmarks'
   | 'DeleteBookmark'
   | 'FavoriteTweet'
@@ -95,5 +97,7 @@ export type ApiType =
   | 'CreateRetweet'
   | 'DeleteRetweet'
   | 'CreateTweet'
+  | 'UserMedia'
+  | 'NotificationsTimeline'
   | 'useUpsellTrackingMutation'
   | 'Unknown'; 

@@ -712,6 +712,8 @@ export class MessageHandler {
       if (path.includes('BookmarkSearchTimeline')) return 'BookmarkSearchTimeline';
       if (path.includes('UserTweets')) return 'UserTweets';
       if (path.includes('UserTweetsAndReplies')) return 'UserTweetsAndReplies';
+      if (path.includes('Likes')) return 'Likes';
+      if (path.includes('UserHighlightsTweets')) return 'UserHighlightsTweets';
       if (path.includes('CreateBookmarks')) return 'CreateBookmarks';
       if (path.includes('DeleteBookmark')) return 'DeleteBookmark';
       if (path.includes('FavoriteTweet')) return 'FavoriteTweet';
@@ -719,6 +721,8 @@ export class MessageHandler {
       if (path.includes('CreateRetweet')) return 'CreateRetweet';
       if (path.includes('DeleteRetweet')) return 'DeleteRetweet';
       if (path.includes('CreateTweet')) return 'CreateTweet';
+      if (path.includes('UserMedia')) return 'UserMedia';
+      if (path.includes('NotificationsTimeline')) return 'NotificationsTimeline';
       if (path.includes('useUpsellTrackingMutation')) return 'useUpsellTrackingMutation';
       return 'GraphQL';
     }
@@ -735,11 +739,15 @@ export class MessageHandler {
    */
   private isOperationApi(apiType: string): boolean {
     return [
+      'CreateBookmarks',
+      'DeleteBookmark',
       'FavoriteTweet',
       'UnfavoriteTweet',
       'CreateRetweet',
       'DeleteRetweet',
       'CreateTweet',
+      'UserMedia',
+      'NotificationsTimeline',
       'useUpsellTrackingMutation'
     ].includes(apiType);
   }

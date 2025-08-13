@@ -46,7 +46,7 @@ function cleanupOldFetchRequests(): void {
 
 const Pattern = Object.freeze({
   tweetRelated:
-    /^(?:\/i\/api)?\/graphql\/(?<queryId>.+)?\/(?<queryName>TweetDetail|HomeTimeline|HomeLatestTimeline|ListLatestTweetsTimeline|SearchTimeline|CommunityTweetsTimeline|CommunityTweetSearchModuleQuery|Bookmarks|BookmarkSearchTimeline|UserTweets|UserTweetsAndReplies|CreateBookmarks|DeleteBookmark|FavoriteTweet|UnfavoriteTweet|CreateRetweet|DeleteRetweet|CreateTweet|useUpsellTrackingMutation)$/,
+    /^(?:\/i\/api)?\/graphql\/(?<queryId>.+)?\/(?<queryName>TweetDetail|HomeTimeline|HomeLatestTimeline|ListLatestTweetsTimeline|SearchTimeline|CommunityTweetsTimeline|CommunityTweetSearchModuleQuery|Bookmarks|BookmarkSearchTimeline|UserTweets|UserTweetsAndReplies|Likes|UserHighlightsTweets|CreateBookmarks|DeleteBookmark|FavoriteTweet|UnfavoriteTweet|CreateRetweet|DeleteRetweet|CreateTweet|UserMedia|NotificationsTimeline|useUpsellTrackingMutation)$/,
 });
 
 // API種類の定義
@@ -62,6 +62,8 @@ const ApiTypes = {
   BookmarkSearchTimeline: 'BookmarkSearchTimeline',
   UserTweets: 'UserTweets',
   UserTweetsAndReplies: 'UserTweetsAndReplies',
+  Likes: 'Likes',
+  UserHighlightsTweets: 'UserHighlightsTweets',
   CreateBookmarks: 'CreateBookmarks',
   DeleteBookmark: 'DeleteBookmark',
   FavoriteTweet: 'FavoriteTweet',
@@ -69,6 +71,8 @@ const ApiTypes = {
   CreateRetweet: 'CreateRetweet',
   DeleteRetweet: 'DeleteRetweet',
   CreateTweet: 'CreateTweet',
+  UserMedia: 'UserMedia',
+  NotificationsTimeline: 'NotificationsTimeline',
   useUpsellTrackingMutation: 'useUpsellTrackingMutation',
 } as const;
 
@@ -85,6 +89,8 @@ const ApiTypeLabels: Record<string, string> = {
   [ApiTypes.BookmarkSearchTimeline]: 'ブックマーク検索タイムライン',
   [ApiTypes.UserTweets]: 'ユーザーツイート',
   [ApiTypes.UserTweetsAndReplies]: 'ユーザー返信',
+  [ApiTypes.Likes]: 'ユーザーいいね',
+  [ApiTypes.UserHighlightsTweets]: 'ユーザーハイライトツイート',
   [ApiTypes.CreateBookmarks]: 'ブックマーク作成',
   [ApiTypes.DeleteBookmark]: 'ブックマーク削除',
   [ApiTypes.FavoriteTweet]: 'ツイートいいね',
@@ -92,6 +98,8 @@ const ApiTypeLabels: Record<string, string> = {
   [ApiTypes.CreateRetweet]: 'リツイート作成',
   [ApiTypes.DeleteRetweet]: 'リツイート削除',
   [ApiTypes.CreateTweet]: 'ツイート作成',
+  [ApiTypes.UserMedia]: 'ユーザーメディア',
+  [ApiTypes.NotificationsTimeline]: '通知タイムライン',
   [ApiTypes.useUpsellTrackingMutation]: '画面縦横比変更追跡',
 };
 
