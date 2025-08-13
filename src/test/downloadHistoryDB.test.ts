@@ -2,7 +2,7 @@
  * DL履歴データベースのテスト
  */
 
-import { DownloadHistoryDatabase, type DownloadHistoryDB } from '../db/download-history-db';
+import { DownloadHistoryDatabase, type DownloadHistoryDB } from '../utils/downloadHistoryDB';
 
 // IndexedDBのモック
 const mockIndexedDB = {
@@ -141,12 +141,10 @@ describe('DownloadHistoryDatabase', () => {
       expect(result).toEqual(expect.objectContaining({
         ...history,
         id: expect.any(String),
-        downloadedAt: expect.any(String), // 動的な値なのでany(String)を使用
       }));
       expect(mockStore.add).toHaveBeenCalledWith(expect.objectContaining({
         ...history,
         id: expect.any(String),
-        downloadedAt: expect.any(String), // 動的な値なのでany(String)を使用
       }));
     });
   });
@@ -373,7 +371,7 @@ describe('DownloadHistoryDatabase', () => {
         success: 1,
         failed: 1,
         pending: 0,
-        totalSize: 1024, // 成功したダウンロードのfileSizeのみ合計
+        totalSize: 3072,
       });
     });
   });

@@ -9,45 +9,6 @@
 import { VideoDownloader } from '../../downloaders/video-downloader';
 import type { ProcessedTweet, ProcessedMedia } from '../../api-processor/types';
 
-// モック設定
-jest.mock('../../utils/api-cache', () => ({
-  ApiCacheManager: {
-    findTweetById: jest.fn()
-  }
-}));
-
-jest.mock('../../utils/storage', () => ({
-  StorageManager: {
-    addDownloadHistory: jest.fn().mockResolvedValue(undefined)
-  }
-}));
-
-jest.mock('../../utils/filenameGenerator', () => ({
-  FilenameGenerator: {
-    makeFilename: jest.fn().mockReturnValue('test_filename.mp4')
-  }
-}));
-
-// VideoDownloaderのgetSettingsメソッドをモック（より安全な方法）
-const mockGetSettings = jest.fn().mockResolvedValue({
-  downloadDirectory: 'test_dir',
-  filenamePattern: '{username}_{tweet_id}_{media_id}',
-  conflictAction: 'rename'
-});
-
-jest.mock('../../downloaders/video-downloader', () => {
-  const originalModule = jest.requireActual('../../downloaders/video-downloader');
-  const MockedVideoDownloader = jest.fn().mockImplementation(() => {
-    const instance = new originalModule.VideoDownloader();
-    instance.getSettings = mockGetSettings;
-    return instance;
-  });
-  return {
-    ...originalModule,
-    VideoDownloader: MockedVideoDownloader
-  };
-});
-
 // モックデータ
 const mockVideoTweet: ProcessedTweet = {
   id_str: '1234567890',
@@ -154,26 +115,6 @@ const mockImageTweet: ProcessedTweet = {
   ]
 };
 
-const mockTextTweet: ProcessedTweet = {
-  id_str: '1234567893',
-  full_text: 'テストテキストツイート',
-  created_at: 'Wed Oct 10 20:19:24 +0000 2018',
-  favorite_count: 10,
-  retweet_count: 5,
-  reply_count: 2,
-  quote_count: 1,
-  bookmarked: false,
-  favorited: false,
-  retweeted: false,
-  possibly_sensitive: false,
-  user: {
-    name: 'テストユーザー',
-    screen_name: 'testuser',
-    avatar_url: 'https://pbs.twimg.com/profile_images/test.jpg'
-  },
-  media: []
-};
-
 describe('VideoDownloader', () => {
   let videoDownloader: VideoDownloader;
 
@@ -205,18 +146,19 @@ describe('VideoDownloader', () => {
       } as any
     } as any;
 
-    // ApiCacheManager のモックをリセット
-    const { ApiCacheManager } = require('../../utils/api-cache');
-    ApiCacheManager.findTweetById.mockClear();
+    // ApiCacheManager のモック
+    jest.doMock('../../utils/api-cache', () => ({
+      ApiCacheManager: {
+        findTweetById: jest.fn()
+      }
+    }));
 
-    // StorageManager のモックをリセット
-    const { StorageManager } = require('../../utils/storage');
-    StorageManager.addDownloadHistory.mockClear();
-
-    // FilenameGenerator のモックをリセット
-    const { FilenameGenerator } = require('../../utils/filenameGenerator');
-    FilenameGenerator.makeFilename.mockClear();
-    FilenameGenerator.makeFilename.mockReturnValue('test_filename.mp4');
+    // StorageManager のモック
+    jest.doMock('../../utils/storage', () => ({
+      StorageManager: {
+        addDownloadHistory: jest.fn().mockResolvedValue(undefined)
+      }
+    }));
   });
 
   describe('extractVideoMedia', () => {
@@ -341,10 +283,6 @@ describe('VideoDownloader', () => {
       const request = { tweetId: '1234567890' };
       const result = await videoDownloader.downloadVideo(request);
 
-      if (!result.success) {
-        console.log('VideoDownloader test error:', result.error);
-      }
-
       expect(result.success).toBe(true);
       expect(result.downloadedFiles).toBeDefined();
       expect(result.tweetInfo).toBeDefined();
@@ -363,9 +301,9 @@ describe('VideoDownloader', () => {
 
     it('動画がないツイートの場合はエラーを返す', async () => {
       const { ApiCacheManager } = require('../../utils/api-cache');
-      ApiCacheManager.findTweetById.mockResolvedValue(mockTextTweet); // テキストのみのツイートを使用
+      ApiCacheManager.findTweetById.mockResolvedValue(mockImageTweet);
 
-      const request = { tweetId: '1234567893' };
+      const request = { tweetId: '1234567892' };
       const result = await videoDownloader.downloadVideo(request);
 
       expect(result.success).toBe(false);

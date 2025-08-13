@@ -162,14 +162,6 @@ export class DownloadManager {
       const downloadItem = await chrome.downloads.search({ id: downloadId });
       if (downloadItem.length > 0) {
         const historyId = downloadId.toString();
-        
-        // 履歴が存在するかチェックしてから更新
-        const existingHistory = await StorageManager.getDownloadHistoryById(historyId);
-        if (!existingHistory) {
-          console.warn(`Comiketter: Download history not found for ID: ${historyId}, skipping update`);
-          return;
-        }
-        
         await StorageManager.updateDownloadHistory(historyId, { 
           status: status,
           ...(status === 'success' && { 

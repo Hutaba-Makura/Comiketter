@@ -1,9 +1,6 @@
 // Jest setup file for testing environment
 import '@testing-library/jest-dom';
 
-// Set test environment
-process.env.NODE_ENV = 'test';
-
 // Mock chrome API for testing
 global.chrome = {
   runtime: {

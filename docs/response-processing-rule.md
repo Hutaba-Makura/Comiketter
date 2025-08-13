@@ -179,7 +179,7 @@ APIレスポンスから取り出すべきキー一覧
 
 | パス                                                | 説明                |
 | ------------------------------------------------- | ----------------- |
-| `tweet.legacy.id_str`                             | ツイートのID（文字列）※DL履歴のtweetIdとして使用      |
+| `tweet.legacy.id_str`                             | ツイートのID（文字列）      |
 | `tweet.legacy.full_text`                          | ツイート本文            |
 | `tweet.legacy.created_at`                         | ツイート作成日時          |
 | `tweet.legacy.favorite_count`                     | いいね数              |
@@ -217,11 +217,6 @@ APIレスポンスから取り出すべきキー一覧
 tweet.retweeted_status_result.result.legacy.full_text
 ```
 のようにアクセスします。
-
-### DL履歴との関連性
-- `tweet.legacy.id_str` → DL履歴の`tweetId`として使用
-- `tweet.core.user_results.result.core.screen_name` → DL履歴の`authorUsername`として使用
-- `tweet.core.user_results.result.core.name` → DL履歴の`authorDisplayName`として使用
 
 ## 保存用JSON構造の例（動画付きツイート）
 

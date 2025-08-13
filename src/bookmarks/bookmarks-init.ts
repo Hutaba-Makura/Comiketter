@@ -9,7 +9,7 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { MantineProvider } from '@mantine/core';
-import { TimelinePage } from './TimelinePage';
+import { BookmarkPage } from './BookmarkPage';
 
 // Mantineテーマ設定
 const theme = {
@@ -46,7 +46,7 @@ const theme = {
 };
 
 // ページの初期化
-const initializeTimelinePage = async (): Promise<void> => {
+const initializeBookmarkPage = async (): Promise<void> => {
   const container = document.getElementById('root');
   if (!container) {
     console.error('Comiketter: Root container not found');
@@ -58,20 +58,20 @@ const initializeTimelinePage = async (): Promise<void> => {
     const root = createRoot(container);
     root.render(
       React.createElement(MantineProvider, { theme },
-        React.createElement(TimelinePage)
+        React.createElement(BookmarkPage)
       )
     );
     
-    console.log('Comiketter: Timeline page initialized successfully');
+    console.log('Comiketter: Bookmark page initialized successfully');
   } catch (error) {
-    console.error('Comiketter: Failed to initialize timeline page:', error);
+    console.error('Comiketter: Failed to initialize bookmark page:', error);
     container.innerHTML = '<div style="text-align: center; padding: 20px; color: #657786;">読み込みに失敗しました</div>';
   }
 };
 
 // DOM読み込み完了後に初期化
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initializeTimelinePage);
+  document.addEventListener('DOMContentLoaded', initializeBookmarkPage);
 } else {
-  initializeTimelinePage();
+  initializeBookmarkPage();
 } 

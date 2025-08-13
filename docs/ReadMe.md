@@ -8,7 +8,6 @@
 
 - **タイムライン自動更新抑止**: コミケ参加者の収集・整理・参照体験向上
 - **カスタムブックマーク（CB）管理**: 柔軟なブックマーク分類と管理
-- **TL風ページ**: 左サイドバーにCBリスト、中央にツイートTL、画像拡大表示機能
 - **画像・動画の自動保存**: TwitterMediaHarvest準拠のメディアダウンロード
 - **動画サムネイル除外機能**: 不要なサムネイル画像の除外
 - **プロフィール画像・バナー画像除外機能**: メディアの自動除外設定
@@ -16,7 +15,6 @@
 - **ファイル名・パス設定機能**: 13種類のパターントークン対応
 - **API傍受機能**: X APIの自動傍受とキャッシュ
 - **ダウンロード履歴管理**: IndexedDBベースの履歴管理
-- **統合DB管理**: ブックマーク、ダウンロード履歴、設定の一元管理
 
 ### 🔧 技術的特徴
 
@@ -88,20 +86,10 @@ src/
 │   ├── downloadManager.ts
 │   └── downloadTestManager.ts
 ├── bookmarks/         # ブックマークページ
-│   ├── TimelinePage.tsx
-│   ├── BookmarkSidebar.tsx
-│   ├── TweetTimeline.tsx
-│   ├── ImageModal.tsx
 │   ├── BookmarkPage.tsx
 │   ├── BookmarkList.tsx
 │   ├── BookmarkDetail.tsx
 │   └── index.tsx
-├── db/               # データベース関連
-│   ├── bookmark-db.ts
-│   ├── download-history-db.ts
-│   ├── settings-db.ts
-│   ├── database-manager.ts
-│   └── index.ts
 ├── components/        # 再利用可能なUIコンポーネント
 │   ├── BookmarkSelector.tsx
 │   ├── BookmarkManager.tsx
@@ -140,7 +128,9 @@ src/
 │   └── api.d.ts
 └── utils/            # ユーティリティ関数
     ├── api-cache.ts
+    ├── bookmarkDB.ts
     ├── bookmarkApiClient.ts
+    ├── downloadHistoryDB.ts
     ├── filenameGenerator.ts
     ├── storage.ts
     ├── logger.ts
@@ -150,7 +140,7 @@ src/
 
 ## 📊 開発進捗
 
-### ✅ 完了済み（90%）
+### ✅ 完了済み（87%）
 
 - **基盤機能**: 100% 完了
   - TypeScript + React + Webpack環境構築
@@ -174,14 +164,12 @@ src/
   - 検索・フィルタリング機能
   - DL履歴管理UIコンポーネント
 
-- **カスタムブックマーク**: 95% 完了
+- **カスタムブックマーク**: 90% 完了
   - 基本データ構造設計
   - ブックマーク作成・編集・削除機能
   - ツイート保存機能
   - ブックマーク選択UI
   - データ永続化（IndexedDB）
-  - TL風ページ実装
-  - 画像拡大表示機能
 
 - **API傍受**: 80% 完了
   - X API傍受の基本実装

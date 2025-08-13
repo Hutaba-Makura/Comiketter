@@ -9,9 +9,7 @@ const config: Config = {
     '**/*.(test|spec).+(ts|tsx|js)',
   ],
   transform: {
-    '^.+\\.(ts|tsx)$': ['ts-jest', {
-      tsconfig: 'tsconfig.json',
-    }],
+    '^.+\\.(ts|tsx)$': 'ts-jest',
   },
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
@@ -23,12 +21,10 @@ const config: Config = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
-  testTimeout: 120000,
-  testEnvironmentOptions: {
-    customExportConditions: ['node', 'node-addons'],
-  },
   globals: {
-    'process.env.NODE_ENV': 'test',
+    'ts-jest': {
+      tsconfig: 'tsconfig.json',
+    },
   },
 };
 

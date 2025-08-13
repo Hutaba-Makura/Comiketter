@@ -28,18 +28,16 @@ import {
   IconVideo,
   IconLink
 } from '@tabler/icons-react';
-import type { BookmarkedTweetDB } from '../db/bookmark-db';
+import type { BookmarkedTweetDB } from '../utils/bookmarkDB';
 
 interface TweetTimelineProps {
   tweets: BookmarkedTweetDB[];
   onTweetClick?: (tweetId: string) => void;
-  onImageClick?: (imageUrl: string) => void;
 }
 
 export const TweetTimeline: React.FC<TweetTimelineProps> = ({
   tweets,
-  onTweetClick,
-  onImageClick
+  onTweetClick
 }) => {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -105,18 +103,7 @@ export const TweetTimeline: React.FC<TweetTimelineProps> = ({
                 height: 80,
                 borderRadius: 8,
                 overflow: 'hidden',
-                flex: imageUrls.length === 1 ? 'none' : 1,
-                cursor: 'pointer',
-                transition: 'transform 0.2s ease',
-                '&:hover': {
-                  transform: 'scale(1.05)',
-                }
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                if (onImageClick) {
-                  onImageClick(url);
-                }
+                flex: imageUrls.length === 1 ? 'none' : 1
               }}
             >
               <Image

@@ -34,10 +34,6 @@ export class BookmarkManager {
    */
   async initialize(): Promise<void> {
     try {
-      // テスト環境では初期化をスキップ
-      if (process.env.NODE_ENV === 'test') {
-        return;
-      }
       this.bookmarks = await StorageManager.getCustomBookmarks();
       console.log('BookmarkManager initialized with', this.bookmarks.length, 'bookmarks');
     } catch (error) {
@@ -49,10 +45,6 @@ export class BookmarkManager {
    * 全ブックマークを取得
    */
   async getBookmarks(): Promise<CustomBookmark[]> {
-    // テスト環境では直接ストレージから取得
-    if (process.env.NODE_ENV === 'test') {
-      return await StorageManager.getCustomBookmarks();
-    }
     return this.bookmarks;
   }
 
@@ -67,10 +59,7 @@ export class BookmarkManager {
       isActive: true,
     });
 
-    // テスト環境ではメモリに追加しない
-    if (process.env.NODE_ENV !== 'test') {
-      this.bookmarks.push(newBookmark);
-    }
+    this.bookmarks.push(newBookmark);
     return newBookmark;
   }
 
@@ -80,12 +69,9 @@ export class BookmarkManager {
   async updateBookmark(id: string, updates: Partial<CustomBookmark>): Promise<void> {
     await StorageManager.updateCustomBookmark(id, updates);
     
-    // テスト環境ではメモリ更新をスキップ
-    if (process.env.NODE_ENV !== 'test') {
-      const index = this.bookmarks.findIndex(b => b.id === id);
-      if (index !== -1) {
-        this.bookmarks[index] = { ...this.bookmarks[index], ...updates };
-      }
+    const index = this.bookmarks.findIndex(b => b.id === id);
+    if (index !== -1) {
+      this.bookmarks[index] = { ...this.bookmarks[index], ...updates };
     }
   }
 
@@ -94,10 +80,7 @@ export class BookmarkManager {
    */
   async deleteBookmark(id: string): Promise<void> {
     await StorageManager.deleteCustomBookmark(id);
-    // テスト環境ではメモリ更新をスキップ
-    if (process.env.NODE_ENV !== 'test') {
-      this.bookmarks = this.bookmarks.filter(b => b.id !== id);
-    }
+    this.bookmarks = this.bookmarks.filter(b => b.id !== id);
   }
 
   /**
@@ -277,12 +260,7 @@ export class BookmarkManager {
     const bookmarkedTweets = await this.getBookmarkedTweetByTweetId(tweetId);
     const bookmarkIds = [...new Set(bookmarkedTweets.map(tweet => tweet.bookmarkId))];
     
-    let bookmarksToFilter = this.bookmarks;
-    if (process.env.NODE_ENV === 'test') {
-      bookmarksToFilter = await StorageManager.getCustomBookmarks();
-    }
-    
-    return bookmarksToFilter.filter(bookmark => bookmarkIds.includes(bookmark.id));
+    return this.bookmarks.filter(bookmark => bookmarkIds.includes(bookmark.id));
   }
 
   /**
@@ -290,13 +268,7 @@ export class BookmarkManager {
    */
   async searchBookmarks(query: string): Promise<CustomBookmark[]> {
     const lowerQuery = query.toLowerCase();
-    let bookmarksToSearch = this.bookmarks;
-    
-    if (process.env.NODE_ENV === 'test') {
-      bookmarksToSearch = await StorageManager.getCustomBookmarks();
-    }
-    
-    return bookmarksToSearch.filter(bookmark => 
+    return this.bookmarks.filter(bookmark => 
       bookmark.name.toLowerCase().includes(lowerQuery) ||
       (bookmark.description && bookmark.description.toLowerCase().includes(lowerQuery))
     );
@@ -333,12 +305,7 @@ export class BookmarkManager {
     }
     
     // 重複チェック
-    let bookmarksToCheck = this.bookmarks;
-    if (process.env.NODE_ENV === 'test') {
-      bookmarksToCheck = await StorageManager.getCustomBookmarks();
-    }
-    
-    const existingBookmark = bookmarksToCheck.find(b => 
+    const existingBookmark = this.bookmarks.find(b => 
       b.name.toLowerCase() === name.toLowerCase() && b.id !== excludeId
     );
     
