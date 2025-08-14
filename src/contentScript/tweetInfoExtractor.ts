@@ -292,7 +292,9 @@ function checkHasMedia(article: HTMLElement): boolean {
     if (src) {
       // プロフィール画像とバナー画像を除外
       if (!isProfileOrBannerImage(src) && !isVideoThumbnail(src)) {
-        hasValidImage = true;
+        if (!isQuoteTweet(article, img as HTMLImageElement)) {
+          hasValidImage = true;
+        }
       }
     }
   });
@@ -456,4 +458,54 @@ export function getMediaType(article: HTMLElement): 'image' | 'video' | 'animate
     return 'image';
   }
   return null;
+}
+
+/**
+ * 画像要素が「引用RT 側カード」に属しているなら true を返す
+ * @param article - ツイート全体の <article data-testid="tweet">
+ * @param img - 判定したい画像要素
+ */
+export function isQuoteTweet(article: HTMLElement, img: HTMLImageElement): boolean {
+  if (!article || !img) return false;
+
+  // 画像のカード要素を取得
+  const card = img.closest('[data-testid="tweetPhoto"]')?.closest('[role="link"]') as HTMLElement | null;
+  if (!card) return false;
+
+  // 引用ラベルを検索する関数
+  const hasQuoteLabel = (element: Element): boolean => {
+    const text = (element.textContent || '').trim();
+    return /引用|Quoted/i.test(text);
+  };
+
+  // 1. aria-labelledby による引用セクション判定
+  const section = card.closest('[aria-labelledby]') as HTMLElement | null;
+  if (section) {
+    const cssEscape = (window as any).CSS?.escape ?? ((s: string) => s.replace(/[^a-zA-Z0-9_\-]/g, '\\$&'));
+    const labelledBy = section.getAttribute('aria-labelledby') ?? '';
+    const hasLabel = labelledBy.split(/\s+/).filter(Boolean)
+      .some(id => {
+        const labelEl = section.querySelector('#' + cssEscape(id)) as HTMLElement | null;
+        return labelEl && hasQuoteLabel(labelEl);
+      });
+    if (hasLabel) return true;
+  }
+
+  // 2. フォールバック: 近傍要素の引用ラベル判定
+  const checkNearbyElements = (start: Element): boolean => {
+    // 直前の兄弟要素をチェック
+    for (let el = start.previousElementSibling; el; el = el.previousElementSibling) {
+      if (hasQuoteLabel(el)) return true;
+    }
+    // 親の兄弟要素もチェック
+    const parent = start.parentElement;
+    if (parent) {
+      for (let el = parent.previousElementSibling; el; el = el.previousElementSibling) {
+        if (hasQuoteLabel(el)) return true;
+      }
+    }
+    return false;
+  };
+
+  return checkNearbyElements(card);
 }
