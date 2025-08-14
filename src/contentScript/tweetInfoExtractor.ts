@@ -304,7 +304,10 @@ function checkHasImage(article: HTMLElement): boolean {
     allImages.forEach(img => {
       const src = img.getAttribute('src');
       if (src && src.includes('/media/') && !isProfileOrBannerImage(src) && !isVideoThumbnail(src)) {
-        hasValidImage = true;
+        // 引用リツイート内の画像も除外
+        if (!isQuoteTweet(article, img as HTMLImageElement)) {
+          hasValidImage = true;
+        }
       }
     });
   }
