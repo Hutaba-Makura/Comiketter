@@ -475,8 +475,9 @@ export function isQuoteTweet(article: HTMLElement, img: HTMLImageElement): boole
   // 引用ラベルを検索する関数
   const hasQuoteLabel = (element: Element): boolean => {
     const text = (element.textContent || '').trim();
-    return /引用|Quoted/i.test(text);
-  };
+    // 「引用」または「Quoted」「Quoted tweet」「Quoted post」のみを単独表示として許可
+    return /^(引用|Quoted(?:\s+(?:post|tweet))?)$/i.test(text);
+  };  
 
   // 1. aria-labelledby による引用セクション判定
   const section = card.closest('[aria-labelledby]') as HTMLElement | null;
