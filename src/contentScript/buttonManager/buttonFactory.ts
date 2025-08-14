@@ -56,8 +56,6 @@ export class ButtonFactory {
     // メディアが含まれているかチェック
     const hasMedia = !!(tweetInfo.media && tweetInfo.media.length > 0);
     
-
-    
     return hasMedia;
   }
 
