@@ -324,8 +324,8 @@ describe('ApiProcessor', () => {
   });
 
   describe('processApiResponseWithoutCache', () => {
-    it('キャッシュ無効でツイートを抽出できる', () => {
-      const result = apiProcessor.processApiResponseWithoutCache(mockApiResponse);
+    it('キャッシュ無効でツイートを抽出できる', async () => {
+      const result = await apiProcessor.processApiResponseWithoutCache(mockApiResponse);
 
       expect(result.tweets).toHaveLength(2);
       expect(result.errors).toHaveLength(0);
@@ -340,11 +340,12 @@ describe('ApiProcessor', () => {
         { path: 'https://x.com/i/api/graphql/TweetDetail', expected: 'TweetDetail' },
         { path: 'https://x.com/i/api/graphql/Bookmarks', expected: 'Bookmarks' },
         { path: 'https://x.com/i/api/graphql/Likes', expected: 'Likes' },
-        { path: 'https://x.com/i/api/graphql/CommunitiesExploreTimeline', expected: 'CommunitiesExploreTimeline' },
+        { path: 'https://x.com/i/api/graphql/UserHighlightsTweets', expected: 'UserHighlightsTweets' },
         { path: 'https://x.com/i/api/graphql/ListLatestTweetsTimeline', expected: 'ListLatestTweetsTimeline' },
         { path: 'https://x.com/i/api/graphql/UserMedia', expected: 'UserMedia' },
-        { path: 'https://x.com/i/api/favorites/create', expected: 'Favorite' },
-        { path: 'https://x.com/i/api/favorites/destroy', expected: 'Unfavorite' },
+        { path: 'https://x.com/i/api/graphql/NotificationsTimeline', expected: 'NotificationsTimeline' },
+        { path: 'https://x.com/i/api/favorites/create', expected: 'FavoriteTweet' },
+        { path: 'https://x.com/i/api/favorites/destroy', expected: 'UnfavoriteTweet' },
         { path: 'https://x.com/i/api/retweet/create', expected: 'CreateRetweet' },
         { path: 'https://x.com/i/api/unknown', expected: 'Unknown' }
       ];

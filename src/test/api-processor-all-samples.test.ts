@@ -55,7 +55,7 @@ describe('ApiProcessor All Samples Test', () => {
       expect(tweetResult.length).toBeGreaterThan(0);
 
       // processApiResponseWithoutCacheの動作を確認
-      const result = apiProcessor.processApiResponseWithoutCache(apiResponseMessage);
+      const result = await apiProcessor.processApiResponseWithoutCache(apiResponseMessage);
 
       // 結果を確認
       expect(result.tweets.length).toBeGreaterThan(0);
@@ -91,7 +91,7 @@ describe('ApiProcessor All Samples Test', () => {
       };
 
       // 処理を実行
-      const result = apiProcessor.processApiResponseWithoutCache(apiResponseMessage);
+      const result = await apiProcessor.processApiResponseWithoutCache(apiResponseMessage);
       
       results.push({
         name,
@@ -163,7 +163,7 @@ describe('ApiProcessor All Samples Test', () => {
       expect(tweetResult2.length).toBeGreaterThan(0);
 
       // processApiResponseWithoutCacheの動作を確認
-      const result = apiProcessor.processApiResponseWithoutCache(apiResponseMessage);
+      const result = await apiProcessor.processApiResponseWithoutCache(apiResponseMessage);
       expect(result.tweets.length).toBeGreaterThan(0);
       expect(result.errors.length).toBe(0);
     } else {

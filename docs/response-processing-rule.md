@@ -54,9 +54,10 @@ interface ApiProcessingResult {
   - `BookmarkSearchTimeline` - ブックマークの検索タイムライン
   - `UserTweets` - ユーザーのツイート
   - `UserTweetsAndReplies` - ユーザーの返信
+  - `Likes` - ユーザーのいいね
+  - `UserHighlightsTweets` - ユーザーのハイライトツイート
 - 使われているのが確認出来なかったAPI
   - `UserTweetsAndReplies` - ユーザーのツイートとリプライ
-  - `UserHighlightsTweets` - ユーザーのハイライトツイート
   - `UserArticlesTweets` - ユーザーの記事ツイート
   - `TweetResultByRestId` - REST IDによるツイート取得
   - `CommunitiesExploreTimeline` - コミュニティタイムライン
@@ -75,7 +76,6 @@ interface ApiProcessingResult {
   - `NotificationsTimeline` - 通知欄の読み込み （抽出不要）
   - `CreateTweet` - ツイート （抽出不要）
 - 使われているのが確認出来なかったAPI
-  - `Likes` - いいね
   - `UserByScreenName` - ユーザー情報のみのため処理対象外
   - `UserByRestId` - ユーザー情報のみのため処理対象外
   - `useUpsellTrackingMutation` - 追跡用のため処理対象外
