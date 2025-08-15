@@ -1,5 +1,6 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
+import CopyWebpackPlugin from 'copy-webpack-plugin';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -41,6 +42,27 @@ export default {
       '@': path.resolve(__dirname, 'src'),
     },
   },
+  plugins: [
+    new CopyWebpackPlugin({
+      patterns: [
+        // HTMLファイルをコピー
+        {
+          from: '*.html',
+          to: '[name][ext]',
+        },
+        // manifest.jsonをコピー
+        {
+          from: 'manifest.json',
+          to: 'manifest.json',
+        },
+        // アイコンファイルをコピー
+        {
+          from: 'icons',
+          to: 'icons',
+        },
+      ],
+    }),
+  ],
   mode: 'development',
   devtool: 'source-map',
 }; 

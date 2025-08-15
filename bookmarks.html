@@ -30,6 +30,12 @@
   <div id="root">
     <div class="loading">読み込み中...</div>
   </div>
-  <script type="module" src="./dist/bookmarks.js"></script>
+  <script>
+    // デバッグ用：拡張機能のコンテキストで実行されているか確認
+    console.log('Bookmarks page loaded');
+    console.log('Extension context:', typeof chrome !== 'undefined' && chrome.runtime);
+    console.log('Current URL:', window.location.href);
+  </script>
+  <script type="module" src="bookmarks.js"></script>
 </body>
 </html> 

@@ -44,21 +44,21 @@
   "chrome_url_overrides": {
     "bookmarks": "bookmarks.html"
   },
-  "icons": {
-    "16": "icons/icon16.png",
-    "32": "icons/icon32.png",
-    "48": "icons/icon48.png",
-    "128": "icons/icon128.png"
-  },
   "web_accessible_resources": [
     {
-      "resources": ["injected.js", "icons/*.svg"],
+      "resources": ["injected.js", "icons/*.svg", "dist/*.js"],
       "matches": [
         "https://twitter.com/*",
         "https://x.com/*"
       ]
     }
   ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'"
   }
