@@ -1,12 +1,13 @@
-/**
- * This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
- * 
- * Comiketter: ブックマーク関連コンポーネントのエクスポート
- */
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import BookmarkApp from './BookmarkApp';
 
-export { BookmarkPage } from './BookmarkPage';
-export { BookmarkList } from './BookmarkList';
-export { BookmarkDetail } from './BookmarkDetail';
-export { TweetTimeline } from './TweetTimeline'; 
+// DOM要素の取得
+const container = document.getElementById('root');
+if (!container) {
+  throw new Error('Root element not found');
+}
+
+// React 18のcreateRootを使用
+const root = createRoot(container);
+root.render(<BookmarkApp />); 
