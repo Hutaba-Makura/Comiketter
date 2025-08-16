@@ -28,7 +28,9 @@ interface CbStoreActions {
 /**
  * CBストアの型
  */
-type CbStore = CbStoreState & CbStoreActions;
+type CbStore = CbStoreState & CbStoreActions & {
+  selectedCb: Cb | undefined;
+};
 
 /**
  * CBストアの作成
@@ -39,6 +41,12 @@ export const useCbStore = create<CbStore>((set, get) => ({
   selectedCbId: null,
   loading: false,
   error: null,
+
+  // Computed properties
+  get selectedCb() {
+    const { cbs, selectedCbId } = get();
+    return cbs.find(cb => cb.id === selectedCbId);
+  },
 
   // アクション
   setCbs: (cbs) => set({ cbs }),

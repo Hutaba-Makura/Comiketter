@@ -1,5 +1,5 @@
 import React from 'react';
-import { Group, Text, ActionIcon } from '@mantine/core';
+import { Group, Text, ActionIcon, Box } from '@mantine/core';
 import { IconHeart, IconRepeat, IconMessage, IconShare } from '@tabler/icons-react';
 import { TweetStats as TweetStatsType } from '../types/tweet';
 import { formatCount } from '../utils/format';
@@ -13,43 +13,44 @@ interface TweetStatsProps {
  */
 export function TweetStats({ stats }: TweetStatsProps) {
   return (
-    <Group gap="lg" justify="space-between">
-      <Group gap="md">
+    <Box style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+      {/* 左側のアクションボタン */}
+      <Box style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
         {/* リプライ */}
-        <Group gap="xs" align="center">
+        <Box style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
           <ActionIcon variant="subtle" size="sm" color="gray">
             <IconMessage size={16} />
           </ActionIcon>
           <Text size="xs" c="dimmed">
             {formatCount(stats.replyCount)}
           </Text>
-        </Group>
+        </Box>
         
         {/* リツイート */}
-        <Group gap="xs" align="center">
+        <Box style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
           <ActionIcon variant="subtle" size="sm" color="gray">
             <IconRepeat size={16} />
           </ActionIcon>
           <Text size="xs" c="dimmed">
             {formatCount(stats.retweetCount)}
           </Text>
-        </Group>
+        </Box>
         
         {/* いいね */}
-        <Group gap="xs" align="center">
+        <Box style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
           <ActionIcon variant="subtle" size="sm" color="gray">
             <IconHeart size={16} />
           </ActionIcon>
           <Text size="xs" c="dimmed">
             {formatCount(stats.likeCount)}
           </Text>
-        </Group>
-      </Group>
+        </Box>
+      </Box>
       
-      {/* シェア */}
+      {/* 右側のシェアボタン */}
       <ActionIcon variant="subtle" size="sm" color="gray">
         <IconShare size={16} />
       </ActionIcon>
-    </Group>
+    </Box>
   );
 }

@@ -58,9 +58,12 @@
     "@mantine/core": "^7.2.2",
     "@mantine/hooks": "^7.2.2",
     "@tabler/icons-react": "^3.34.0",
+    "@types/react-window": "^1.8.8",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-tweet": "^3.2.2",
+    "react-window": "^1.8.11",
+    "react-window-infinite-loader": "^1.0.10",
     "zustand": "^5.0.7"
   },
   "engines": {

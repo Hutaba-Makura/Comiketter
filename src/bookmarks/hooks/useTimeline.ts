@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { cbService } from '../services/cbService';
 
 /**
@@ -9,7 +9,7 @@ export function useTimeline(selectedCbId: string | null) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const fetchTweetIds = useCallback(async () => {
     // CBが選択されていない場合は何もしない
     if (!selectedCbId) {
       setTweetIds([]);
@@ -17,28 +17,34 @@ export function useTimeline(selectedCbId: string | null) {
       return;
     }
 
-    const fetchTweetIds = async () => {
-      setLoading(true);
-      setError(null);
-      
-      try {
-        const ids = await cbService.getTweetIdsByCbId(selectedCbId);
-        setTweetIds(ids);
-      } catch (err) {
-        console.error('ツイートID取得エラー:', err);
-        setError(err instanceof Error ? err.message : 'ツイートの取得に失敗しました');
-        setTweetIds([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTweetIds();
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const ids = await cbService.getTweetIdsByCbId(selectedCbId);
+      setTweetIds(ids);
+    } catch (err) {
+      console.error('ツイートID取得エラー:', err);
+      setError(err instanceof Error ? err.message : 'ツイートの取得に失敗しました');
+      setTweetIds([]);
+    } finally {
+      setLoading(false);
+    }
   }, [selectedCbId]);
+
+  // 手動で再取得する関数
+  const refetch = useCallback(() => {
+    fetchTweetIds();
+  }, [fetchTweetIds]);
+
+  useEffect(() => {
+    fetchTweetIds();
+  }, [fetchTweetIds]);
 
   return {
     tweetIds,
     loading,
-    error
+    error,
+    refetch
   };
 }

@@ -1,9 +1,8 @@
 import React from 'react';
-import { Paper, Stack, Text, Group, Avatar, Badge } from '@mantine/core';
-import { IconHeart, IconRepeat, IconMessage, IconShare } from '@tabler/icons-react';
+import { Paper, Stack, Text, Group, Badge, Box } from '@mantine/core';
+import { IconHeart, IconRepeat, IconMessage, IconShare, IconUser } from '@tabler/icons-react';
 import { TweetHeader } from './TweetHeader';
 import { TweetStats } from './TweetStats';
-import { TweetMedia } from './TweetMedia';
 import { formatTweetId } from '../utils/format';
 
 interface TweetEmbedFallbackProps {
@@ -19,7 +18,7 @@ export function TweetEmbedFallback({ id }: TweetEmbedFallbackProps) {
     id: 'sample-user',
     username: 'sample_user',
     displayName: 'サンプルユーザー',
-    profileImageUrl: 'https://via.placeholder.com/48x48/1DA1F2/FFFFFF?text=U',
+    profileImageUrl: '', // 外部画像を使用しない
     verified: true
   };
 
@@ -34,7 +33,7 @@ export function TweetEmbedFallback({ id }: TweetEmbedFallbackProps) {
 
   return (
     <Paper p="md" withBorder>
-      <Stack gap="sm">
+      <Box style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         {/* ヘッダー */}
         <TweetHeader
           author={sampleAuthor}
@@ -42,22 +41,22 @@ export function TweetEmbedFallback({ id }: TweetEmbedFallbackProps) {
         />
         
         {/* ツイート内容 */}
-        <Text size="sm">
+        <Text size="sm" style={{ lineHeight: 1.4 }}>
           これはプロト版のサンプルツイートです。ID: {formatTweetId(id)}
           <br />
-          実際のツイート内容はここに表示されます。
+          実際のツイート内容はここに表示されます。このツイートには複数行のテキストが含まれることがあります。
         </Text>
         
-        {/* 統計情報 */}
+        {/* 統計情報とアクションボタン */}
         <TweetStats stats={sampleStats} />
         
-        {/* アクションボタン */}
-        <Group gap="xs">
+        {/* プロト版バッジ */}
+        <Box style={{ display: 'flex', justifyContent: 'flex-start' }}>
           <Badge variant="light" size="xs" color="blue">
             プロト版
           </Badge>
-        </Group>
-      </Stack>
+        </Box>
+      </Box>
     </Paper>
   );
 }

@@ -1,7 +1,5 @@
-import React, { useState } from 'react';
-import { Alert, Text, Box } from '@mantine/core';
-import { IconAlertCircle } from '@tabler/icons-react';
-import { Tweet } from 'react-tweet';
+import React from 'react';
+import { Box } from '@mantine/core';
 import { useThemeBridge } from '../hooks/useThemeBridge';
 import { TweetEmbedFallback } from './TweetEmbedFallback';
 
@@ -10,28 +8,11 @@ interface TweetEmbedProps {
 }
 
 /**
- * react-tweetを使用したツイート表示コンポーネント
+ * ツイート表示コンポーネント
+ * 現在はフォールバック実装のみを使用
  */
 export function TweetEmbed({ id }: TweetEmbedProps) {
-  const [hasError, setHasError] = useState(false);
   const { themeValue } = useThemeBridge();
-
-  // react-tweetが失敗した場合のフォールバック
-  if (hasError) {
-    return (
-      <Alert
-        icon={<IconAlertCircle size={16} />}
-        title="ツイートの読み込みに失敗しました"
-        color="red"
-        variant="light"
-      >
-        <Text size="sm" mb="md">
-          このツイートを表示できませんでした
-        </Text>
-        <TweetEmbedFallback id={id} />
-      </Alert>
-    );
-  }
 
   return (
     <Box
@@ -40,12 +21,10 @@ export function TweetEmbed({ id }: TweetEmbedProps) {
         border: '1px solid #e1e8ed',
         borderRadius: 8,
         overflow: 'hidden',
+        padding: '16px',
       }}
     >
-      <Tweet 
-        id={id}
-        onError={() => setHasError(true)}
-      />
+      <TweetEmbedFallback id={id} />
     </Box>
   );
 }
