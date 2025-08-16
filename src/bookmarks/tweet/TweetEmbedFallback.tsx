@@ -3,6 +3,7 @@ import { Paper, Stack, Text, Group, Badge, Box } from '@mantine/core';
 import { IconHeart, IconRepeat, IconMessage, IconShare, IconUser } from '@tabler/icons-react';
 import { TweetHeader } from './TweetHeader';
 import { TweetStats } from './TweetStats';
+import { TweetMedia } from './TweetMedia';
 import { formatTweetId } from '../utils/format';
 
 interface TweetEmbedFallbackProps {
@@ -31,6 +32,20 @@ export function TweetEmbedFallback({ id }: TweetEmbedFallbackProps) {
 
   const sampleDate = new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000);
 
+  // サンプルメディア（ランダムに生成）
+  const hasMedia = Math.random() > 0.5;
+  const sampleMedia = hasMedia ? [
+    {
+      id: 'media-1',
+      type: 'image' as const,
+      url: 'https://via.placeholder.com/400x300/1DA1F2/FFFFFF?text=Image',
+      previewUrl: 'https://via.placeholder.com/400x300/1DA1F2/FFFFFF?text=Image',
+      altText: 'サンプル画像',
+      width: 400,
+      height: 300
+    }
+  ] : [];
+
   return (
     <Paper p="md" withBorder>
       <Box style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -46,6 +61,9 @@ export function TweetEmbedFallback({ id }: TweetEmbedFallbackProps) {
           <br />
           実際のツイート内容はここに表示されます。このツイートには複数行のテキストが含まれることがあります。
         </Text>
+
+        {/* メディア表示 */}
+        {hasMedia && <TweetMedia media={sampleMedia} />}
         
         {/* 統計情報とアクションボタン */}
         <TweetStats stats={sampleStats} />
