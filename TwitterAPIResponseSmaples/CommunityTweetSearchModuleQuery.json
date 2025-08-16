@@ -1,0 +1,1187 @@
+{
+    "data": {
+        "communityResults": {
+            "result": {
+                "__typename": "Community",
+                "community_filtered_timeline": {
+                    "timeline": {
+                        "instructions": [
+                            {
+                                "__typename": "TimelineClearCache",
+                                "__isTimelineTimelineInstruction": "TimelineClearCache",
+                                "type": "TimelineClearCache"
+                            },
+                            {
+                                "__typename": "TimelineAddEntries",
+                                "__isTimelineTimelineInstruction": "TimelineAddEntries",
+                                "type": "TimelineAddEntries",
+                                "entries": [
+                                    {
+                                        "entryId": "tweet-1941670051096166702",
+                                        "sortIndex": "1949774047009046528",
+                                        "content": {
+                                            "entryType": "TimelineTimelineItem",
+                                            "__typename": "TimelineTimelineItem",
+                                            "itemContent": {
+                                                "itemType": "TimelineTweet",
+                                                "__typename": "TimelineTweet",
+                                                "tweet_results": {
+                                                    "result": {
+                                                        "__typename": "Tweet",
+                                                        "rest_id": "1941670051096166702",
+                                                        "core": {
+                                                            "user_results": {
+                                                                "result": {
+                                                                    "__typename": "User",
+                                                                    "id": "VXNlcjoxMDc1NjI1MzgyNzA2MTAyMjc0",
+                                                                    "rest_id": "1075625382706102274",
+                                                                    "affiliates_highlighted_label": {},
+                                                                    "avatar": {
+                                                                        "image_url": "https://pbs.twimg.com/profile_images/1878416161949540352/v_RxQqKK_normal.jpg"
+                                                                    },
+                                                                    "core": {
+                                                                        "created_at": "Thu Dec 20 05:34:10 +0000 2018",
+                                                                        "name": "虫",
+                                                                        "screen_name": "osukibot"
+                                                                    },
+                                                                    "dm_permissions": {
+                                                                        "can_dm": false
+                                                                    },
+                                                                    "has_graduated_access": true,
+                                                                    "is_blue_verified": false,
+                                                                    "legacy": {
+                                                                        "default_profile": true,
+                                                                        "default_profile_image": false,
+                                                                        "description": "サブカルの虫 │ またある時はアニャ•テイラー=ジョイの猫 │ あの夏のルカが好きです │ 移住先一覧→https://t.co/t8sYm83Djc",
+                                                                        "entities": {
+                                                                            "description": {
+                                                                                "urls": [
+                                                                                    {
+                                                                                        "display_url": "lit.link/docious",
+                                                                                        "expanded_url": "https://lit.link/docious",
+                                                                                        "url": "https://t.co/t8sYm83Djc",
+                                                                                        "indices": [
+                                                                                            52,
+                                                                                            75
+                                                                                        ]
+                                                                                    }
+                                                                                ]
+                                                                            }
+                                                                        },
+                                                                        "fast_followers_count": 0,
+                                                                        "favourites_count": 24996,
+                                                                        "followers_count": 83,
+                                                                        "friends_count": 196,
+                                                                        "has_custom_timelines": true,
+                                                                        "is_translator": false,
+                                                                        "listed_count": 1,
+                                                                        "media_count": 1117,
+                                                                        "normal_followers_count": 83,
+                                                                        "pinned_tweet_ids_str": [
+                                                                            "1924668740672881115"
+                                                                        ],
+                                                                        "possibly_sensitive": false,
+                                                                        "profile_banner_url": "https://pbs.twimg.com/profile_banners/1075625382706102274/1736652350",
+                                                                        "profile_interstitial_type": "",
+                                                                        "statuses_count": 5951,
+                                                                        "translator_type": "none",
+                                                                        "want_retweets": false,
+                                                                        "withheld_in_countries": []
+                                                                    },
+                                                                    "location": {
+                                                                        "location": "千葉のバニーバロウ"
+                                                                    },
+                                                                    "media_permissions": {
+                                                                        "can_media_tag": false
+                                                                    },
+                                                                    "parody_commentary_fan_label": "None",
+                                                                    "profile_image_shape": "Circle",
+                                                                    "privacy": {
+                                                                        "protected": false
+                                                                    },
+                                                                    "relationship_perspectives": {
+                                                                        "following": false
+                                                                    },
+                                                                    "tipjar_settings": {},
+                                                                    "verification": {
+                                                                        "verified": false
+                                                                    }
+                                                                },
+                                                                "id": "VXNlclJlc3VsdHM6MTA3NTYyNTM4MjcwNjEwMjI3NA=="
+                                                            }
+                                                        },
+                                                        "unmention_data": {
+                                                            "id": "VW5tZW50aW9uczoKAAEa8jKfwpoBLg8AAgoAAAAAAA=="
+                                                        },
+                                                        "edit_control": {
+                                                            "__typename": "EditControlInitial",
+                                                            "edit_tweet_ids": [
+                                                                "1941670051096166702"
+                                                            ],
+                                                            "editable_until_msecs": "1751768789000",
+                                                            "is_edit_eligible": true,
+                                                            "edits_remaining": "5"
+                                                        },
+                                                        "is_translatable": false,
+                                                        "views": {
+                                                            "count": "2134",
+                                                            "state": "EnabledWithCount"
+                                                        },
+                                                        "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
+                                                        "community_results": {
+                                                            "result": {
+                                                                "__typename": "Community",
+                                                                "id_str": "1543561733310402566",
+                                                                "viewer_relationship": {
+                                                                    "moderation_state": {
+                                                                        "__typename": "CommunityUserDefaultModerationState"
+                                                                    },
+                                                                    "id": "VXNlckNvbW11bml0eVJlbGF0aW9uc2hpcDoKAAEWn0ZSJxpwAAoAAhVr1Tfi2lAGAA=="
+                                                                },
+                                                                "id": "Q29tbXVuaXR5OjE1NDM1NjE3MzMzMTA0MDI1NjY="
+                                                            },
+                                                            "id": "Q29tbXVuaXR5UmVzdWx0czoxNTQzNTYxNzMzMzEwNDAyNTY2"
+                                                        },
+                                                        "author_community_relationship": {
+                                                            "community_results": {
+                                                                "result": {
+                                                                    "__typename": "Community",
+                                                                    "id_str": "1543561733310402566",
+                                                                    "name": "飲食店のお冷",
+                                                                    "description": "皆が撮ったお冷を載せる場所です。",
+                                                                    "created_at": 1656848769874,
+                                                                    "search_tags": [],
+                                                                    "is_nsfw": false,
+                                                                    "actions": {
+                                                                        "delete_action_result": {
+                                                                            "__typename": "CommunityDeleteActionUnavailable",
+                                                                            "__isCommunityDeleteActionResult": "CommunityDeleteActionUnavailable",
+                                                                            "reason": "Unavailable"
+                                                                        },
+                                                                        "join_action_result": {
+                                                                            "__typename": "CommunityJoinActionUnavailable",
+                                                                            "__isCommunityJoinActionResult": "CommunityJoinActionUnavailable",
+                                                                            "reason": "ViewerRequestRequired",
+                                                                            "message": "このコミュニティへの参加をリクエストしてください。"
+                                                                        },
+                                                                        "leave_action_result": {
+                                                                            "__typename": "CommunityLeaveActionUnavailable",
+                                                                            "__isCommunityLeaveActionResult": "CommunityLeaveActionUnavailable",
+                                                                            "reason": "ViewerNotMember",
+                                                                            "message": "Not a member."
+                                                                        },
+                                                                        "pin_action_result": {
+                                                                            "__typename": "CommunityTweetPinActionUnavailable",
+                                                                            "__isCommunityTweetPinActionResult": "CommunityTweetPinActionUnavailable"
+                                                                        },
+                                                                        "id": "Q29tbXVuaXR5QWN0aW9uczoxNTQzNTYxNzMzMzEwNDAyNTY2"
+                                                                    },
+                                                                    "admin_results": {
+                                                                        "result": {
+                                                                            "__typename": "User",
+                                                                            "id": "VXNlcjozMjUxNTA1Mzky",
+                                                                            "rest_id": "3251505392",
+                                                                            "affiliates_highlighted_label": {},
+                                                                            "avatar": {
+                                                                                "image_url": "https://pbs.twimg.com/profile_images/1509852377993850880/3OWucLHM_normal.jpg"
+                                                                            },
+                                                                            "core": {
+                                                                                "created_at": "Sun Jun 21 10:19:00 +0000 2015",
+                                                                                "name": "ohuton",
+                                                                                "screen_name": "nyr50ml"
+                                                                            },
+                                                                            "dm_permissions": {
+                                                                                "can_dm": false
+                                                                            },
+                                                                            "has_graduated_access": true,
+                                                                            "is_blue_verified": false,
+                                                                            "legacy": {
+                                                                                "default_profile": false,
+                                                                                "default_profile_image": false,
+                                                                                "description": "oekaki neco\uD83D\uDE3A\n\n✉　nyr50ml@gmail.com",
+                                                                                "entities": {
+                                                                                    "description": {
+                                                                                        "urls": []
+                                                                                    },
+                                                                                    "url": {
+                                                                                        "urls": [
+                                                                                            {
+                                                                                                "display_url": "nyr50ml.booth.pm",
+                                                                                                "expanded_url": "https://nyr50ml.booth.pm/",
+                                                                                                "url": "https://t.co/4Yu6NTU3TV",
+                                                                                                "indices": [
+                                                                                                    0,
+                                                                                                    23
+                                                                                                ]
+                                                                                            }
+                                                                                        ]
+                                                                                    }
+                                                                                },
+                                                                                "fast_followers_count": 0,
+                                                                                "favourites_count": 60511,
+                                                                                "followers_count": 92479,
+                                                                                "friends_count": 647,
+                                                                                "has_custom_timelines": true,
+                                                                                "is_translator": false,
+                                                                                "listed_count": 855,
+                                                                                "media_count": 4022,
+                                                                                "normal_followers_count": 92479,
+                                                                                "pinned_tweet_ids_str": [
+                                                                                    "1562394454962876416"
+                                                                                ],
+                                                                                "possibly_sensitive": false,
+                                                                                "profile_banner_url": "https://pbs.twimg.com/profile_banners/3251505392/1575983580",
+                                                                                "profile_interstitial_type": "",
+                                                                                "statuses_count": 46848,
+                                                                                "translator_type": "none",
+                                                                                "url": "https://t.co/4Yu6NTU3TV",
+                                                                                "want_retweets": false,
+                                                                                "withheld_in_countries": []
+                                                                            },
+                                                                            "location": {
+                                                                                "location": "here"
+                                                                            },
+                                                                            "media_permissions": {
+                                                                                "can_media_tag": false
+                                                                            },
+                                                                            "parody_commentary_fan_label": "None",
+                                                                            "profile_image_shape": "Circle",
+                                                                            "privacy": {
+                                                                                "protected": false
+                                                                            },
+                                                                            "relationship_perspectives": {
+                                                                                "following": false
+                                                                            },
+                                                                            "tipjar_settings": {},
+                                                                            "verification": {
+                                                                                "verified": false
+                                                                            }
+                                                                        },
+                                                                        "id": "VXNlclJlc3VsdHM6MzI1MTUwNTM5Mg=="
+                                                                    },
+                                                                    "creator_results": {
+                                                                        "result": {
+                                                                            "__typename": "User",
+                                                                            "id": "VXNlcjozMjUxNTA1Mzky",
+                                                                            "rest_id": "3251505392",
+                                                                            "affiliates_highlighted_label": {},
+                                                                            "avatar": {
+                                                                                "image_url": "https://pbs.twimg.com/profile_images/1509852377993850880/3OWucLHM_normal.jpg"
+                                                                            },
+                                                                            "core": {
+                                                                                "created_at": "Sun Jun 21 10:19:00 +0000 2015",
+                                                                                "name": "ohuton",
+                                                                                "screen_name": "nyr50ml"
+                                                                            },
+                                                                            "dm_permissions": {
+                                                                                "can_dm": false
+                                                                            },
+                                                                            "has_graduated_access": true,
+                                                                            "is_blue_verified": false,
+                                                                            "legacy": {
+                                                                                "default_profile": false,
+                                                                                "default_profile_image": false,
+                                                                                "description": "oekaki neco\uD83D\uDE3A\n\n✉　nyr50ml@gmail.com",
+                                                                                "entities": {
+                                                                                    "description": {
+                                                                                        "urls": []
+                                                                                    },
+                                                                                    "url": {
+                                                                                        "urls": [
+                                                                                            {
+                                                                                                "display_url": "nyr50ml.booth.pm",
+                                                                                                "expanded_url": "https://nyr50ml.booth.pm/",
+                                                                                                "url": "https://t.co/4Yu6NTU3TV",
+                                                                                                "indices": [
+                                                                                                    0,
+                                                                                                    23
+                                                                                                ]
+                                                                                            }
+                                                                                        ]
+                                                                                    }
+                                                                                },
+                                                                                "fast_followers_count": 0,
+                                                                                "favourites_count": 60511,
+                                                                                "followers_count": 92479,
+                                                                                "friends_count": 647,
+                                                                                "has_custom_timelines": true,
+                                                                                "is_translator": false,
+                                                                                "listed_count": 855,
+                                                                                "media_count": 4022,
+                                                                                "normal_followers_count": 92479,
+                                                                                "pinned_tweet_ids_str": [
+                                                                                    "1562394454962876416"
+                                                                                ],
+                                                                                "possibly_sensitive": false,
+                                                                                "profile_banner_url": "https://pbs.twimg.com/profile_banners/3251505392/1575983580",
+                                                                                "profile_interstitial_type": "",
+                                                                                "statuses_count": 46848,
+                                                                                "translator_type": "none",
+                                                                                "url": "https://t.co/4Yu6NTU3TV",
+                                                                                "want_retweets": false,
+                                                                                "withheld_in_countries": []
+                                                                            },
+                                                                            "location": {
+                                                                                "location": "here"
+                                                                            },
+                                                                            "media_permissions": {
+                                                                                "can_media_tag": false
+                                                                            },
+                                                                            "parody_commentary_fan_label": "None",
+                                                                            "profile_image_shape": "Circle",
+                                                                            "privacy": {
+                                                                                "protected": false
+                                                                            },
+                                                                            "relationship_perspectives": {
+                                                                                "following": false
+                                                                            },
+                                                                            "tipjar_settings": {},
+                                                                            "verification": {
+                                                                                "verified": false
+                                                                            }
+                                                                        },
+                                                                        "id": "VXNlclJlc3VsdHM6MzI1MTUwNTM5Mg=="
+                                                                    },
+                                                                    "invites_result": {
+                                                                        "__typename": "CommunityInvitesUnavailable",
+                                                                        "__isCommunityInvitesResult": "CommunityInvitesUnavailable",
+                                                                        "reason": "Unavailable",
+                                                                        "message": "Must be a member of the Community to invite others."
+                                                                    },
+                                                                    "join_policy": "RestrictedJoinRequestsRequireModeratorApproval",
+                                                                    "invites_policy": "ModeratorInvitesAllowed",
+                                                                    "is_pinned": false,
+                                                                    "members_facepile_results": [
+                                                                        {
+                                                                            "result": {
+                                                                                "__typename": "User",
+                                                                                "id": "VXNlcjozMjUxNTA1Mzky",
+                                                                                "rest_id": "3251505392",
+                                                                                "affiliates_highlighted_label": {},
+                                                                                "avatar": {
+                                                                                    "image_url": "https://pbs.twimg.com/profile_images/1509852377993850880/3OWucLHM_normal.jpg"
+                                                                                },
+                                                                                "core": {
+                                                                                    "created_at": "Sun Jun 21 10:19:00 +0000 2015",
+                                                                                    "name": "ohuton",
+                                                                                    "screen_name": "nyr50ml"
+                                                                                },
+                                                                                "dm_permissions": {
+                                                                                    "can_dm": false
+                                                                                },
+                                                                                "has_graduated_access": true,
+                                                                                "is_blue_verified": false,
+                                                                                "legacy": {
+                                                                                    "default_profile": false,
+                                                                                    "default_profile_image": false,
+                                                                                    "description": "oekaki neco\uD83D\uDE3A\n\n✉　nyr50ml@gmail.com",
+                                                                                    "entities": {
+                                                                                        "description": {
+                                                                                            "urls": []
+                                                                                        },
+                                                                                        "url": {
+                                                                                            "urls": [
+                                                                                                {
+                                                                                                    "display_url": "nyr50ml.booth.pm",
+                                                                                                    "expanded_url": "https://nyr50ml.booth.pm/",
+                                                                                                    "url": "https://t.co/4Yu6NTU3TV",
+                                                                                                    "indices": [
+                                                                                                        0,
+                                                                                                        23
+                                                                                                    ]
+                                                                                                }
+                                                                                            ]
+                                                                                        }
+                                                                                    },
+                                                                                    "fast_followers_count": 0,
+                                                                                    "favourites_count": 60511,
+                                                                                    "followers_count": 92479,
+                                                                                    "friends_count": 647,
+                                                                                    "has_custom_timelines": true,
+                                                                                    "is_translator": false,
+                                                                                    "listed_count": 855,
+                                                                                    "media_count": 4022,
+                                                                                    "normal_followers_count": 92479,
+                                                                                    "pinned_tweet_ids_str": [
+                                                                                        "1562394454962876416"
+                                                                                    ],
+                                                                                    "possibly_sensitive": false,
+                                                                                    "profile_banner_url": "https://pbs.twimg.com/profile_banners/3251505392/1575983580",
+                                                                                    "profile_interstitial_type": "",
+                                                                                    "statuses_count": 46848,
+                                                                                    "translator_type": "none",
+                                                                                    "url": "https://t.co/4Yu6NTU3TV",
+                                                                                    "want_retweets": false,
+                                                                                    "withheld_in_countries": []
+                                                                                },
+                                                                                "location": {
+                                                                                    "location": "here"
+                                                                                },
+                                                                                "media_permissions": {
+                                                                                    "can_media_tag": false
+                                                                                },
+                                                                                "parody_commentary_fan_label": "None",
+                                                                                "profile_image_shape": "Circle",
+                                                                                "privacy": {
+                                                                                    "protected": false
+                                                                                },
+                                                                                "relationship_perspectives": {
+                                                                                    "following": false
+                                                                                },
+                                                                                "tipjar_settings": {},
+                                                                                "verification": {
+                                                                                    "verified": false
+                                                                                }
+                                                                            },
+                                                                            "id": "VXNlclJlc3VsdHM6MzI1MTUwNTM5Mg=="
+                                                                        },
+                                                                        {
+                                                                            "result": {
+                                                                                "__typename": "User",
+                                                                                "id": "VXNlcjoxMTgzMjIxMTc1ODkzMTE4OTc3",
+                                                                                "rest_id": "1183221175893118977",
+                                                                                "affiliates_highlighted_label": {},
+                                                                                "avatar": {
+                                                                                    "image_url": "https://pbs.twimg.com/profile_images/1537275079347712001/nmTXNNoO_normal.jpg"
+                                                                                },
+                                                                                "core": {
+                                                                                    "created_at": "Sun Oct 13 03:22:48 +0000 2019",
+                                                                                    "name": "⌬鈴木ほらない⌬",
+                                                                                    "screen_name": "Suzuki_Hora9"
+                                                                                },
+                                                                                "dm_permissions": {
+                                                                                    "can_dm": true
+                                                                                },
+                                                                                "has_graduated_access": true,
+                                                                                "is_blue_verified": false,
+                                                                                "legacy": {
+                                                                                    "default_profile": true,
+                                                                                    "default_profile_image": false,
+                                                                                    "description": "ベンゼン環の中に円を書く奴を許さない柚木ジェネレーション。いつもお世話になっています。オセロで好きな駒は桂馬。2022年6月16日におにぎりを落としました。合掌。2023年5月13日に指に小鳥が停まりました。おとうふ実在論の父です。",
+                                                                                    "entities": {
+                                                                                        "description": {
+                                                                                            "urls": []
+                                                                                        },
+                                                                                        "url": {
+                                                                                            "urls": [
+                                                                                                {
+                                                                                                    "display_url": "profcard.info/u/7ySdvrYuawRo…",
+                                                                                                    "expanded_url": "https://profcard.info/u/7ySdvrYuawRoDMuQsRlOEpLmcSG2",
+                                                                                                    "url": "https://t.co/H7sicB574d",
+                                                                                                    "indices": [
+                                                                                                        0,
+                                                                                                        23
+                                                                                                    ]
+                                                                                                }
+                                                                                            ]
+                                                                                        }
+                                                                                    },
+                                                                                    "fast_followers_count": 0,
+                                                                                    "favourites_count": 38861,
+                                                                                    "followers_count": 184,
+                                                                                    "friends_count": 183,
+                                                                                    "has_custom_timelines": true,
+                                                                                    "is_translator": false,
+                                                                                    "listed_count": 2,
+                                                                                    "media_count": 1982,
+                                                                                    "normal_followers_count": 184,
+                                                                                    "pinned_tweet_ids_str": [
+                                                                                        "1498630972970962946"
+                                                                                    ],
+                                                                                    "possibly_sensitive": false,
+                                                                                    "profile_banner_url": "https://pbs.twimg.com/profile_banners/1183221175893118977/1694404447",
+                                                                                    "profile_interstitial_type": "",
+                                                                                    "statuses_count": 25253,
+                                                                                    "translator_type": "none",
+                                                                                    "url": "https://t.co/H7sicB574d",
+                                                                                    "want_retweets": false,
+                                                                                    "withheld_in_countries": []
+                                                                                },
+                                                                                "location": {
+                                                                                    "location": "北海道悪寒大学 博士課程(破壊力学)"
+                                                                                },
+                                                                                "media_permissions": {
+                                                                                    "can_media_tag": false
+                                                                                },
+                                                                                "parody_commentary_fan_label": "None",
+                                                                                "profile_image_shape": "Circle",
+                                                                                "professional": {
+                                                                                    "rest_id": "1467692681786982401",
+                                                                                    "professional_type": "Creator",
+                                                                                    "category": [
+                                                                                        {
+                                                                                            "id": 960,
+                                                                                            "name": "宗教指導者",
+                                                                                            "icon_name": "IconBriefcaseStroke"
+                                                                                        }
+                                                                                    ],
+                                                                                    "id": "UHJvZmVzc2lvbmFsOjE0Njc2OTI2ODE3ODY5ODI0MDE="
+                                                                                },
+                                                                                "privacy": {
+                                                                                    "protected": true
+                                                                                },
+                                                                                "relationship_perspectives": {
+                                                                                    "following": false
+                                                                                },
+                                                                                "tipjar_settings": {},
+                                                                                "verification": {
+                                                                                    "verified": false
+                                                                                }
+                                                                            },
+                                                                            "id": "VXNlclJlc3VsdHM6MTE4MzIyMTE3NTg5MzExODk3Nw=="
+                                                                        },
+                                                                        {
+                                                                            "result": {
+                                                                                "__typename": "User",
+                                                                                "id": "VXNlcjoxMjMzNDg3Nzk2MjUxMTYwNTc2",
+                                                                                "rest_id": "1233487796251160576",
+                                                                                "affiliates_highlighted_label": {},
+                                                                                "avatar": {
+                                                                                    "image_url": "https://pbs.twimg.com/profile_images/1865651956213276672/8Xw6R21-_normal.jpg"
+                                                                                },
+                                                                                "core": {
+                                                                                    "created_at": "Fri Feb 28 20:23:11 +0000 2020",
+                                                                                    "name": "縲",
+                                                                                    "screen_name": "Bordeaux_Buka"
+                                                                                },
+                                                                                "dm_permissions": {
+                                                                                    "can_dm": true
+                                                                                },
+                                                                                "has_graduated_access": true,
+                                                                                "is_blue_verified": false,
+                                                                                "legacy": {
+                                                                                    "default_profile": true,
+                                                                                    "default_profile_image": false,
+                                                                                    "description": "a.k.aぶかさん 余力で生きてる・絵を描いたり",
+                                                                                    "entities": {
+                                                                                        "description": {
+                                                                                            "urls": []
+                                                                                        }
+                                                                                    },
+                                                                                    "fast_followers_count": 0,
+                                                                                    "favourites_count": 76037,
+                                                                                    "followers_count": 263,
+                                                                                    "friends_count": 819,
+                                                                                    "has_custom_timelines": true,
+                                                                                    "is_translator": false,
+                                                                                    "listed_count": 5,
+                                                                                    "media_count": 2497,
+                                                                                    "normal_followers_count": 263,
+                                                                                    "pinned_tweet_ids_str": [
+                                                                                        "1757697889420394631"
+                                                                                    ],
+                                                                                    "possibly_sensitive": false,
+                                                                                    "profile_banner_url": "https://pbs.twimg.com/profile_banners/1233487796251160576/1674548380",
+                                                                                    "profile_interstitial_type": "",
+                                                                                    "statuses_count": 30415,
+                                                                                    "translator_type": "none",
+                                                                                    "want_retweets": false,
+                                                                                    "withheld_in_countries": []
+                                                                                },
+                                                                                "location": {
+                                                                                    "location": "サムイ島"
+                                                                                },
+                                                                                "media_permissions": {
+                                                                                    "can_media_tag": false
+                                                                                },
+                                                                                "parody_commentary_fan_label": "None",
+                                                                                "profile_image_shape": "Circle",
+                                                                                "professional": {
+                                                                                    "rest_id": "1461375682295271424",
+                                                                                    "professional_type": "Creator",
+                                                                                    "category": [
+                                                                                        {
+                                                                                            "id": 209,
+                                                                                            "name": "両替",
+                                                                                            "icon_name": "IconBriefcaseStroke"
+                                                                                        }
+                                                                                    ],
+                                                                                    "id": "UHJvZmVzc2lvbmFsOjE0NjEzNzU2ODIyOTUyNzE0MjQ="
+                                                                                },
+                                                                                "privacy": {
+                                                                                    "protected": false
+                                                                                },
+                                                                                "relationship_perspectives": {
+                                                                                    "following": false
+                                                                                },
+                                                                                "tipjar_settings": {},
+                                                                                "verification": {
+                                                                                    "verified": false
+                                                                                }
+                                                                            },
+                                                                            "id": "VXNlclJlc3VsdHM6MTIzMzQ4Nzc5NjI1MTE2MDU3Ng=="
+                                                                        },
+                                                                        {
+                                                                            "result": {
+                                                                                "__typename": "User",
+                                                                                "id": "VXNlcjoxOTM3MzI5NzQ=",
+                                                                                "rest_id": "193732974",
+                                                                                "affiliates_highlighted_label": {},
+                                                                                "avatar": {
+                                                                                    "image_url": "https://pbs.twimg.com/profile_images/1863144524043726848/BdlujDER_normal.jpg"
+                                                                                },
+                                                                                "core": {
+                                                                                    "created_at": "Wed Sep 22 15:20:25 +0000 2010",
+                                                                                    "name": "ののもとむむむ\uD83D\uDE08みちのくティアB18",
+                                                                                    "screen_name": "muryard"
+                                                                                },
+                                                                                "dm_permissions": {
+                                                                                    "can_dm": false
+                                                                                },
+                                                                                "has_graduated_access": true,
+                                                                                "is_blue_verified": true,
+                                                                                "legacy": {
+                                                                                    "default_profile": false,
+                                                                                    "default_profile_image": false,
+                                                                                    "description": "漫画と絵を描いています！\n★青騎士...『寝る寝るネルネ』隔月連載\n★7/18からピッコマ等で電子配信...『カメラと青春　高橋亮子に関する2,3の呪い（原作:伊藤秋樹さま）』月1-2回掲載予定\n\n (依頼等)☛DMもしくはsoftmatine@gmail.com",
+                                                                                    "entities": {
+                                                                                        "description": {
+                                                                                            "urls": []
+                                                                                        }
+                                                                                    },
+                                                                                    "fast_followers_count": 0,
+                                                                                    "favourites_count": 74237,
+                                                                                    "followers_count": 17250,
+                                                                                    "friends_count": 1826,
+                                                                                    "has_custom_timelines": true,
+                                                                                    "is_translator": false,
+                                                                                    "listed_count": 326,
+                                                                                    "media_count": 5904,
+                                                                                    "normal_followers_count": 17250,
+                                                                                    "pinned_tweet_ids_str": [
+                                                                                        "1945863721055879301"
+                                                                                    ],
+                                                                                    "possibly_sensitive": false,
+                                                                                    "profile_interstitial_type": "",
+                                                                                    "statuses_count": 57120,
+                                                                                    "translator_type": "none",
+                                                                                    "want_retweets": false,
+                                                                                    "withheld_in_countries": []
+                                                                                },
+                                                                                "location": {
+                                                                                    "location": "福島"
+                                                                                },
+                                                                                "media_permissions": {
+                                                                                    "can_media_tag": false
+                                                                                },
+                                                                                "parody_commentary_fan_label": "None",
+                                                                                "profile_image_shape": "Circle",
+                                                                                "professional": {
+                                                                                    "rest_id": "1727559116389065085",
+                                                                                    "professional_type": "Creator",
+                                                                                    "category": [],
+                                                                                    "id": "UHJvZmVzc2lvbmFsOjE3Mjc1NTkxMTYzODkwNjUwODU="
+                                                                                },
+                                                                                "privacy": {
+                                                                                    "protected": false
+                                                                                },
+                                                                                "relationship_perspectives": {
+                                                                                    "following": false
+                                                                                },
+                                                                                "tipjar_settings": {},
+                                                                                "verification": {
+                                                                                    "verified": false
+                                                                                }
+                                                                            },
+                                                                            "id": "VXNlclJlc3VsdHM6MTkzNzMyOTc0"
+                                                                        }
+                                                                    ],
+                                                                    "moderator_count": 1,
+                                                                    "member_count": 1310,
+                                                                    "role": "NonMember",
+                                                                    "rules": [
+                                                                        {
+                                                                            "rest_id": "1543561733436231681",
+                                                                            "name": "親切かつ礼儀正しい態度を取る。",
+                                                                            "id": "Q29tbXVuaXR5UnVsZToxNTQzNTYxNzMzNDM2MjMxNjgx"
+                                                                        },
+                                                                        {
+                                                                            "rest_id": "1543566036477554688",
+                                                                            "name": "お冷の写真だけを載せましょう",
+                                                                            "description": "お店のお冷だけでなく、自宅で注いだ水でも大丈夫です。",
+                                                                            "id": "Q29tbXVuaXR5UnVsZToxNTQzNTY2MDM2NDc3NTU0Njg4"
+                                                                        }
+                                                                    ],
+                                                                    "custom_banner_media": {
+                                                                        "media_info": {
+                                                                            "__typename": "ApiImage",
+                                                                            "color_info": {
+                                                                                "palette": [
+                                                                                    {
+                                                                                        "rgb": {
+                                                                                            "red": 168,
+                                                                                            "green": 167,
+                                                                                            "blue": 168
+                                                                                        },
+                                                                                        "percentage": 72.73
+                                                                                    },
+                                                                                    {
+                                                                                        "rgb": {
+                                                                                            "red": 140,
+                                                                                            "green": 109,
+                                                                                            "blue": 97
+                                                                                        },
+                                                                                        "percentage": 23.99
+                                                                                    },
+                                                                                    {
+                                                                                        "rgb": {
+                                                                                            "red": 117,
+                                                                                            "green": 114,
+                                                                                            "blue": 123
+                                                                                        },
+                                                                                        "percentage": 1.56
+                                                                                    },
+                                                                                    {
+                                                                                        "rgb": {
+                                                                                            "red": 155,
+                                                                                            "green": 124,
+                                                                                            "blue": 113
+                                                                                        },
+                                                                                        "percentage": 1.29
+                                                                                    }
+                                                                                ]
+                                                                            },
+                                                                            "original_img_url": "https://pbs.twimg.com/community_banner_img/1543563302030438401/Mu54zXuP?format=jpg&name=orig",
+                                                                            "original_img_width": 2048,
+                                                                            "original_img_height": 819,
+                                                                            "salient_rect": {
+                                                                                "left": 1024,
+                                                                                "top": 409,
+                                                                                "width": 1,
+                                                                                "height": 1
+                                                                            }
+                                                                        },
+                                                                        "id": "QXBpTWVkaWE6DAATCgABFWvWpSHacAEAAA=="
+                                                                    },
+                                                                    "default_banner_media": {
+                                                                        "media_info": {
+                                                                            "__typename": "ApiImage",
+                                                                            "color_info": {
+                                                                                "palette": [
+                                                                                    {
+                                                                                        "rgb": {
+                                                                                            "red": 69,
+                                                                                            "green": 205,
+                                                                                            "blue": 167
+                                                                                        },
+                                                                                        "percentage": 45.62
+                                                                                    },
+                                                                                    {
+                                                                                        "rgb": {
+                                                                                            "red": 189,
+                                                                                            "green": 180,
+                                                                                            "blue": 254
+                                                                                        },
+                                                                                        "percentage": 27.74
+                                                                                    },
+                                                                                    {
+                                                                                        "rgb": {
+                                                                                            "red": 113,
+                                                                                            "green": 196,
+                                                                                            "blue": 202
+                                                                                        },
+                                                                                        "percentage": 10.6
+                                                                                    },
+                                                                                    {
+                                                                                        "rgb": {
+                                                                                            "red": 214,
+                                                                                            "green": 218,
+                                                                                            "blue": 249
+                                                                                        },
+                                                                                        "percentage": 7.43
+                                                                                    },
+                                                                                    {
+                                                                                        "rgb": {
+                                                                                            "red": 123,
+                                                                                            "green": 166,
+                                                                                            "blue": 211
+                                                                                        },
+                                                                                        "percentage": 4.5
+                                                                                    }
+                                                                                ]
+                                                                            },
+                                                                            "original_img_url": "https://pbs.twimg.com/media/FECQwOLUYAEGLKF.jpg",
+                                                                            "original_img_width": 1200,
+                                                                            "original_img_height": 480
+                                                                        },
+                                                                        "id": "QXBpTWVkaWE6DAABCgABFECQwOLUYAEKAAITiFWq8lUQBAAA"
+                                                                    },
+                                                                    "viewer_relationship": {
+                                                                        "moderation_state": {
+                                                                            "__typename": "CommunityUserDefaultModerationState"
+                                                                        },
+                                                                        "id": "VXNlckNvbW11bml0eVJlbGF0aW9uc2hpcDoKAAEWn0ZSJxpwAAoAAhVr1Tfi2lAGAA=="
+                                                                    },
+                                                                    "join_requests_result": {
+                                                                        "__typename": "CommunityJoinRequestsUnavailable"
+                                                                    },
+                                                                    "id": "Q29tbXVuaXR5OjE1NDM1NjE3MzMzMTA0MDI1NjY="
+                                                                },
+                                                                "id": "Q29tbXVuaXR5UmVzdWx0czoxNTQzNTYxNzMzMzEwNDAyNTY2"
+                                                            },
+                                                            "role": "Member",
+                                                            "user_results": {
+                                                                "result": {
+                                                                    "__typename": "User",
+                                                                    "id": "VXNlcjoxMDc1NjI1MzgyNzA2MTAyMjc0",
+                                                                    "rest_id": "1075625382706102274",
+                                                                    "affiliates_highlighted_label": {},
+                                                                    "avatar": {
+                                                                        "image_url": "https://pbs.twimg.com/profile_images/1878416161949540352/v_RxQqKK_normal.jpg"
+                                                                    },
+                                                                    "core": {
+                                                                        "created_at": "Thu Dec 20 05:34:10 +0000 2018",
+                                                                        "name": "虫",
+                                                                        "screen_name": "osukibot"
+                                                                    },
+                                                                    "dm_permissions": {
+                                                                        "can_dm": false
+                                                                    },
+                                                                    "has_graduated_access": true,
+                                                                    "is_blue_verified": false,
+                                                                    "legacy": {
+                                                                        "default_profile": true,
+                                                                        "default_profile_image": false,
+                                                                        "description": "サブカルの虫 │ またある時はアニャ•テイラー=ジョイの猫 │ あの夏のルカが好きです │ 移住先一覧→https://t.co/t8sYm83Djc",
+                                                                        "entities": {
+                                                                            "description": {
+                                                                                "urls": [
+                                                                                    {
+                                                                                        "display_url": "lit.link/docious",
+                                                                                        "expanded_url": "https://lit.link/docious",
+                                                                                        "url": "https://t.co/t8sYm83Djc",
+                                                                                        "indices": [
+                                                                                            52,
+                                                                                            75
+                                                                                        ]
+                                                                                    }
+                                                                                ]
+                                                                            }
+                                                                        },
+                                                                        "fast_followers_count": 0,
+                                                                        "favourites_count": 24996,
+                                                                        "followers_count": 83,
+                                                                        "friends_count": 196,
+                                                                        "has_custom_timelines": true,
+                                                                        "is_translator": false,
+                                                                        "listed_count": 1,
+                                                                        "media_count": 1117,
+                                                                        "normal_followers_count": 83,
+                                                                        "pinned_tweet_ids_str": [
+                                                                            "1924668740672881115"
+                                                                        ],
+                                                                        "possibly_sensitive": false,
+                                                                        "profile_banner_url": "https://pbs.twimg.com/profile_banners/1075625382706102274/1736652350",
+                                                                        "profile_interstitial_type": "",
+                                                                        "statuses_count": 5951,
+                                                                        "translator_type": "none",
+                                                                        "want_retweets": false,
+                                                                        "withheld_in_countries": []
+                                                                    },
+                                                                    "location": {
+                                                                        "location": "千葉のバニーバロウ"
+                                                                    },
+                                                                    "media_permissions": {
+                                                                        "can_media_tag": false
+                                                                    },
+                                                                    "parody_commentary_fan_label": "None",
+                                                                    "profile_image_shape": "Circle",
+                                                                    "privacy": {
+                                                                        "protected": false
+                                                                    },
+                                                                    "relationship_perspectives": {
+                                                                        "following": false
+                                                                    },
+                                                                    "tipjar_settings": {},
+                                                                    "verification": {
+                                                                        "verified": false
+                                                                    }
+                                                                },
+                                                                "id": "VXNlclJlc3VsdHM6MTA3NTYyNTM4MjcwNjEwMjI3NA=="
+                                                            },
+                                                            "id": "VXNlckNvbW11bml0eVJlbGF0aW9uc2hpcDoKAAEO7WOWL5dAAgoAAhVr1Tfi2lAGAA=="
+                                                        },
+                                                        "legacy": {
+                                                            "bookmark_count": 0,
+                                                            "bookmarked": false,
+                                                            "created_at": "Sun Jul 06 01:26:29 +0000 2025",
+                                                            "conversation_id_str": "1941670051096166702",
+                                                            "display_text_range": [
+                                                                0,
+                                                                5
+                                                            ],
+                                                            "entities": {
+                                                                "hashtags": [],
+                                                                "media": [
+                                                                    {
+                                                                        "display_url": "pic.x.com/WbYOJDor39",
+                                                                        "expanded_url": "https://x.com/osukibot/status/1941670051096166702/photo/1",
+                                                                        "id_str": "1941670035992584192",
+                                                                        "indices": [
+                                                                            6,
+                                                                            29
+                                                                        ],
+                                                                        "media_key": "3_1941670035992584192",
+                                                                        "media_url_https": "https://pbs.twimg.com/media/GvIynD5boAAnBlp.jpg",
+                                                                        "type": "photo",
+                                                                        "url": "https://t.co/WbYOJDor39",
+                                                                        "ext_media_availability": {
+                                                                            "status": "Available"
+                                                                        },
+                                                                        "features": {
+                                                                            "large": {
+                                                                                "faces": []
+                                                                            },
+                                                                            "medium": {
+                                                                                "faces": []
+                                                                            },
+                                                                            "small": {
+                                                                                "faces": []
+                                                                            },
+                                                                            "orig": {
+                                                                                "faces": []
+                                                                            }
+                                                                        },
+                                                                        "sizes": {
+                                                                            "large": {
+                                                                                "h": 1535,
+                                                                                "w": 2048,
+                                                                                "resize": "fit"
+                                                                            },
+                                                                            "medium": {
+                                                                                "h": 899,
+                                                                                "w": 1200,
+                                                                                "resize": "fit"
+                                                                            },
+                                                                            "small": {
+                                                                                "h": 510,
+                                                                                "w": 680,
+                                                                                "resize": "fit"
+                                                                            },
+                                                                            "thumb": {
+                                                                                "h": 150,
+                                                                                "w": 150,
+                                                                                "resize": "crop"
+                                                                            }
+                                                                        },
+                                                                        "original_info": {
+                                                                            "height": 1535,
+                                                                            "width": 2048,
+                                                                            "focus_rects": [
+                                                                                {
+                                                                                    "x": 0,
+                                                                                    "y": 0,
+                                                                                    "w": 2048,
+                                                                                    "h": 1147
+                                                                                },
+                                                                                {
+                                                                                    "x": 205,
+                                                                                    "y": 0,
+                                                                                    "w": 1535,
+                                                                                    "h": 1535
+                                                                                },
+                                                                                {
+                                                                                    "x": 299,
+                                                                                    "y": 0,
+                                                                                    "w": 1346,
+                                                                                    "h": 1535
+                                                                                },
+                                                                                {
+                                                                                    "x": 588,
+                                                                                    "y": 0,
+                                                                                    "w": 768,
+                                                                                    "h": 1535
+                                                                                },
+                                                                                {
+                                                                                    "x": 0,
+                                                                                    "y": 0,
+                                                                                    "w": 2048,
+                                                                                    "h": 1535
+                                                                                }
+                                                                            ]
+                                                                        },
+                                                                        "media_results": {
+                                                                            "result": {
+                                                                                "__typename": "ApiMedia",
+                                                                                "media_key": "3_1941670035992584192",
+                                                                                "id": "QXBpTWVkaWE6DAABCgABGvIynD5boAAKAAIa8jKfwpoBLgAA"
+                                                                            },
+                                                                            "id": "QXBpTWVkaWFSZXN1bHRzOgwAAQoAARryMpw+W6AACgACGvIyn8KaAS4AAA=="
+                                                                        }
+                                                                    }
+                                                                ],
+                                                                "symbols": [],
+                                                                "timestamps": [],
+                                                                "urls": [],
+                                                                "user_mentions": []
+                                                            },
+                                                            "extended_entities": {
+                                                                "media": [
+                                                                    {
+                                                                        "display_url": "pic.x.com/WbYOJDor39",
+                                                                        "expanded_url": "https://x.com/osukibot/status/1941670051096166702/photo/1",
+                                                                        "id_str": "1941670035992584192",
+                                                                        "indices": [
+                                                                            6,
+                                                                            29
+                                                                        ],
+                                                                        "media_key": "3_1941670035992584192",
+                                                                        "media_url_https": "https://pbs.twimg.com/media/GvIynD5boAAnBlp.jpg",
+                                                                        "type": "photo",
+                                                                        "url": "https://t.co/WbYOJDor39",
+                                                                        "ext_media_availability": {
+                                                                            "status": "Available"
+                                                                        },
+                                                                        "features": {
+                                                                            "large": {
+                                                                                "faces": []
+                                                                            },
+                                                                            "medium": {
+                                                                                "faces": []
+                                                                            },
+                                                                            "small": {
+                                                                                "faces": []
+                                                                            },
+                                                                            "orig": {
+                                                                                "faces": []
+                                                                            }
+                                                                        },
+                                                                        "sizes": {
+                                                                            "large": {
+                                                                                "h": 1535,
+                                                                                "w": 2048,
+                                                                                "resize": "fit"
+                                                                            },
+                                                                            "medium": {
+                                                                                "h": 899,
+                                                                                "w": 1200,
+                                                                                "resize": "fit"
+                                                                            },
+                                                                            "small": {
+                                                                                "h": 510,
+                                                                                "w": 680,
+                                                                                "resize": "fit"
+                                                                            },
+                                                                            "thumb": {
+                                                                                "h": 150,
+                                                                                "w": 150,
+                                                                                "resize": "crop"
+                                                                            }
+                                                                        },
+                                                                        "original_info": {
+                                                                            "height": 1535,
+                                                                            "width": 2048,
+                                                                            "focus_rects": [
+                                                                                {
+                                                                                    "x": 0,
+                                                                                    "y": 0,
+                                                                                    "w": 2048,
+                                                                                    "h": 1147
+                                                                                },
+                                                                                {
+                                                                                    "x": 205,
+                                                                                    "y": 0,
+                                                                                    "w": 1535,
+                                                                                    "h": 1535
+                                                                                },
+                                                                                {
+                                                                                    "x": 299,
+                                                                                    "y": 0,
+                                                                                    "w": 1346,
+                                                                                    "h": 1535
+                                                                                },
+                                                                                {
+                                                                                    "x": 588,
+                                                                                    "y": 0,
+                                                                                    "w": 768,
+                                                                                    "h": 1535
+                                                                                },
+                                                                                {
+                                                                                    "x": 0,
+                                                                                    "y": 0,
+                                                                                    "w": 2048,
+                                                                                    "h": 1535
+                                                                                }
+                                                                            ]
+                                                                        },
+                                                                        "media_results": {
+                                                                            "result": {
+                                                                                "__typename": "ApiMedia",
+                                                                                "media_key": "3_1941670035992584192",
+                                                                                "id": "QXBpTWVkaWE6DAABCgABGvIynD5boAAKAAIa8jKfwpoBLgAA"
+                                                                            },
+                                                                            "id": "QXBpTWVkaWFSZXN1bHRzOgwAAQoAARryMpw+W6AACgACGvIyn8KaAS4AAA=="
+                                                                        }
+                                                                    }
+                                                                ]
+                                                            },
+                                                            "favorite_count": 9,
+                                                            "favorited": false,
+                                                            "full_text": "先週のお冷 https://t.co/WbYOJDor39",
+                                                            "is_quote_status": false,
+                                                            "lang": "ja",
+                                                            "possibly_sensitive": false,
+                                                            "possibly_sensitive_editable": true,
+                                                            "quote_count": 0,
+                                                            "reply_count": 0,
+                                                            "retweet_count": 0,
+                                                            "retweeted": false,
+                                                            "user_id_str": "1075625382706102274",
+                                                            "id_str": "1941670051096166702"
+                                                        },
+                                                        "id": "VHdlZXQ6MTk0MTY3MDA1MTA5NjE2NjcwMg=="
+                                                    },
+                                                    "id": "VHdlZXRSZXN1bHRzOjE5NDE2NzAwNTEwOTYxNjY3MDI="
+                                                },
+                                                "tweetDisplayType": "Tweet",
+                                                "__isTimelineTimelineItemContent": "TimelineTweet"
+                                            },
+                                            "clientEventInfo": {
+                                                "component": "suggest_community_tweet",
+                                                "element": "tweet",
+                                                "details": {
+                                                    "timelinesDetails": {
+                                                        "injectionType": "CommunityTweet"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "entryId": "cursor-top-1949774047009046529",
+                                        "sortIndex": "1949774047009046529",
+                                        "content": {
+                                            "entryType": "TimelineTimelineCursor",
+                                            "__typename": "TimelineTimelineCursor",
+                                            "value": "DAAJAAA",
+                                            "cursorType": "Top"
+                                        }
+                                    },
+                                    {
+                                        "entryId": "cursor-bottom-1949774047009046527",
+                                        "sortIndex": "1949774047009046527",
+                                        "content": {
+                                            "entryType": "TimelineTimelineCursor",
+                                            "__typename": "TimelineTimelineCursor",
+                                            "value": "DAAFCgABGw79Klg___0LAAIAAAAoRW1QQzZ3QUFBZlEvZ0dKTjB2R3AvQUFBQUFFYThqS2Z3cG9CTGc9PQgAAwAAAAIAAA",
+                                            "cursorType": "Bottom"
+                                        }
+                                    }
+                                ]
+                            }
+                        ],
+                        "metadata": {
+                            "scribeConfig": {
+                                "page": "community_search_top"
+                            }
+                        },
+                        "id": "CommunitySearchTopProduct-Timeline"
+                    },
+                    "id": "VGltZWxpbmU6DABtCgABFWvVN+LaUAYOAAILAAAAAAsAAwAAAAblhYjpgLEIAAQAAAADAAA="
+                },
+                "id": "Q29tbXVuaXR5OjE1NDM1NjE3MzMzMTA0MDI1NjY="
+            },
+            "id": "Q29tbXVuaXR5UmVzdWx0czoxNTQzNTYxNzMzMzEwNDAyNTY2"
+        }
+    }
+}

@@ -70,29 +70,14 @@ export class TweetObserver {
    * 既存のツイートにボタンを追加
    */
   private initializeExistingTweets(): void {
-    // 複数のセレクターを試行
-    const tweetSelectors = [
-      'article[data-testid="tweet"]',
-      'article[role="article"]',
-      '[data-testid="tweet"]',
-      'article',
-    ];
-
-    let articles: NodeListOf<Element> | null = null;
-    let usedSelector = '';
-
-    for (const selector of tweetSelectors) {
-      articles = document.querySelectorAll(selector);
-      if (articles.length > 0) {
-        usedSelector = selector;
-        break;
-      }
-    }
+    const articles = document.querySelectorAll('article[data-testid="tweet"]');
     
     if (articles && articles.length > 0) {
       articles.forEach((article) => {
         if (this.shouldAddButtons(article as HTMLElement)) {
-          this.addButtonsToTweet(article as HTMLElement);
+          this.addButtonsToTweet(article as HTMLElement).catch(error => {
+            console.error('Comiketter: Failed to add buttons to existing tweet:', error);
+          });
         }
       });
     }
@@ -190,7 +175,6 @@ export class TweetObserver {
 
     // 処理済みノードをクリア
     this.pendingNodes = [];
-    this.processingTimeout = null;
   }
 
   /**
@@ -202,10 +186,7 @@ export class TweetObserver {
       return;
     }
 
-    // 処理済みとしてマーク
-    this.processedElements.add(node);
-
-    // ツイートセレクターを試行
+    // ツイート要素のセレクター
     const tweetSelectors = [
       'article[data-testid="tweet"]',
       'article[role="article"]',
@@ -215,8 +196,13 @@ export class TweetObserver {
     // 直接ツイート要素の場合
     for (const selector of tweetSelectors) {
       if (node.matches(selector)) {
+        // 処理済みとしてマーク（判定前にマーク）
+        this.processedElements.add(node);
+        
         if (this.shouldAddButtons(node)) {
-          this.addButtonsToTweet(node);
+          this.addButtonsToTweet(node).catch(error => {
+            console.error('Comiketter: Failed to add buttons to tweet:', error);
+          });
         }
         return;
       }
@@ -227,13 +213,25 @@ export class TweetObserver {
       const tweets = node.querySelectorAll(selector);
       if (tweets.length > 0) {
         tweets.forEach((tweet) => {
-          if (this.shouldAddButtons(tweet as HTMLElement)) {
-            this.addButtonsToTweet(tweet as HTMLElement);
+          const tweetElement = tweet as HTMLElement;
+          
+          // 各ツイート要素を個別に処理済みとしてマーク
+          if (!this.processedElements.has(tweetElement)) {
+            this.processedElements.add(tweetElement);
+            
+            if (this.shouldAddButtons(tweetElement)) {
+              this.addButtonsToTweet(tweetElement).catch(error => {
+                console.error('Comiketter: Failed to add buttons to tweet:', error);
+              });
+            }
           }
         });
         return;
       }
     }
+    
+    // ツイート要素でない場合も処理済みとしてマーク
+    this.processedElements.add(node);
   }
 
   /**
@@ -244,25 +242,39 @@ export class TweetObserver {
     const hasBookmarkButton = !!article.querySelector('.comiketter-bookmark-button');
     const hasDownloadButton = !!article.querySelector('.comiketter-download-button');
     
-
+    // どちらかのボタンが既に存在する場合は追加しない
+    if (hasBookmarkButton || hasDownloadButton) {
+      console.log('Comiketter: 既にボタンが存在するためスキップ', {
+        hasBookmarkButton,
+        hasDownloadButton,
+        article: article.tagName,
+        tweetId: article.getAttribute('data-testid')
+      });
+      return false;
+    }
     
-    return !hasBookmarkButton;
+    return true;
   }
 
   /**
    * ツイートにボタンを追加
    */
-  private addButtonsToTweet(article: HTMLElement): void {
+  private async addButtonsToTweet(article: HTMLElement): Promise<void> {
     try {
+      // 最終チェック：既にボタンが存在する場合は処理を中止
+      if (!this.shouldAddButtons(article)) {
+        console.log('Comiketter: 最終チェックでボタン追加を中止', {
+          article: article.tagName,
+          tweetId: article.getAttribute('data-testid')
+        });
+        return;
+      }
 
-      
       // ツイート情報を取得
       const tweetInfo = getTweetInfoFromArticle(article);
       if (!tweetInfo) {
         return;
       }
-
-
 
       // アクションバー（いいね、RT等のボタン群）を取得
       const actionBar = this.getActionBar(article);
@@ -270,17 +282,27 @@ export class TweetObserver {
         return;
       }
 
-
-
       // ボタンを作成
-      const buttons = this.buttonFactory.createButtonsForTweet(tweetInfo);
+      const buttons = await this.buttonFactory.createButtonsForTweet(tweetInfo);
 
-
+      // 最終チェック：ボタン作成後に再度チェック
+      if (!this.shouldAddButtons(article)) {
+        console.log('Comiketter: ボタン作成後の最終チェックで中止', {
+          article: article.tagName,
+          tweetId: article.getAttribute('data-testid')
+        });
+        return;
+      }
 
       // アクションバーに挿入（順序を制御）
       this.buttonFactory.insertButtonsToActionBar(actionBar, buttons);
       
-
+      console.log('Comiketter: ボタン追加完了', {
+        article: article.tagName,
+        tweetId: article.getAttribute('data-testid'),
+        buttonCount: buttons.length
+      });
+      
     } catch (error) {
       console.error('Comiketter: Failed to add buttons:', error);
       sendLog('Failed to add buttons:', error);

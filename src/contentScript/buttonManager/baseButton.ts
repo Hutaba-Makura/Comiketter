@@ -25,12 +25,67 @@ export interface ButtonConfig {
   position: 'left' | 'right';
 }
 
+export type Theme = 'light' | 'dark';
+
 export abstract class BaseButton {
   protected config: ButtonConfig;
 
   constructor(config: ButtonConfig) {
     this.config = config;
     this.injectStyles();
+  }
+
+  /**
+   * テーマを検出
+   */
+  protected detectTheme(): Theme {
+    // html要素のcolor-schemeスタイルから判定
+    const htmlElement = document.documentElement;
+    const computedStyle = getComputedStyle(htmlElement);
+    const colorScheme = computedStyle.getPropertyValue('color-scheme').trim();
+    
+    if (colorScheme === 'dark') {
+      return 'dark';
+    } else {
+      return 'light';
+    }
+  }
+
+  /**
+   * テーマに応じたボタン色を取得
+   */
+  protected getButtonColor(theme: Theme): string {
+    return theme === 'dark' ? '#72777c' : '#536471';
+  }
+
+  /**
+   * アイコンファイルを読み込み
+   */
+  protected async loadIcon(iconName: string): Promise<string> {
+    try {
+      const response = await fetch(chrome.runtime.getURL(`icons/${iconName}.svg`));
+      if (!response.ok) {
+        throw new Error(`Failed to load icon: ${iconName}`);
+      }
+      return await response.text();
+    } catch (error) {
+      console.error(`Comiketter: Failed to load icon ${iconName}:`, error);
+      // フォールバック用のデフォルトアイコン
+      return this.getDefaultIcon(iconName);
+    }
+  }
+
+  /**
+   * デフォルトアイコンを取得
+   */
+  protected getDefaultIcon(iconName: string): string {
+    const defaultIcons: Record<string, string> = {
+      'download': `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" /><path d="M7 11l5 5l5 -5" /><path d="M12 4l0 12" /></svg>`,
+      'bookmarks': `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 10v11l-5 -3l-5 3v-11a3 3 0 0 1 3 -3h4a3 3 0 0 1 3 3z" /><path d="M11 3h5a3 3 0 0 1 3 3v11" /></svg>`,
+      'bookmarked': `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 6a4 4 0 0 1 4 4v11a1 1 0 0 1 -1.514 .857l-4.486 -2.691l-4.486 2.691a1 1 0 0 1 -1.508 -.743l-.006 -.114v-11a4 4 0 0 1 4 -4h4z" /><path d="M16 2a4 4 0 0 1 4 4v11a1 1 0 0 1 -2 0v-11a2 2 0 0 0 -2 -2h-5a1 1 0 0 1 0 -2h5z" /></svg>`,
+    };
+    
+    return defaultIcons[iconName] || defaultIcons['download'];
   }
 
   /**
@@ -56,7 +111,7 @@ export abstract class BaseButton {
   /**
    * ボタンを作成
    */
-  abstract createButton(tweetInfo: Tweet): HTMLElement;
+  abstract createButton(tweetInfo: Tweet): Promise<HTMLElement>;
 
   /**
    * サンプルボタン（いいねボタン等）を取得
@@ -106,6 +161,13 @@ export abstract class BaseButton {
     // サンプルボタンをクローンして不要な要素を削除
     const button = sampleButton.cloneNode(true) as HTMLElement;
     
+    // 既存のSVGアイコンをすべて削除
+    const existingSvgs = button.querySelectorAll('svg');
+    if (existingSvgs.length > 0) {
+      console.log(`Comiketter: ${existingSvgs.length}個の既存SVGアイコンを削除`);
+      existingSvgs.forEach(svg => svg.remove());
+    }
+    
     // テキスト要素を削除
     const textContainer = button.querySelector('[data-testid="app-text-transition-container"] > span > span');
     if (textContainer) {
@@ -118,14 +180,28 @@ export abstract class BaseButton {
   /**
    * アイコン要素を作成
    */
-  protected createIconElement(sampleButton: HTMLElement): HTMLElement {
-    const icon = this.createElementFromHTML(this.config.iconSVG);
+  protected async createIconElement(iconName: string, sampleButton: HTMLElement): Promise<HTMLElement> {
+    const theme = this.detectTheme();
+    const iconColor = this.getButtonColor(theme);
+    
+    console.log(`Comiketter: アイコン作成開始 - ${iconName} (テーマ: ${theme}, 色: ${iconColor})`);
+    
+    // アイコンファイルを読み込み
+    const iconSVG = await this.loadIcon(iconName);
+    
+    // SVG要素を作成
+    const icon = this.createElementFromHTML(iconSVG);
     
     // サンプルボタンのアイコンからスタイルを取得
     const sampleIcon = sampleButton.querySelector('svg');
     if (sampleIcon) {
       icon.setAttribute('class', sampleIcon.className || 'r-4qtqp9 r-yyyyoo r-1xvli5t r-dnmrzs r-bnwqim r-1plcrui r-lrvibr r-1hdv0qi');
     }
+    
+    // 色を設定
+    icon.style.color = iconColor;
+    
+    console.log(`Comiketter: アイコン作成完了 - ${iconName}`);
     
     return icon;
   }

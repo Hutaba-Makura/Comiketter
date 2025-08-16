@@ -493,16 +493,45 @@ export class SidebarButton {
    * ボタンクリック時の処理
    */
   private handleButtonClick(): void {
-    sendLog('サイドバーボタンクリック');
-    
-    // ブックマークページを開く
-    chrome.runtime.sendMessage({
-      type: 'OPEN_BOOKMARK_PAGE',
-    }).catch((error) => {
-      sendLog('ブックマークページを開けませんでした:', error);
-      // フォールバック: 新しいタブで開く
-      window.open(chrome.runtime.getURL('bookmarks.html'), '_blank');
-    });
+    try {
+      sendLog('サイドバーボタンクリック');
+      
+      // 拡張機能のコンテキストが有効かチェック
+      if (!chrome?.runtime?.id) {
+        sendLog('拡張機能コンテキストが無効です。フォールバック処理を実行');
+        this.openBookmarkPageFallback();
+        return;
+      }
+      
+      // ブックマークページを開く
+      chrome.runtime.sendMessage({
+        type: 'OPEN_BOOKMARK_PAGE',
+      }).catch((error) => {
+        sendLog('ブックマークページを開けませんでした:', error);
+        // フォールバック: 新しいタブで開く
+        this.openBookmarkPageFallback();
+      });
+    } catch (error) {
+      sendLog('サイドバーボタンクリックエラー:', error);
+      // エラーが発生した場合もフォールバック処理を実行
+      this.openBookmarkPageFallback();
+    }
+  }
+
+  /**
+   * ブックマークページを開くフォールバック処理
+   */
+  private openBookmarkPageFallback(): void {
+    try {
+      // 直接URLで開く
+      const bookmarkUrl = chrome?.runtime?.getURL?.('bookmarks.html') || 'bookmarks.html';
+      window.open(bookmarkUrl, '_blank');
+      sendLog('フォールバック処理でブックマークページを開きました');
+    } catch (fallbackError) {
+      sendLog('フォールバック処理も失敗しました:', fallbackError);
+      // 最後の手段: アラートでユーザーに通知
+      alert('ブックマークページを開けませんでした。手動でブックマークページにアクセスしてください。');
+    }
   }
 
   /**

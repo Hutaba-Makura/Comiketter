@@ -103,6 +103,111 @@ describe('FilenameGenerator', () => {
       expect(filename).toBe('comiketter/testUser/testUser-1145141919810-01.jpg');
     });
 
+    it('複数メディアファイルのシリアル番号を正しく生成する', () => {
+      const settings: FilenameSettingProps = {
+        directory: 'comiketter',
+        noSubDirectory: false,
+        filenamePattern: [PatternToken.Account, PatternToken.TweetId, PatternToken.Serial],
+        fileAggregation: true,
+        groupBy: AggregationToken.Account,
+      };
+
+      // 1つ目のメディア（シリアル番号: 1）
+      const mediaFile1: TweetMediaFileProps = {
+        ...sampleMediaFile,
+        serial: 1,
+        ext: 'jpg',
+      };
+      const filename1 = FilenameGenerator.makeFilename(mediaFile1, settings);
+      expect(filename1).toBe('comiketter/testUser/testUser-1145141919810-01.jpg');
+
+      // 2つ目のメディア（シリアル番号: 2）
+      const mediaFile2: TweetMediaFileProps = {
+        ...sampleMediaFile,
+        serial: 2,
+        ext: 'jpg',
+      };
+      const filename2 = FilenameGenerator.makeFilename(mediaFile2, settings);
+      expect(filename2).toBe('comiketter/testUser/testUser-1145141919810-02.jpg');
+
+      // 3つ目のメディア（シリアル番号: 3、動画）
+      const mediaFile3: TweetMediaFileProps = {
+        ...sampleMediaFile,
+        serial: 3,
+        ext: 'mp4',
+        type: 'video',
+      };
+      const filename3 = FilenameGenerator.makeFilename(mediaFile3, settings);
+      expect(filename3).toBe('comiketter/testUser/testUser-1145141919810-03.mp4');
+
+      // 10個目のメディア（シリアル番号: 10、ゼロパディング確認）
+      const mediaFile10: TweetMediaFileProps = {
+        ...sampleMediaFile,
+        serial: 10,
+        ext: 'png',
+      };
+      const filename10 = FilenameGenerator.makeFilename(mediaFile10, settings);
+      expect(filename10).toBe('comiketter/testUser/testUser-1145141919810-10.png');
+    });
+
+    it('カスタムパターンで複数メディアファイルのシリアル番号を正しく生成する', () => {
+      const settings: FilenameSettingProps = {
+        directory: 'downloads',
+        noSubDirectory: false,
+        filenamePattern: [PatternToken.Date, PatternToken.Serial, PatternToken.Hash],
+        fileAggregation: false,
+        groupBy: AggregationToken.Account,
+      };
+
+      // 1つ目のメディア
+      const mediaFile1: TweetMediaFileProps = {
+        ...sampleMediaFile,
+        serial: 1,
+        ext: 'jpg',
+      };
+      const filename1 = FilenameGenerator.makeFilename(mediaFile1, settings);
+      // 日付は現在日付に基づくため、パターンマッチングで確認
+      expect(filename1).toMatch(/^downloads\/\d{8}-01-abc123def456\.jpg$/);
+
+      // 2つ目のメディア
+      const mediaFile2: TweetMediaFileProps = {
+        ...sampleMediaFile,
+        serial: 2,
+        ext: 'jpg',
+      };
+      const filename2 = FilenameGenerator.makeFilename(mediaFile2, settings);
+      expect(filename2).toMatch(/^downloads\/\d{8}-02-abc123def456\.jpg$/);
+    });
+
+    it('シリアル番号なしのパターンでファイル名が重複することを確認する', () => {
+      const settings: FilenameSettingProps = {
+        directory: 'comiketter',
+        noSubDirectory: false,
+        filenamePattern: [PatternToken.Account, PatternToken.TweetId], // シリアル番号なし
+        fileAggregation: true,
+        groupBy: AggregationToken.Account,
+      };
+
+      // 同じツイートの複数メディアでファイル名が重複
+      const mediaFile1: TweetMediaFileProps = {
+        ...sampleMediaFile,
+        serial: 1,
+        ext: 'jpg',
+      };
+      const filename1 = FilenameGenerator.makeFilename(mediaFile1, settings);
+
+      const mediaFile2: TweetMediaFileProps = {
+        ...sampleMediaFile,
+        serial: 2, // シリアル番号は使用されない
+        ext: 'jpg',
+      };
+      const filename2 = FilenameGenerator.makeFilename(mediaFile2, settings);
+
+      // ファイル名が重複することを確認
+      expect(filename1).toBe(filename2);
+      expect(filename1).toBe('comiketter/testUser/testUser-1145141919810.jpg');
+    });
+
     it('サブディレクトリを無効化したファイル名を生成する', () => {
       const settings: FilenameSettingProps = {
         directory: 'comiketter',
