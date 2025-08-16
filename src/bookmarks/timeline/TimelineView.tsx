@@ -117,87 +117,92 @@ export function TimelineView() {
   }
 
   return (
-    <Box p="xl">
-      {/* ヘッダー */}
-      <Stack gap="md">
-        <Group justify="space-between" align="center">
-          <Stack gap={4}>
-            <Text size="xl" fw={600}>
-              {selectedCb?.name || 'CB'}
-            </Text>
-            {selectedCb?.description && (
-              <Text size="sm" c="dimmed">
-                {selectedCb.description}
-              </Text>
-            )}
-          </Stack>
+    <Box p="xl" style={{ position: 'relative', height: '100vh', display: 'flex', flexDirection: 'column' }}>
+      {/* ヘッダーとツールバーを1行に横並びに配置（固定） */}
+      <Box style={{ flexShrink: 0 }}>
+        <Group gap="lg" align="center" mb="md" wrap="nowrap">
+          {/* CB名 */}
+          <Text size="xl" fw={600} style={{ flexShrink: 0 }}>
+            {selectedCb?.name || 'CB'}
+          </Text>
+
+          {/* ツイート数 */}
+          <Badge variant="light" size="lg" style={{ flexShrink: 0 }}>
+            {tweetIds.length} ツイート
+          </Badge>
+
+          {/* 検索バー */}
+          <TextInput
+            placeholder="ツイートを検索..."
+            leftSection={<IconSearch size={14} />}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.currentTarget.value)}
+            size="sm"
+            style={{ width: 250, flexShrink: 0 }}
+          />
           
-          <Group gap="xs">
-            <Badge variant="light" size="lg">
-              {tweetIds.length} ツイート
-            </Badge>
-            
-            <Tooltip label="更新">
-              <ActionIcon
-                variant="light"
-                size="md"
-                onClick={refetch}
-                loading={loading}
-              >
-                <IconRefresh size={16} />
-              </ActionIcon>
-            </Tooltip>
-          </Group>
+          {/* ソート選択 */}
+          <Select
+            value={sortOrder}
+            onChange={(value) => setSortOrder(value as 'newest' | 'oldest')}
+            data={[
+              { value: 'newest', label: '新しい順' },
+              { value: 'oldest', label: '古い順' }
+            ]}
+            size="sm"
+            style={{ width: 120, flexShrink: 0 }}
+            leftSection={
+              sortOrder === 'newest' ? 
+                <IconSortDescending size={14} /> : 
+                <IconSortAscending size={14} />
+            }
+          />
+
+          {/* 更新ボタン */}
+          <Tooltip label="更新">
+            <ActionIcon
+              variant="light"
+              size="md"
+              onClick={refetch}
+              loading={loading}
+              style={{ flexShrink: 0 }}
+            >
+              <IconRefresh size={16} />
+            </ActionIcon>
+          </Tooltip>
         </Group>
 
-        <Divider />
+        {/* CBの説明文（別行に表示） */}
+        {selectedCb?.description && (
+          <Text size="sm" c="dimmed" mb="md">
+            {selectedCb.description}
+          </Text>
+        )}
 
-        {/* ツールバー */}
-        <Group justify="space-between" align="center">
-          <Group gap="md">
-            <TextInput
-              placeholder="ツイートを検索..."
-              leftSection={<IconSearch size={14} />}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.currentTarget.value)}
+        {/* 検索結果表示 */}
+        {searchQuery && (
+          <Text size="sm" c="dimmed" mb="md">
+            {filteredAndSortedTweetIds.length}件の結果
+          </Text>
+        )}
+
+        {/* 仮想化スイッチ */}
+        {filteredAndSortedTweetIds.length >= 100 && (
+          <Box mb="md">
+            <Switch
+              label="仮想化表示"
+              checked={useVirtualization}
+              onChange={(event) => setUseVirtualization(event.currentTarget.checked)}
               size="sm"
-              style={{ width: 250 }}
             />
-            
-            <Select
-              value={sortOrder}
-              onChange={(value) => setSortOrder(value as 'newest' | 'oldest')}
-              data={[
-                { value: 'newest', label: '新しい順' },
-                { value: 'oldest', label: '古い順' }
-              ]}
-              size="sm"
-              style={{ width: 120 }}
-              leftSection={
-                sortOrder === 'newest' ? 
-                  <IconSortDescending size={14} /> : 
-                  <IconSortAscending size={14} />
-              }
-            />
+          </Box>
+        )}
 
-            {filteredAndSortedTweetIds.length >= 100 && (
-              <Switch
-                label="仮想化表示"
-                checked={useVirtualization}
-                onChange={(event) => setUseVirtualization(event.currentTarget.checked)}
-                size="sm"
-              />
-            )}
-          </Group>
+        <Divider mb="md" />
+      </Box>
 
-          {searchQuery && (
-            <Text size="sm" c="dimmed">
-              {filteredAndSortedTweetIds.length}件の結果
-            </Text>
-          )}
-        </Group>
-
-        {/* ツイート一覧 */}
+      {/* ツイート一覧（スクロール可能） */}
+      <Box style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
         {filteredAndSortedTweetIds.length === 0 ? (
           <Center h={300}>
             <Stack align="center" gap="md">
@@ -231,7 +236,7 @@ export function TimelineView() {
             </Stack>
           </Center>
         ) : shouldUseVirtualization ? (
-          <Box style={{ height: 600 }}>
+          <Box style={{ height: '100%' }}>
             <VirtualizedTimeline 
               tweetIds={filteredAndSortedTweetIds}
               height={600}
@@ -250,7 +255,7 @@ export function TimelineView() {
             ))}
           </Stack>
         )}
-      </Stack>
+      </Box>
     </Box>
   );
 }
