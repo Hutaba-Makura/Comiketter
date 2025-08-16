@@ -13,7 +13,6 @@ export default {
     popup: './src/popup/index.tsx',
     options: './src/options/index.tsx',
     bookmarks: './src/bookmarks/index.tsx',
-    debug: './src/bookmarks/debug.js',
   },
   output: {
     path: path.resolve(__dirname, 'dist'),

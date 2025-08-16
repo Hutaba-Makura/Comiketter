@@ -10,13 +10,17 @@ import { useCbStore } from './state/cbStore';
 export default function BookmarkApp() {
   const { setCbs, setLoading, setError } = useCbStore();
 
-  // 初期化時にCB一覧を取得
+  // 初期化時にデータベースとCB一覧を取得
   useEffect(() => {
     const initializeApp = async () => {
       setLoading(true);
       setError(null);
       
       try {
+        // データベースの初期化
+        await cbService.initialize();
+        
+        // CB一覧を取得
         const cbList = await cbService.listCbs();
         setCbs(cbList);
       } catch (err) {

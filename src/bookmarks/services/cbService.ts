@@ -1,65 +1,57 @@
-import { bookmarkDB } from '../../utils/bookmarkDB';
-import { Cb, CreateCbInput, UpdateCbInput } from '../types/cb';
+import { cbDataService } from './cbDataService';
+import { Cb } from '../types/cb';
 
 /**
- * CBサービス - bookmarkDBへの薄いラッパー
+ * CBサービス - ビジネスロジック層
+ * cbDataServiceをラップして、アプリケーション固有の処理を提供
  */
 export class CbService {
+  /**
+   * サービス初期化
+   */
+  async initialize(): Promise<void> {
+    await cbDataService.initialize();
+  }
+
   /**
    * CB一覧を取得
    */
   async listCbs(): Promise<Cb[]> {
     try {
-      const bookmarks = await bookmarkDB.getAllBookmarks();
-      
-      // ブックマークをCB形式に変換
-      const cbs = bookmarks.map(bookmark => ({
-        id: bookmark.id,
-        name: bookmark.name,
-        description: bookmark.description || '',
-        groupId: undefined, // 後でグループ機能を実装
-        createdAt: new Date(bookmark.createdAt),
-        updatedAt: new Date(bookmark.updatedAt),
-        tweetCount: 0 // 後で実際のツイート数を取得
-      }));
-
-      // プロト版用のサンプルデータを追加
-      if (cbs.length === 0) {
-        return [
-          {
-            id: 'sample-1',
-            name: 'サンプルCB 1',
-            description: 'これはプロト版のサンプルデータです',
-            groupId: undefined,
-            createdAt: new Date('2024-01-01'),
-            updatedAt: new Date('2024-01-15'),
-            tweetCount: 5
-          },
-          {
-            id: 'sample-2',
-            name: 'サンプルCB 2',
-            description: '2つ目のサンプルデータ',
-            groupId: undefined,
-            createdAt: new Date('2024-01-02'),
-            updatedAt: new Date('2024-01-16'),
-            tweetCount: 12
-          },
-          {
-            id: 'sample-3',
-            name: '空のCB',
-            description: 'ツイートがまだ追加されていないCB',
-            groupId: undefined,
-            createdAt: new Date('2024-01-03'),
-            updatedAt: new Date('2024-01-03'),
-            tweetCount: 0
-          }
-        ];
-      }
-
-      return cbs;
+      return await cbDataService.getAllCbs();
     } catch (error) {
       console.error('CB一覧取得エラー:', error);
-      throw new Error('CB一覧の取得に失敗しました');
+      
+      // エラー時はプロト版用のサンプルデータを返す
+      return [
+        {
+          id: 'sample-1',
+          name: 'サンプルCB 1',
+          description: 'これはプロト版のサンプルデータです',
+          groupId: undefined,
+          createdAt: new Date('2024-01-01'),
+          updatedAt: new Date('2024-01-15'),
+          tweetCount: 5
+        },
+        {
+          id: 'sample-2',
+          name: 'サンプルCB 2',
+          description: '2つ目のサンプルデータ',
+          groupId: undefined,
+          createdAt: new Date('2024-01-02'),
+          updatedAt: new Date('2024-01-16'),
+          tweetCount: 12
+        },
+        {
+          id: 'sample-3',
+          name: '空のCB',
+          description: 'ツイートがまだ追加されていないCB',
+          groupId: undefined,
+          createdAt: new Date('2024-01-03'),
+          updatedAt: new Date('2024-01-03'),
+          tweetCount: 0
+        }
+      ];
     }
   }
 
@@ -68,72 +60,48 @@ export class CbService {
    */
   async getTweetIdsByCbId(cbId: string): Promise<string[]> {
     try {
-      const bookmark = await bookmarkDB.getBookmarkById(cbId);
-      
-      if (!bookmark) {
-        // プロト版用のサンプルデータ
-        if (cbId === 'sample-1') {
-          return [
-            '1234567890123456789',
-            '1234567890123456790',
-            '1234567890123456791',
-            '1234567890123456792',
-            '1234567890123456793'
-          ];
-        } else if (cbId === 'sample-2') {
-          return [
-            '1234567890123456794',
-            '1234567890123456795',
-            '1234567890123456796',
-            '1234567890123456797',
-            '1234567890123456798',
-            '1234567890123456799',
-            '1234567890123456800',
-            '1234567890123456801',
-            '1234567890123456802',
-            '1234567890123456803',
-            '1234567890123456804',
-            '1234567890123456805'
-          ];
-        } else if (cbId === 'sample-3') {
-          return [];
-        }
-        
-        throw new Error(`CBが見つかりません: ${cbId}`);
-      }
-      
-      // 後で実際のツイートIDを取得する実装を追加
-      return [];
+      return await cbDataService.getTweetIdsByCbId(cbId);
     } catch (error) {
       console.error('ツイートID取得エラー:', error);
-      throw new Error('ツイートIDの取得に失敗しました');
+      
+      // エラー時はプロト版用のサンプルデータを返す
+      if (cbId === 'sample-1') {
+        return [
+          '1234567890123456789',
+          '1234567890123456790',
+          '1234567890123456791',
+          '1234567890123456792',
+          '1234567890123456793'
+        ];
+      } else if (cbId === 'sample-2') {
+        return [
+          '1234567890123456794',
+          '1234567890123456795',
+          '1234567890123456796',
+          '1234567890123456797',
+          '1234567890123456798',
+          '1234567890123456799',
+          '1234567890123456800',
+          '1234567890123456801',
+          '1234567890123456802',
+          '1234567890123456803',
+          '1234567890123456804',
+          '1234567890123456805'
+        ];
+      } else if (cbId === 'sample-3') {
+        return [];
+      }
+      
+      return [];
     }
   }
 
   /**
-   * CBを作成
+   * 新しいCBを作成
    */
-  async createCb(input: CreateCbInput): Promise<Cb> {
+  async createCb(name: string, description?: string): Promise<Cb> {
     try {
-      const bookmark = await bookmarkDB.addBookmark({
-        name: input.name,
-        description: input.description || '',
-        isActive: true
-      });
-      
-      if (!bookmark) {
-        throw new Error('CBの作成に失敗しました');
-      }
-      
-      return {
-        id: bookmark.id,
-        name: bookmark.name,
-        description: bookmark.description || '',
-        groupId: undefined,
-        createdAt: new Date(bookmark.createdAt),
-        updatedAt: new Date(bookmark.updatedAt),
-        tweetCount: 0 // 後で実際のツイート数を取得
-      };
+      return await cbDataService.createCb(name, description);
     } catch (error) {
       console.error('CB作成エラー:', error);
       throw new Error('CBの作成に失敗しました');
@@ -143,27 +111,9 @@ export class CbService {
   /**
    * CBを更新
    */
-  async updateCb(id: string, input: UpdateCbInput): Promise<Cb> {
+  async updateCb(cbId: string, updates: { name?: string; description?: string }): Promise<Cb> {
     try {
-      await bookmarkDB.updateBookmark(id, {
-        name: input.name,
-        description: input.description
-      });
-      
-      const bookmark = await bookmarkDB.getBookmarkById(id);
-      if (!bookmark) {
-        throw new Error('更新したCBの取得に失敗しました');
-      }
-      
-      return {
-        id: bookmark.id,
-        name: bookmark.name,
-        description: bookmark.description || '',
-        groupId: undefined,
-        createdAt: new Date(bookmark.createdAt),
-        updatedAt: new Date(bookmark.updatedAt),
-        tweetCount: 0 // 後で実際のツイート数を取得
-      };
+      return await cbDataService.updateCb(cbId, updates);
     } catch (error) {
       console.error('CB更新エラー:', error);
       throw new Error('CBの更新に失敗しました');
@@ -173,12 +123,70 @@ export class CbService {
   /**
    * CBを削除
    */
-  async deleteCb(id: string): Promise<void> {
+  async deleteCb(cbId: string): Promise<void> {
     try {
-      await bookmarkDB.deleteBookmark(id);
+      await cbDataService.deleteCb(cbId);
     } catch (error) {
       console.error('CB削除エラー:', error);
       throw new Error('CBの削除に失敗しました');
+    }
+  }
+
+  /**
+   * ツイートをCBに追加
+   */
+  async addTweetToCb(cbId: string, tweetId: string, tweetData: {
+    authorUsername: string;
+    authorDisplayName?: string;
+    authorId?: string;
+    content: string;
+    mediaUrls?: string[];
+    mediaTypes?: string[];
+    tweetDate: string;
+    isRetweet: boolean;
+    isReply: boolean;
+    replyToTweetId?: string;
+    replyToUsername?: string;
+  }): Promise<void> {
+    try {
+      await cbDataService.addTweetToCb(cbId, tweetId, tweetData);
+    } catch (error) {
+      console.error('ツイート追加エラー:', error);
+      throw new Error('ツイートの追加に失敗しました');
+    }
+  }
+
+  /**
+   * ツイートをCBから削除
+   */
+  async removeTweetFromCb(cbId: string, tweetId: string): Promise<void> {
+    try {
+      await cbDataService.removeTweetFromCb(cbId, tweetId);
+    } catch (error) {
+      console.error('ツイート削除エラー:', error);
+      throw new Error('ツイートの削除に失敗しました');
+    }
+  }
+
+  /**
+   * 統計情報を取得
+   */
+  async getStats(): Promise<{
+    totalCbs: number;
+    totalTweets: number;
+    activeCbs: number;
+    tweetsByCb: { [cbId: string]: number };
+  }> {
+    try {
+      return await cbDataService.getStats();
+    } catch (error) {
+      console.error('統計情報取得エラー:', error);
+      return {
+        totalCbs: 0,
+        totalTweets: 0,
+        activeCbs: 0,
+        tweetsByCb: {}
+      };
     }
   }
 }

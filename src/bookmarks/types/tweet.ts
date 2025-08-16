@@ -1,23 +1,33 @@
 /**
- * Fallback用のツイート表示型定義
+ * react-tweetの仕様に基づく型定義
+ * 
+ * react-tweetはTwitterのsyndication APIを使用してツイートデータを取得し、
+ * 内部で適切な型定義を提供します。
+ * 
+ * このファイルでは、フォールバック表示用の型定義のみを提供します。
  */
-export interface UITweet {
+
+/**
+ * フォールバック用のツイート表示型定義
+ * react-tweetが失敗した場合の代替表示用
+ */
+export interface FallbackTweet {
   id: string;
   text: string;
-  author: TweetAuthor;
-  stats: TweetStats;
-  media: TweetMediaItem[];
+  author: FallbackTweetAuthor;
+  stats: FallbackTweetStats;
+  media: FallbackTweetMediaItem[];
   createdAt: Date;
   isRetweet?: boolean;
-  retweetedBy?: TweetAuthor;
+  retweetedBy?: FallbackTweetAuthor;
   isQuote?: boolean;
-  quotedTweet?: UITweet;
+  quotedTweet?: FallbackTweet;
 }
 
 /**
- * ツイート作者の型定義
+ * フォールバック用のツイート作者の型定義
  */
-export interface TweetAuthor {
+export interface FallbackTweetAuthor {
   id: string;
   username: string;
   displayName: string;
@@ -26,9 +36,9 @@ export interface TweetAuthor {
 }
 
 /**
- * ツイート統計の型定義
+ * フォールバック用のツイート統計の型定義
  */
-export interface TweetStats {
+export interface FallbackTweetStats {
   retweetCount: number;
   likeCount: number;
   replyCount: number;
@@ -36,9 +46,9 @@ export interface TweetStats {
 }
 
 /**
- * ツイートメディアの型定義
+ * フォールバック用のツイートメディアの型定義
  */
-export interface TweetMediaItem {
+export interface FallbackTweetMediaItem {
   id: string;
   type: 'image' | 'video' | 'gif';
   url: string;
@@ -47,3 +57,9 @@ export interface TweetMediaItem {
   width?: number;
   height?: number;
 }
+
+// 後方互換性のため、古い型名も残す
+export type UITweet = FallbackTweet;
+export type TweetAuthor = FallbackTweetAuthor;
+export type TweetStats = FallbackTweetStats;
+export type TweetMediaItem = FallbackTweetMediaItem;

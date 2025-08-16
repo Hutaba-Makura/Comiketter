@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Paper, Alert, Text } from '@mantine/core';
+import { Alert, Text, Box } from '@mantine/core';
 import { IconAlertCircle } from '@tabler/icons-react';
+import { Tweet } from 'react-tweet';
 import { useThemeBridge } from '../hooks/useThemeBridge';
 import { TweetEmbedFallback } from './TweetEmbedFallback';
 
@@ -15,31 +16,36 @@ export function TweetEmbed({ id }: TweetEmbedProps) {
   const [hasError, setHasError] = useState(false);
   const { themeValue } = useThemeBridge();
 
-  // react-tweetが利用できない場合のフォールバック
+  // react-tweetが失敗した場合のフォールバック
   if (hasError) {
-    return <TweetEmbedFallback id={id} />;
+    return (
+      <Alert
+        icon={<IconAlertCircle size={16} />}
+        title="ツイートの読み込みに失敗しました"
+        color="red"
+        variant="light"
+      >
+        <Text size="sm" mb="md">
+          このツイートを表示できませんでした
+        </Text>
+        <TweetEmbedFallback id={id} />
+      </Alert>
+    );
   }
 
-  // react-tweetの動的インポート
-  React.useEffect(() => {
-    const loadReactTweet = async () => {
-      try {
-        const { Tweet } = await import('react-tweet');
-        // 成功した場合は何もしない（フォールバックは表示されない）
-      } catch (error) {
-        console.error('react-tweet読み込みエラー:', error);
-        setHasError(true);
-      }
-    };
-    
-    loadReactTweet();
-  }, []);
-
-  // react-tweetが利用できない場合はフォールバック
-  if (hasError) {
-    return <TweetEmbedFallback id={id} />;
-  }
-
-  // プロト版ではフォールバックを表示
-  return <TweetEmbedFallback id={id} />;
+  return (
+    <Box
+      data-theme={themeValue}
+      style={{
+        border: '1px solid #e1e8ed',
+        borderRadius: 8,
+        overflow: 'hidden',
+      }}
+    >
+      <Tweet 
+        id={id}
+        onError={() => setHasError(true)}
+      />
+    </Box>
+  );
 }
