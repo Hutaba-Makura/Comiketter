@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Box, Alert, Text, Button } from '@mantine/core';
 import { IconAlertCircle, IconRefresh } from '@tabler/icons-react';
 import { Tweet } from 'react-tweet';
@@ -18,17 +18,26 @@ export function TweetEmbed({ id }: TweetEmbedProps) {
   const [isLoading, setIsLoading] = useState(true);
   const { themeValue } = useThemeBridge();
 
-  // エラーハンドラー
+  // エラーハンドラー（レンダリング中の状態更新を避ける）
   const handleError = useCallback(() => {
     console.error('react-tweet error for tweet:', id);
-    setHasError(true);
-    setIsLoading(false);
+    // レンダリング中を避けるため、次のティックで実行
+    setTimeout(() => {
+      setHasError(true);
+      setIsLoading(false);
+    }, 0);
   }, [id]);
 
-  // ロード完了ハンドラー
-  const handleLoad = useCallback(() => {
-    setIsLoading(false);
-  }, []);
+  // ローディング状態を自動的に管理
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (isLoading) {
+        setIsLoading(false);
+      }
+    }, 2000); // 2秒後にローディングを終了
+
+    return () => clearTimeout(timer);
+  }, [isLoading]);
 
   // react-tweetが失敗した場合のフォールバック
   if (hasError) {
