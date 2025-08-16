@@ -1,6 +1,6 @@
 {
   "name": "comiketter",
-  "version": "1.0.0",
+  "version": "0.9.0",
   "description": "コミックマーケット参加者向けX（旧Twitter）専用Chrome拡張機能",
   "main": "index.js",
   "scripts": {
