@@ -292,7 +292,7 @@ function checkHasImage(article: HTMLElement): boolean {
       // プロフィール画像とバナー画像を除外
       if (!isProfileOrBannerImage(src) && !isVideoThumbnail(src)) {
         if (!isQuoteTweet(article, img as HTMLImageElement)) {
-          hasValidImage = true;
+          hasValidImage = true; // TODO: 画像付き引用RTの場合はfalseにする
         }
       }
     }
