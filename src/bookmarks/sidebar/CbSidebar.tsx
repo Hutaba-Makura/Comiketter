@@ -127,25 +127,17 @@ export function CbSidebar() {
       />
 
       {/* CB一覧 */}
-      <Box pos="relative" style={{ flex: 1 }}>
+      <Box pos="relative" style={{ flex: 1, overflow: 'hidden' }}>
         <LoadingOverlay visible={loading} />
         
         <ScrollArea 
-          h="100%" 
-          type="hover"
+          h="100%"
+          type="auto"
           scrollbarSize={6}
-          scrollHideDelay={500}
-          styles={{
-            scrollbar: {
-              '&[data-orientation="horizontal"]': {
-                display: 'none',
-              },
-            },
-            thumb: {
-              backgroundColor: 'var(--mantine-color-gray-4)',
-              '&:hover': {
-                backgroundColor: 'var(--mantine-color-gray-6)',
-              },
+          scrollHideDelay={0}
+          style={{
+            '&::-webkit-scrollbar:horizontal': {
+              display: 'none',
             },
           }}
         >
@@ -159,10 +151,17 @@ export function CbSidebar() {
                 <Stack gap="sm" align="center">
                   <IconBookmark size={32} color="var(--mantine-color-gray-4)" />
                   <Text size="sm" c="dimmed" ta="center">
-                    CBがありませんよん
+                    CBがありませんよ
                   </Text>
                   <Text size="xs" c="dimmed" ta="center">
                     新規作成ボタンからCBを作成してください
+                  </Text>
+                  <Text size="xs" c="dimmed" ta="center">
+                    最終更新時刻:{new Date().toLocaleTimeString('ja-JP', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      second: '2-digit',
+                    })}
                   </Text>
                 </Stack>
               )}
