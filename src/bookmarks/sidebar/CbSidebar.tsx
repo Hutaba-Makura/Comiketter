@@ -130,7 +130,25 @@ export function CbSidebar() {
       <Box pos="relative" style={{ flex: 1 }}>
         <LoadingOverlay visible={loading} />
         
-        <ScrollArea h="100%" type="auto">
+        <ScrollArea 
+          h="100%" 
+          type="hover"
+          scrollbarSize={6}
+          scrollHideDelay={500}
+          styles={{
+            scrollbar: {
+              '&[data-orientation="horizontal"]': {
+                display: 'none',
+              },
+            },
+            thumb: {
+              backgroundColor: 'var(--mantine-color-gray-4)',
+              '&:hover': {
+                backgroundColor: 'var(--mantine-color-gray-6)',
+              },
+            },
+          }}
+        >
           {filteredCbs.length === 0 ? (
             <Box py="xl">
               {searchQuery ? (
@@ -141,7 +159,7 @@ export function CbSidebar() {
                 <Stack gap="sm" align="center">
                   <IconBookmark size={32} color="var(--mantine-color-gray-4)" />
                   <Text size="sm" c="dimmed" ta="center">
-                    CBがありません
+                    CBがありませんよん
                   </Text>
                   <Text size="xs" c="dimmed" ta="center">
                     新規作成ボタンからCBを作成してください
