@@ -134,12 +134,9 @@ export function CbSidebar() {
           h="100%"
           type="auto"
           scrollbarSize={6}
-          scrollHideDelay={0}
-          style={{
-            '&::-webkit-scrollbar:horizontal': {
-              display: 'none',
-            },
-          }}
+          scrollHideDelay={500}
+          scrollbars="y"
+          viewportProps={DetailedHTMLProps}    
         >
           {filteredCbs.length === 0 ? (
             <Box py="xl">
@@ -149,7 +146,7 @@ export function CbSidebar() {
                 </Text>
               ) : (
                 <Stack gap="sm" align="center">
-                  <IconBookmark size={32} color="var(--mantine-color-gray-4)" />
+                  <IconBookmark size={32} color="var(--mantine-color-blue-6)" />
                   <Text size="sm" c="dimmed" ta="center">
                     CBがありませんよ
                   </Text>
