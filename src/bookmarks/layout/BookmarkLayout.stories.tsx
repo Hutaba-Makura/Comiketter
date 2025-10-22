@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
+import { MantineProvider } from '@mantine/core';
 import { BookmarkLayout } from './BookmarkLayout';
+import { withCbStore } from '../test/storybookDecorators';
 
 /**
  * BookmarkLayoutコンポーネントのメタデータ
@@ -17,6 +19,14 @@ const meta: Meta<typeof BookmarkLayout> = {
   },
   tags: ['autodocs'],
   argTypes: {},
+  decorators: [
+    (Story) => (
+      <MantineProvider>
+        <Story />
+      </MantineProvider>
+    ),
+    withCbStore,
+  ],
 };
 
 export default meta;

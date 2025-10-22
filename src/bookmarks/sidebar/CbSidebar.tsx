@@ -95,7 +95,8 @@ export function CbSidebar() {
           カスタムブックマーク
         </Title>
         <Button
-          variant="light"
+          variant="filled"
+          color="blue"
           size="xs"
           leftSection={<IconPlus size={14} />}
           onClick={handleCreateCb}
@@ -132,11 +133,11 @@ export function CbSidebar() {
         
         <ScrollArea 
           h="100%"
-          type="auto"
+          type="never"
           scrollbarSize={6}
           scrollHideDelay={500}
           scrollbars="y"
-          viewportProps={DetailedHTMLProps}    
+          viewportProps={{ style: { overflowY: 'auto' } }}
         >
           {filteredCbs.length === 0 ? (
             <Box py="xl">
