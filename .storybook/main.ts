@@ -31,13 +31,13 @@ const config: StorybookConfig = {
       use: ['style-loader', 'css-loader', 'sass-loader'],
     });
 
-    // 既存のCSSルールを確認
+    // CSSファイルのsideEffectsを有効にする（MantineのCSSが正しく読み込まれるように）
     const cssRule = config.module?.rules?.find(
       (rule) => rule && typeof rule === 'object' && 'test' in rule && rule.test?.toString().includes('css')
     );
     
     if (cssRule && typeof cssRule === 'object' && 'sideEffects' in cssRule) {
-      (cssRule as any).sideEffects = false;
+      (cssRule as any).sideEffects = true;
     }
 
     return config;

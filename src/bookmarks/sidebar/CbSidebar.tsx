@@ -106,7 +106,7 @@ export function CbSidebar() {
       </Group>
 
       {/* 統計情報 */}
-      <Group gap="xs" justify="center">
+      <Group gap="xs" justify="flex-start">
         <Badge variant="light" size="sm">
           {totalCbs} CB
         </Badge>
