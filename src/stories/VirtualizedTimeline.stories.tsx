@@ -4,7 +4,7 @@ import { VirtualizedTimeline } from '../bookmarks/timeline/VirtualizedTimeline';
 import { sampleTweetIds } from './data/tweetSampleData';
 
 const meta = {
-  title: 'CB/VirtualizedTimeline',
+  title: 'Timeline/VirtualizedTimeline',
   component: VirtualizedTimeline,
   parameters: {
     layout: 'fullscreen',
@@ -106,7 +106,7 @@ export const DarkTheme: Story = {
   },
   decorators: [
     (Story) => (
-      <MantineProvider theme={{ colorScheme: 'dark' }}>
+      <MantineProvider theme={{ colorScheme: 'dark' } as any}>
         <div style={{ padding: '20px', backgroundColor: '#1a1a1a', minHeight: '100vh' }}>
           <Story />
         </div>

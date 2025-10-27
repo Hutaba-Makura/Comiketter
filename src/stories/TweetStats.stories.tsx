@@ -4,7 +4,7 @@ import { TweetStats } from '../bookmarks/tweet/TweetStats';
 import { sampleStats } from './data/tweetSampleData';
 
 const meta = {
-  title: 'CB/TweetStats',
+  title: 'Tweet/TweetStats',
   component: TweetStats,
   parameters: {
     layout: 'padded',
@@ -109,7 +109,7 @@ export const DarkTheme: Story = {
   },
   decorators: [
     (Story) => (
-      <MantineProvider theme={{ colorScheme: 'dark' }}>
+      <MantineProvider theme={{ colorScheme: 'dark' } as any}>
         <div style={{ maxWidth: '600px', margin: '0 auto', backgroundColor: '#1a1a1a', padding: '20px', borderRadius: '8px' }}>
           <Story />
         </div>

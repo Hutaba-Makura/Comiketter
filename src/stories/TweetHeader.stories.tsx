@@ -4,7 +4,7 @@ import { TweetHeader } from '../bookmarks/tweet/TweetHeader';
 import { sampleAuthors } from './data/tweetSampleData';
 
 const meta = {
-  title: 'CB/TweetHeader',
+  title: 'Tweet/TweetHeader',
   component: TweetHeader,
   parameters: {
     layout: 'padded',
@@ -110,7 +110,7 @@ export const DarkTheme: Story = {
   },
   decorators: [
     (Story) => (
-      <MantineProvider theme={{ colorScheme: 'dark' }}>
+      <MantineProvider theme={{ colorScheme: 'dark' } as any}>
         <div style={{ maxWidth: '600px', margin: '0 auto', backgroundColor: '#1a1a1a', padding: '20px', borderRadius: '8px' }}>
           <Story />
         </div>

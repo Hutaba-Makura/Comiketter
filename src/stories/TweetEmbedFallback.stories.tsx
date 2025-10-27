@@ -3,7 +3,7 @@ import { MantineProvider } from '@mantine/core';
 import { TweetEmbedFallback } from '../bookmarks/tweet/TweetEmbedFallback';
 
 const meta = {
-  title: 'CB/TweetEmbedFallback',
+  title: 'Tweet/TweetEmbedFallback',
   component: TweetEmbedFallback,
   parameters: {
     layout: 'padded',
@@ -77,7 +77,7 @@ export const DarkTheme: Story = {
   },
   decorators: [
     (Story) => (
-      <MantineProvider theme={{ colorScheme: 'dark' }}>
+      <MantineProvider theme={{ colorScheme: 'dark' } as any}>
         <div style={{ maxWidth: '600px', margin: '0 auto', backgroundColor: '#1a1a1a', padding: '20px', borderRadius: '8px' }}>
           <Story />
         </div>

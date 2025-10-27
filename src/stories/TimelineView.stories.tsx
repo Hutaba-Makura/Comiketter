@@ -1,34 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-webpack5';
 import { MantineProvider } from '@mantine/core';
-import { TimelineView } from '../bookmarks/timeline/TimelineView';
+import { StorybookTimelineView } from './components/StorybookTimelineView';
 import { sampleCbData, sampleTweetIds } from './data/tweetSampleData';
 
-// TimelineViewはuseCbStoreとuseTimelineフックに依存しているため、
-// モックを提供する必要があります
-const mockCbStore = {
-  selectedCbId: 'sample-cb-1',
-  selectedCb: sampleCbData
-};
-
-const mockTimeline = {
-  tweetIds: sampleTweetIds,
-  loading: false,
-  error: null,
-  refetch: () => {}
-};
-
-// モック関数を提供
-jest.mock('../bookmarks/state/cbStore', () => ({
-  useCbStore: () => mockCbStore
-}));
-
-jest.mock('../bookmarks/hooks/useTimeline', () => ({
-  useTimeline: () => mockTimeline
-}));
-
 const meta = {
-  title: 'CB/TimelineView',
-  component: TimelineView,
+  title: 'Timeline/TimelineView',
+  component: StorybookTimelineView,
   parameters: {
     layout: 'fullscreen',
     docs: {
@@ -38,6 +15,24 @@ const meta = {
     }
   },
   tags: ['autodocs'],
+  argTypes: {
+    selectedCbId: {
+      control: 'text',
+      description: '選択されたCBのID'
+    },
+    tweetIds: {
+      control: 'object',
+      description: '表示するツイートIDの配列'
+    },
+    loading: {
+      control: 'boolean',
+      description: 'ローディング状態'
+    },
+    error: {
+      control: 'text',
+      description: 'エラーメッセージ'
+    }
+  },
   decorators: [
     (Story) => (
       <MantineProvider>
@@ -47,144 +42,100 @@ const meta = {
       </MantineProvider>
     )
   ]
-} satisfies Meta<typeof TimelineView>;
+} satisfies Meta<typeof StorybookTimelineView>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
 // 基本的なタイムライン表示
-export const Default: Story = {};
+export const Default: Story = {
+  args: {
+    selectedCbId: 'sample-cb-1',
+    selectedCb: sampleCbData,
+    tweetIds: sampleTweetIds,
+    loading: false,
+    error: null
+  }
+};
 
 // ローディング状態
 export const Loading: Story = {
-  decorators: [
-    (Story) => {
-      // ローディング状態のモック
-      jest.doMock('../bookmarks/hooks/useTimeline', () => ({
-        useTimeline: () => ({
-          tweetIds: [],
-          loading: true,
-          error: null,
-          refetch: () => {}
-        })
-      }));
-      
-      return (
-        <MantineProvider>
-          <div style={{ padding: '20px', backgroundColor: '#f8f9fa', minHeight: '100vh' }}>
-            <Story />
-          </div>
-        </MantineProvider>
-      );
-    }
-  ]
+  args: {
+    selectedCbId: 'sample-cb-1',
+    selectedCb: sampleCbData,
+    tweetIds: [],
+    loading: true,
+    error: null
+  }
 };
 
 // エラー状態
 export const Error: Story = {
-  decorators: [
-    (Story) => {
-      // エラー状態のモック
-      jest.doMock('../bookmarks/hooks/useTimeline', () => ({
-        useTimeline: () => ({
-          tweetIds: [],
-          loading: false,
-          error: 'ツイートの取得に失敗しました',
-          refetch: () => {}
-        })
-      }));
-      
-      return (
-        <MantineProvider>
-          <div style={{ padding: '20px', backgroundColor: '#f8f9fa', minHeight: '100vh' }}>
-            <Story />
-          </div>
-        </MantineProvider>
-      );
-    }
-  ]
+  args: {
+    selectedCbId: 'sample-cb-1',
+    selectedCb: sampleCbData,
+    tweetIds: [],
+    loading: false,
+    error: 'ツイートの取得に失敗しました'
+  }
 };
 
 // 空のタイムライン
 export const EmptyTimeline: Story = {
-  decorators: [
-    (Story) => {
-      // 空のタイムラインのモック
-      jest.doMock('../bookmarks/hooks/useTimeline', () => ({
-        useTimeline: () => ({
-          tweetIds: [],
-          loading: false,
-          error: null,
-          refetch: () => {}
-        })
-      }));
-      
-      return (
-        <MantineProvider>
-          <div style={{ padding: '20px', backgroundColor: '#f8f9fa', minHeight: '100vh' }}>
-            <Story />
-          </div>
-        </MantineProvider>
-      );
-    }
-  ]
+  args: {
+    selectedCbId: 'sample-cb-1',
+    selectedCb: sampleCbData,
+    tweetIds: [],
+    loading: false,
+    error: null
+  }
+};
+
+// 少数のツイート
+export const FewTweets: Story = {
+  args: {
+    selectedCbId: 'sample-cb-1',
+    selectedCb: sampleCbData,
+    tweetIds: sampleTweetIds.slice(0, 3),
+    loading: false,
+    error: null
+  }
 };
 
 // 多数のツイート（仮想化有効）
 export const ManyTweets: Story = {
-  decorators: [
-    (Story) => {
-      // 多数のツイートのモック
-      const manyTweetIds = Array.from({ length: 150 }, (_, i) => `1234567890123456${String(i).padStart(3, '0')}`);
-      
-      jest.doMock('../bookmarks/hooks/useTimeline', () => ({
-        useTimeline: () => ({
-          tweetIds: manyTweetIds,
-          loading: false,
-          error: null,
-          refetch: () => {}
-        })
-      }));
-      
-      return (
-        <MantineProvider>
-          <div style={{ padding: '20px', backgroundColor: '#f8f9fa', minHeight: '100vh' }}>
-            <Story />
-          </div>
-        </MantineProvider>
-      );
-    }
-  ]
+  args: {
+    selectedCbId: 'sample-cb-1',
+    selectedCb: sampleCbData,
+    tweetIds: Array.from({ length: 150 }, (_, i) => `1234567890123456${String(i).padStart(3, '0')}`),
+    loading: false,
+    error: null
+  }
 };
 
 // CBが選択されていない状態
 export const NoCbSelected: Story = {
-  decorators: [
-    (Story) => {
-      // CBが選択されていない状態のモック
-      jest.doMock('../bookmarks/state/cbStore', () => ({
-        useCbStore: () => ({
-          selectedCbId: null,
-          selectedCb: null
-        })
-      }));
-      
-      return (
-        <MantineProvider>
-          <div style={{ padding: '20px', backgroundColor: '#f8f9fa', minHeight: '100vh' }}>
-            <Story />
-          </div>
-        </MantineProvider>
-      );
-    }
-  ]
+  args: {
+    selectedCbId: null,
+    selectedCb: null,
+    tweetIds: [],
+    loading: false,
+    error: null
+  }
 };
 
 // ダークテーマ
 export const DarkTheme: Story = {
+  args: {
+    selectedCbId: 'sample-cb-1',
+    selectedCb: sampleCbData,
+    tweetIds: sampleTweetIds,
+    loading: false,
+    error: null
+  },
   decorators: [
     (Story) => (
-      <MantineProvider theme={{ colorScheme: 'dark' }}>
+      <MantineProvider theme={{ colorScheme: 'dark' } as any}>
         <div style={{ padding: '20px', backgroundColor: '#1a1a1a', minHeight: '100vh' }}>
           <Story />
         </div>
@@ -195,6 +146,13 @@ export const DarkTheme: Story = {
 
 // レスポンシブ表示（モバイルサイズ）
 export const MobileView: Story = {
+  args: {
+    selectedCbId: 'sample-cb-1',
+    selectedCb: sampleCbData,
+    tweetIds: sampleTweetIds,
+    loading: false,
+    error: null
+  },
   parameters: {
     viewport: {
       defaultViewport: 'mobile1'
@@ -204,6 +162,13 @@ export const MobileView: Story = {
 
 // レスポンシブ表示（タブレットサイズ）
 export const TabletView: Story = {
+  args: {
+    selectedCbId: 'sample-cb-1',
+    selectedCb: sampleCbData,
+    tweetIds: sampleTweetIds,
+    loading: false,
+    error: null
+  },
   parameters: {
     viewport: {
       defaultViewport: 'tablet'
@@ -213,6 +178,13 @@ export const TabletView: Story = {
 
 // レスポンシブ表示（デスクトップサイズ）
 export const DesktopView: Story = {
+  args: {
+    selectedCbId: 'sample-cb-1',
+    selectedCb: sampleCbData,
+    tweetIds: sampleTweetIds,
+    loading: false,
+    error: null
+  },
   parameters: {
     viewport: {
       defaultViewport: 'desktop'
@@ -222,6 +194,13 @@ export const DesktopView: Story = {
 
 // インタラクション機能のテスト
 export const InteractiveFeatures: Story = {
+  args: {
+    selectedCbId: 'sample-cb-1',
+    selectedCb: sampleCbData,
+    tweetIds: sampleTweetIds,
+    loading: false,
+    error: null
+  },
   parameters: {
     docs: {
       description: {

@@ -105,8 +105,8 @@ export const sampleMediaItems: TweetMediaItem[][] = [
     {
       id: 'media-4',
       type: 'video',
-      url: 'https://via.placeholder.com/600x400/45B7D1/FFFFFF?text=動画コンテンツ',
-      previewUrl: 'https://via.placeholder.com/600x400/45B7D1/FFFFFF?text=動画コンテンツ',
+      url: 'https://video.twimg.com/amplify_video/1976375876527988737/vid/avc1/1920x1080/DaUSmb1XZkHqEYkg.mp4?tag=21',
+      previewUrl: 'https://pbs.twimg.com/amplify_video_thumb/1976375876527988737/img/NwB1QSaYkTW-1oHg.jpg',
       altText: '動画コンテンツ',
       width: 600,
       height: 400
@@ -117,8 +117,8 @@ export const sampleMediaItems: TweetMediaItem[][] = [
     {
       id: 'media-5',
       type: 'gif',
-      url: 'https://via.placeholder.com/500x300/96CEB4/FFFFFF?text=GIFアニメーション',
-      previewUrl: 'https://via.placeholder.com/500x300/96CEB4/FFFFFF?text=GIFアニメーション',
+      url: 'https://video.twimg.com/tweet_video/G3l8yaCWkAASxJB.mp4',
+      previewUrl: 'https://pbs.twimg.com/tweet_video_thumb/G3l8yaCWkAASxJB.jpg',
       altText: 'GIFアニメーション',
       width: 500,
       height: 300

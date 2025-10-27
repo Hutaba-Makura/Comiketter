@@ -4,7 +4,7 @@ import { TweetMedia } from '../bookmarks/tweet/TweetMedia';
 import { sampleMediaItems } from './data/tweetSampleData';
 
 const meta = {
-  title: 'CB/TweetMedia',
+  title: 'Tweet/TweetMedia',
   component: TweetMedia,
   parameters: {
     layout: 'padded',
@@ -146,7 +146,7 @@ export const DarkTheme: Story = {
   },
   decorators: [
     (Story) => (
-      <MantineProvider theme={{ colorScheme: 'dark' }}>
+      <MantineProvider theme={{ colorScheme: 'dark' } as any}>
         <div style={{ maxWidth: '600px', margin: '0 auto', backgroundColor: '#1a1a1a', padding: '20px', borderRadius: '8px' }}>
           <Story />
         </div>

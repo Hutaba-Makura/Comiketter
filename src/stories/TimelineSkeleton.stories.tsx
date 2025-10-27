@@ -3,7 +3,7 @@ import { MantineProvider } from '@mantine/core';
 import { TimelineSkeleton } from '../bookmarks/timeline/TimelineSkeleton';
 
 const meta = {
-  title: 'CB/TimelineSkeleton',
+  title: 'Timeline/TimelineSkeleton',
   component: TimelineSkeleton,
   parameters: {
     layout: 'fullscreen',
@@ -35,7 +35,7 @@ export const Default: Story = {};
 export const DarkTheme: Story = {
   decorators: [
     (Story) => (
-      <MantineProvider theme={{ colorScheme: 'dark' }}>
+      <MantineProvider theme={{ colorScheme: 'dark' } as any}>
         <div style={{ padding: '20px', backgroundColor: '#1a1a1a', minHeight: '100vh' }}>
           <Story />
         </div>
