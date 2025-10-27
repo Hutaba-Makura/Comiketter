@@ -1,6 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Box, Alert, Text, Button } from '@mantine/core';
-import { IconAlertCircle, IconRefresh } from '@tabler/icons-react';
+import { Box, Text } from '@mantine/core';
 import { Tweet } from 'react-tweet';
 import { useThemeBridge } from '../hooks/useThemeBridge';
 import { TweetEmbedFallback } from './TweetEmbedFallback';
@@ -42,36 +41,13 @@ export function TweetEmbed({ id }: TweetEmbedProps) {
   // react-tweetが失敗した場合のフォールバック
   if (hasError) {
     return (
-      <Box
-        data-theme={themeValue}
-        style={{
-          border: '1px solid #e1e8ed',
-          borderRadius: 8,
-          overflow: 'hidden',
+      <TweetEmbedFallback 
+        id={id}
+        onRetry={() => {
+          setHasError(false);
+          setIsLoading(true);
         }}
-      >
-        <Alert
-          icon={<IconAlertCircle size={16} />}
-          title="ツイートの読み込みに失敗しました"
-          color="red"
-          variant="light"
-        >
-          <Text size="sm" mb="md">
-            このツイートを表示できませんでした
-          </Text>
-          <Button 
-            variant="light" 
-            size="xs"
-            leftSection={<IconRefresh size={14} />}
-            onClick={() => {
-              setHasError(false);
-              setIsLoading(true);
-            }}
-          >
-            再試行
-          </Button>
-        </Alert>
-      </Box>
+      />
     );
   }
 
