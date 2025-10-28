@@ -89,16 +89,22 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
               switch (media.length) {
                 case 1:
                   return (
-                    <Paper withBorder style={{ 
-                      position: 'relative', 
-                      overflow: 'hidden', 
-                      borderRadius: '16px',
-                      backgroundColor: 'rgb(207, 217, 222)',
-                      '.hover': {
-                        backgroundColor: 'rgba(29, 155, 240, 0.1)',
-                        transitionDuration: '0.2s',
-                      }, 
-                      }}>
+                    <Paper 
+                      withBorder 
+                      style={{ 
+                        position: 'relative', 
+                        overflow: 'hidden', 
+                        borderRadius: '16px',
+                        backgroundColor: 'transparent',
+                        transition: 'background-color 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = 'rgba(29, 155, 240, 0.1)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                      }}
+                    >
                       <img
                         src={media[0].previewUrl}
                         alt={media[0].altText || 'メディア'}
@@ -108,7 +114,8 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                           maxWidth: '516px', 
                           minHeight: '300px', 
                           maxHeight: '417.33px', 
-                          objectFit: 'cover'
+                          objectFit: 'cover',
+                          pointerEvents: 'none'
                         }}
                       />
                       <Badge
@@ -118,7 +125,8 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                           position: 'absolute',
                           top: 8,
                           right: 8,
-                          backgroundColor: 'rgba(0, 0, 0, 0.7)'
+                          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                          pointerEvents: 'none'
                         }}
                       >
                         {media[0].type.toUpperCase()}
@@ -195,19 +203,25 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                       2: '0px 0px 16px 0px'
                     }
                   return (
-                    <Box style={{ 
-                      display: 'grid', 
-                      gridTemplateColumns: '1fr 1fr', 
-                      gridTemplateRows: '1fr 1fr', 
-                      gap: '2px', 
-                      height: '300px',
-                      borderRadius: '16px',
-                      backgroundColor: 'rgb(207, 217, 222)',
-                      '.hover': {
-                        backgroundColor: 'rgba(29, 155, 240, 0.1)',
-                        transitionDuration: '0.2s',
-                      }, 
-                      }}>
+                    <Box 
+                      style={{ 
+                        display: 'grid', 
+                        gridTemplateColumns: '1fr 1fr', 
+                        gridTemplateRows: '1fr 1fr', 
+                        gap: '2px', 
+                        height: '300px',
+                        borderRadius: '16px',
+                        position: 'relative',
+                        backgroundColor: '#ffffff',
+                        transition: 'background-color 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = 'rgba(29, 155, 240, 0.1)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'white';
+                      }}
+                    >
                       {/* 1枚目: 左半分全体 */}
                       <Paper 
                         key={media[0].id} 
@@ -217,7 +231,8 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                           borderRadius: borderRadiusMap3[0],
                           gridColumn: '1',
                           gridRow: '1 / 3',
-                          borderRight: '0 solid black'
+                          borderRight: '0 solid black',
+                          backgroundColor: 'transparent'
                         }}
                       >
                         <img
@@ -229,7 +244,8 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                             maxWidth: '257px',
                             minHeight: '187.31px',
                             maxHeight: '290.25px',
-                            objectFit: 'cover'
+                            objectFit: 'cover',
+                            pointerEvents: 'none'
                           }}
                         />
                         <Badge
@@ -239,7 +255,8 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                             position: 'absolute',
                             top: 4,
                             right: 4,
-                            backgroundColor: 'rgba(0, 0, 0, 0.7)'
+                            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                            pointerEvents: 'none'
                           }}
                         >
                           {media[0].type.toUpperCase()}
@@ -256,7 +273,8 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                           gridColumn: '2',
                           gridRow: '1',
                           borderLeft: '0 solid black',
-                          borderBottom: '0 solid black'
+                          borderBottom: '0 solid black',
+                          backgroundColor: 'transparent'
                         }}
                       >
                         <img
@@ -268,7 +286,8 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                             maxWidth: '257px',
                             minHeight: '92.66px',
                             maxHeight: '144.13px',
-                            objectFit: 'cover'
+                            objectFit: 'cover',
+                            pointerEvents: 'none'
                           }}
                         />
                         <Badge
@@ -278,7 +297,8 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                             position: 'absolute',
                             top: 4,
                             right: 4,
-                            backgroundColor: 'rgba(0, 0, 0, 0.7)'
+                            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                            pointerEvents: 'none'
                           }}
                         >
                           {media[1].type.toUpperCase()}
@@ -295,7 +315,8 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                           gridColumn: '2',
                           gridRow: '2', 
                           borderLeft: '0 solid black',
-                          borderTop: '0 solid black'
+                          borderTop: '0 solid black',
+                          backgroundColor: 'transparent'
                         }}
                       >
                         <img
@@ -307,7 +328,8 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                             maxWidth: '257px',
                             minHeight: '92.66px',
                             maxHeight: '144.13px',
-                            objectFit: 'cover'
+                            objectFit: 'cover',
+                            pointerEvents: 'none'
                           }}
                         />
                         <Badge
@@ -317,7 +339,8 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                             position: 'absolute',
                             top: 4,
                             right: 4,
-                            backgroundColor: 'rgba(0, 0, 0, 0.7)'
+                            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                            pointerEvents: 'none'
                           }}
                         >
                           {media[2].type.toUpperCase()}
@@ -334,26 +357,37 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                       3: '0px 0px 16px 0px'
                     }
                   return (
-                    <Box style={{ 
-                      display: 'grid', 
-                      gridTemplateColumns: 'repeat(2, 1fr)', 
-                      gap: '2px',
-                      borderRadius: '16px',
-                      backgroundColor: 'rgb(207, 217, 222)',
-                      '.hover': {
-                        backgroundColor: 'rgba(29, 155, 240, 0.1)',
-                        transitionDuration: '0.2s',
-                      }, 
-                      }}>
+                    <Box 
+                      style={{ 
+                        display: 'grid', 
+                        gridTemplateColumns: 'repeat(2, 1fr)', 
+                        gap: '2px',
+                        borderRadius: '16px',
+                        position: 'relative',
+                        backgroundColor: '#ffffff',
+                        transition: 'background-color 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = 'rgba(29, 155, 240, 0.1)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'white';
+                      }}
+                    >
                       {media.slice(0, 4).map((item, index) => (
-                        <Paper key={item.id} withBorder style={{ 
-                          position: 'relative',
-                          borderRadius: borderRadiusMap4[index%4], 
-                          borderRight: (index%4 === 0 || index%4 === 3) ? '0 solid black' : 'none',
-                          borderLeft: (index%4 === 1 || index%4 === 2) ? '0 solid black' : 'none',
-                          borderTop: (index%4 === 2 || index%4 === 3) ? '0 solid black' : 'none',
-                          borderBottom: (index%4 === 0 || index%4 === 1) ? '0 solid black' : 'none'
-                          }}>
+                        <Paper 
+                          key={item.id} 
+                          withBorder 
+                          style={{ 
+                            position: 'relative',
+                            borderRadius: borderRadiusMap4[index%4], 
+                            borderRight: (index%4 === 0 || index%4 === 3) ? '0 solid black' : 'none',
+                            borderLeft: (index%4 === 1 || index%4 === 2) ? '0 solid black' : 'none',
+                            borderTop: (index%4 === 2 || index%4 === 3) ? '0 solid black' : 'none',
+                            borderBottom: (index%4 === 0 || index%4 === 1) ? '0 solid black' : 'none',
+                            backgroundColor: 'transparent'
+                          }}
+                        >
                           <img
                             src={item.previewUrl}
                             alt={item.altText || 'メディア'}
@@ -363,7 +397,8 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                               maxWidth: '257px',
                               minHeight: '92.66px',
                               maxHeight: '144.13px', 
-                              objectFit: 'cover'
+                              objectFit: 'cover',
+                              pointerEvents: 'none'
                             }}
                           />
                           <Badge
@@ -373,7 +408,8 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                               position: 'absolute',
                               top: 4,
                               right: 4,
-                              backgroundColor: 'rgba(0, 0, 0, 0.7)'
+                              backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                              pointerEvents: 'none'
                             }}
                           >
                             {item.type.toUpperCase()}
@@ -391,6 +427,7 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 borderRadius: '4px',
+                                pointerEvents: 'none'
                               }}
                             >
                               <Text size="lg" fw={600} c="white">
