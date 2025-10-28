@@ -74,7 +74,7 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
               switch (media.length) {
                 case 1:
                   return (
-                    <Paper withBorder style={{ position: 'relative', overflow: 'hidden' }}>
+                    <Paper withBorder style={{ position: 'relative', overflow: 'hidden', borderRadius: '16px' }}>
                       <img
                         src={media[0].previewUrl}
                         alt={media[0].altText || 'メディア'}
@@ -84,8 +84,7 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                           maxWidth: '516px', 
                           minHeight: '300px', 
                           maxHeight: '417.33px', 
-                          objectFit: 'cover', 
-                          borderRadius: '4px'
+                          objectFit: 'cover'
                         }}
                       />
                       <Badge
@@ -105,9 +104,19 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                 
                 case 2:
                   return (
-                    <Box style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '4px' }}>
+                    <Box style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '2px' }}>
                       {media.map((item, index) => (
-                        <Paper key={item.id} withBorder style={{ position: 'relative' }}>
+                        <Paper 
+                          key={item.id} 
+                          withBorder 
+                          style={{ 
+                            position: 'relative',
+                            borderRadius: index === 0 ? '16px 0px 0px 16px' : '0px 16px 16px 0px',
+                            overflow: 'hidden',
+                            borderRight: index === 0 ? 'none' : '1px solid #e1e8ed',
+                            borderLeft: index === 1 ? 'none' : '1px solid #e1e8ed'
+                          }}
+                        >
                           <img
                             src={item.previewUrl}
                             alt={item.altText || 'メディア'}
@@ -117,8 +126,7 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                               maxWidth: '257px',
                               minHeight: '187.31px',
                               maxHeight: '290.25px', 
-                              objectFit: 'cover', 
-                              borderRadius: '4px' 
+                              objectFit: 'cover'
                             }}
                           />
                           <Badge
@@ -138,17 +146,24 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                     </Box>
                   );
                 
-                case 3:
+                  case 3:
+                    const borderRadiusMap3: Record<number, string> = {
+                      0: '16px 0px 0px 16px',
+                      1: '0px 16px 0px 0px',
+                      2: '0px 0px 16px 0px'
+                    }
                   return (
-                    <Box style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr', gap: '4px', height: '300px' }}>
+                    <Box style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr', gap: '2px', height: '300px' }}>
                       {/* 1枚目: 左半分全体 */}
                       <Paper 
                         key={media[0].id} 
                         withBorder 
                         style={{ 
                           position: 'relative',
+                          borderRadius: borderRadiusMap3[0],
                           gridColumn: '1',
-                          gridRow: '1 / 3'
+                          gridRow: '1 / 3',
+                          borderRight: '1px solid #e1e8ed'
                         }}
                       >
                         <img
@@ -184,8 +199,11 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                         withBorder 
                         style={{ 
                           position: 'relative',
+                          borderRadius: borderRadiusMap3[1],
                           gridColumn: '2',
-                          gridRow: '1'
+                          gridRow: '1',
+                          borderLeft: '1px solid #e1e8ed',
+                          borderBottom: '1px solid #e1e8ed'
                         }}
                       >
                         <img
@@ -221,8 +239,11 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                         withBorder 
                         style={{ 
                           position: 'relative',
+                          borderRadius: borderRadiusMap3[2],
                           gridColumn: '2',
-                          gridRow: '2'
+                          gridRow: '2', 
+                          borderLeft: '1px solid #e1e8ed',
+                          borderTop: '1px solid #e1e8ed'
                         }}
                       >
                         <img
@@ -254,11 +275,24 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                     </Box>
                   );
                 
-                default: // 4枚以上
+                  default: // 4枚以上
+                    const borderRadiusMap4: Record<number, string> = {
+                      0: '16px 0px 0px 16px',
+                      1: '0px 16px 0px 0px',
+                      2: '0px 0px 16px 0px',
+                      3: '0px 0px 0px 16px'
+                    }
                   return (
                     <Box style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '4px' }}>
                       {media.slice(0, 4).map((item, index) => (
-                        <Paper key={item.id} withBorder style={{ position: 'relative' }}>
+                        <Paper key={item.id} withBorder style={{ 
+                          position: 'relative',
+                          borderRadius: borderRadiusMap4[index%4], 
+                          borderRight: (index%4 === 0 || index%4 === 3) ? 'none' : '1px solid #e1e8ed',
+                          borderLeft: (index%4 === 1 || index%4 === 2) ? 'none' : '1px solid #e1e8ed',
+                          borderTop: (index%4 === 2 || index%4 === 3) ? 'none' : '1px solid #e1e8ed',
+                          borderBottom: (index%4 === 0 || index%4 === 1) ? 'none' : '1px solid #e1e8ed'
+                          }}>
                           <img
                             src={item.previewUrl}
                             alt={item.altText || 'メディア'}
