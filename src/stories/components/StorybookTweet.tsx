@@ -75,7 +75,15 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                 <img
                   src={media[0].previewUrl}
                   alt={media[0].altText || 'メディア'}
-                  style={{ width: '100%', maxWidth: '516px', minWidth: '300px', minHeight: '300px', maxHeight: '417.33px',objectFit: 'cover', borderRadius: '4px' }}
+                  style={{ 
+                    width: '100%', 
+                    minWidth: '300px', 
+                    maxWidth: '516px', 
+                    minHeight: '300px', 
+                    maxHeight: '417.33px', 
+                    objectFit: 'cover', 
+                    borderRadius: '4px'
+                  }}
                 />
                 <Badge
                   size="xs"
@@ -99,7 +107,10 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                       alt={item.altText || 'メディア'}
                       style={{ 
                         width: '100%', 
-                        height: index === 3 ? '150px' : '100px', 
+                        minWidth: '165.5px',
+                        maxWidth: '257px',
+                        minHeight: '187.31px',
+                        maxHeight: '290.25px', 
                         objectFit: 'cover', 
                         borderRadius: '4px' 
                       }}
