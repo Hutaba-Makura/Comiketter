@@ -129,36 +129,36 @@ export const sampleMediaItems: TweetMediaItem[][] = [
     {
       id: 'media-6',
       type: 'image',
-      url: 'https://via.placeholder.com/300x200/FFEAA7/FFFFFF?text=画像1',
-      previewUrl: 'https://via.placeholder.com/300x200/FFEAA7/FFFFFF?text=画像1',
-      altText: '画像1',
+      url: 'https://pbs.twimg.com/media/G4LseiFX0AAWOpv?format=jpg&name=medium',
+      previewUrl: 'https://pbs.twimg.com/media/G4LseiFX0AAWOpv?format=jpg&name=small',
+      altText: '花隈千冬',
       width: 300,
       height: 200
     },
     {
       id: 'media-7',
       type: 'image',
-      url: 'https://via.placeholder.com/300x200/DDA0DD/FFFFFF?text=画像2',
-      previewUrl: 'https://via.placeholder.com/300x200/DDA0DD/FFFFFF?text=画像2',
-      altText: '画像2',
+      url: 'https://pbs.twimg.com/media/G4E3v43WIAAVy1Z?format=jpg&name=medium',
+      previewUrl: 'https://pbs.twimg.com/media/G4E3v43WIAAVy1Z?format=jpg&name=small',
+      altText: 'ベロン',
       width: 300,
       height: 200
     },
     {
       id: 'media-8',
       type: 'image',
-      url: 'https://via.placeholder.com/300x200/98D8C8/FFFFFF?text=画像3',
-      previewUrl: 'https://via.placeholder.com/300x200/98D8C8/FFFFFF?text=画像3',
-      altText: '画像3',
+      url: 'https://pbs.twimg.com/media/G3-5bdZWAAEp7QP?format=jpg&name=medium',
+      previewUrl: 'https://pbs.twimg.com/media/G3-5bdZWAAEp7QP?format=jpg&name=small',
+      altText: 'ヤミ',
       width: 300,
       height: 200
     },
     {
       id: 'media-9',
       type: 'image',
-      url: 'https://via.placeholder.com/300x200/F7DC6F/FFFFFF?text=画像4',
-      previewUrl: 'https://via.placeholder.com/300x200/F7DC6F/FFFFFF?text=画像4',
-      altText: '画像4',
+      url: 'https://pbs.twimg.com/media/G30AmfmWIAAbeJr?format=jpg&name=small',
+      previewUrl: 'https://pbs.twimg.com/media/G30AmfmWIAAbeJr?format=jpg&name=small',
+      altText: 'ネコネコ',
       width: 300,
       height: 200
     }
@@ -181,23 +181,23 @@ export const sampleTweetIds: string[] = [
 
 // サンプルツイートコンテンツ
 export const sampleTweetContents: string[] = [
-  'コミックマーケット100の開催が決定しました！皆様のご参加をお待ちしております。',
-  '新作同人誌のサンプルを公開しました。ぜひチェックしてみてください！',
-  'コスプレ写真を投稿しました。衣装は全て手作りです。',
-  '同人サークル「サンプル」の新刊情報です。コミケでお待ちしております。',
-  '今日はコミックマーケットの準備をしています。たくさんの方にお会いできるのが楽しみです。',
-  '新作イラストを描きました。コミケで頒布予定です。',
-  'コスプレの衣装制作が完了しました。細かい部分までこだわって作りました。',
-  '同人誌の印刷が完了しました。コミケ当日が楽しみです。',
-  'コミックマーケットの会場レイアウトを確認しました。迷子にならないよう注意してください。',
-  '新作グッズのデザインが完成しました。コミケで販売予定です。'
+  '39393939',
+  'テトテトテトテト',
+  'ブルーアーカイブ！(電車内に響くクソデカボイス)',
+  'ぬるぽ',
+  'ちくわ大明神',
+  '俺はお前が俺を見たのを見たぞ',
+  '助けてー！集団ストーカに襲われています！！',
+  '修行をしています。いつの日か世界を救うと信じて',
+  'ヘアメイクアップアーティストでタレントのIKKOこと豊田一幸は2017年10月24日～10月28日の間に全くの他人と入れ替わっている。',
+  'おはよう！朝４時に何してるんだい？'
 ];
 
 // サンプルCBデータ
 export const sampleCbData = {
   id: 'sample-cb-1',
-  name: 'コミックマーケット関連',
-  description: 'コミックマーケットに関するツイートをまとめたCB',
+  name: 'テスト用',
+  description: 'テスト用のCBだよん',
   tweetCount: 10,
   createdAt: new Date('2024-01-01'),
   updatedAt: new Date('2024-01-15')
