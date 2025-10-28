@@ -52,7 +52,11 @@ export const Default: Story = {
   args: {
     selectedCbId: 'sample-cb-1',
     selectedCb: sampleCbData,
-    tweetIds: sampleTweetIds,
+    tweetIds: [
+      ...sampleTweetIds,
+      '1234567890123456799', // 3枚画像のツイート（index 10）
+      '1234567890123456800', // 4枚画像のツイート（index 11）
+    ],
     loading: false,
     error: null
   }

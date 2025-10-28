@@ -70,87 +70,246 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
         {/* メディア表示 */}
         {media.length > 0 && (
           <Box style={{ marginTop: '8px' }}>
-            {media.length === 1 ? (
-              <Paper withBorder style={{ position: 'relative', overflow: 'hidden' }}>
-                <img
-                  src={media[0].previewUrl}
-                  alt={media[0].altText || 'メディア'}
-                  style={{ 
-                    width: '100%', 
-                    minWidth: '300px', 
-                    maxWidth: '516px', 
-                    minHeight: '300px', 
-                    maxHeight: '417.33px', 
-                    objectFit: 'cover', 
-                    borderRadius: '4px'
-                  }}
-                />
-                <Badge
-                  size="xs"
-                  variant="filled"
-                  style={{
-                    position: 'absolute',
-                    top: 8,
-                    right: 8,
-                    backgroundColor: 'rgba(0, 0, 0, 0.7)'
-                  }}
-                >
-                  {media[0].type.toUpperCase()}
-                </Badge>
-              </Paper>
-            ) : (
-              <Box style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '4px' }}>
-                {media.slice(0, 4).map((item, index) => (
-                  <Paper key={item.id} withBorder style={{ position: 'relative' }}>
-                    <img
-                      src={item.previewUrl}
-                      alt={item.altText || 'メディア'}
-                      style={{ 
-                        width: '100%', 
-                        minWidth: '165.5px',
-                        maxWidth: '257px',
-                        minHeight: '187.31px',
-                        maxHeight: '290.25px', 
-                        objectFit: 'cover', 
-                        borderRadius: '4px' 
-                      }}
-                    />
-                    <Badge
-                      size="xs"
-                      variant="filled"
-                      style={{
-                        position: 'absolute',
-                        top: 4,
-                        right: 4,
-                        backgroundColor: 'rgba(0, 0, 0, 0.7)'
-                      }}
-                    >
-                      {item.type.toUpperCase()}
-                    </Badge>
-                    {index === 3 && media.length > 4 && (
-                      <Box
+            {(() => {
+              switch (media.length) {
+                case 1:
+                  return (
+                    <Paper withBorder style={{ position: 'relative', overflow: 'hidden' }}>
+                      <img
+                        src={media[0].previewUrl}
+                        alt={media[0].altText || 'メディア'}
+                        style={{ 
+                          width: '100%', 
+                          minWidth: '300px', 
+                          maxWidth: '516px', 
+                          minHeight: '300px', 
+                          maxHeight: '417.33px', 
+                          objectFit: 'cover', 
+                          borderRadius: '4px'
+                        }}
+                      />
+                      <Badge
+                        size="xs"
+                        variant="filled"
                         style={{
                           position: 'absolute',
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          bottom: 0,
-                          backgroundColor: 'rgba(0, 0, 0, 0.7)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          borderRadius: '4px',
+                          top: 8,
+                          right: 8,
+                          backgroundColor: 'rgba(0, 0, 0, 0.7)'
                         }}
                       >
-                        <Text size="lg" fw={600} c="white">
-                          +{media.length - 4}
-                        </Text>
-                      </Box>
-                    )}
-                  </Paper>
-                ))}
-              </Box>
-            )}
+                        {media[0].type.toUpperCase()}
+                      </Badge>
+                    </Paper>
+                  );
+                
+                case 2:
+                  return (
+                    <Box style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '4px' }}>
+                      {media.map((item, index) => (
+                        <Paper key={item.id} withBorder style={{ position: 'relative' }}>
+                          <img
+                            src={item.previewUrl}
+                            alt={item.altText || 'メディア'}
+                            style={{ 
+                              width: '100%', 
+                              minWidth: '165.5px',
+                              maxWidth: '257px',
+                              minHeight: '187.31px',
+                              maxHeight: '290.25px', 
+                              objectFit: 'cover', 
+                              borderRadius: '4px' 
+                            }}
+                          />
+                          <Badge
+                            size="xs"
+                            variant="filled"
+                            style={{
+                              position: 'absolute',
+                              top: 4,
+                              right: 4,
+                              backgroundColor: 'rgba(0, 0, 0, 0.7)'
+                            }}
+                          >
+                            {item.type.toUpperCase()}
+                          </Badge>
+                        </Paper>
+                      ))}
+                    </Box>
+                  );
+                
+                case 3:
+                  return (
+                    <Box style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr', gap: '4px', height: '300px' }}>
+                      {/* 1枚目: 左半分全体 */}
+                      <Paper 
+                        key={media[0].id} 
+                        withBorder 
+                        style={{ 
+                          position: 'relative',
+                          gridColumn: '1',
+                          gridRow: '1 / 3'
+                        }}
+                      >
+                        <img
+                          src={media[0].previewUrl}
+                          alt={media[0].altText || 'メディア'}
+                          style={{ 
+                            width: '100%', 
+                            minWidth: '165.5px',
+                            maxWidth: '257px',
+                            minHeight: '187.31px',
+                            maxHeight: '290.25px',
+                            objectFit: 'cover', 
+                            borderRadius: '4px' 
+                          }}
+                        />
+                        <Badge
+                          size="xs"
+                          variant="filled"
+                          style={{
+                            position: 'absolute',
+                            top: 4,
+                            right: 4,
+                            backgroundColor: 'rgba(0, 0, 0, 0.7)'
+                          }}
+                        >
+                          {media[0].type.toUpperCase()}
+                        </Badge>
+                      </Paper>
+                      
+                      {/* 2枚目: 右側上半分 */}
+                      <Paper 
+                        key={media[1].id} 
+                        withBorder 
+                        style={{ 
+                          position: 'relative',
+                          gridColumn: '2',
+                          gridRow: '1'
+                        }}
+                      >
+                        <img
+                          src={media[1].previewUrl}
+                          alt={media[1].altText || 'メディア'}
+                          style={{ 
+                            width: '100%', 
+                            minWidth: '165.5px',
+                            maxWidth: '257px',
+                            minHeight: '92.66px',
+                            maxHeight: '144.13px',
+                            objectFit: 'cover', 
+                            borderRadius: '4px' 
+                          }}
+                        />
+                        <Badge
+                          size="xs"
+                          variant="filled"
+                          style={{
+                            position: 'absolute',
+                            top: 4,
+                            right: 4,
+                            backgroundColor: 'rgba(0, 0, 0, 0.7)'
+                          }}
+                        >
+                          {media[1].type.toUpperCase()}
+                        </Badge>
+                      </Paper>
+                      
+                      {/* 3枚目: 右側下半分 */}
+                      <Paper 
+                        key={media[2].id} 
+                        withBorder 
+                        style={{ 
+                          position: 'relative',
+                          gridColumn: '2',
+                          gridRow: '2'
+                        }}
+                      >
+                        <img
+                          src={media[2].previewUrl}
+                          alt={media[2].altText || 'メディア'}
+                          style={{ 
+                            width: '100%', 
+                            minWidth: '165.5px',
+                            maxWidth: '257px',
+                            minHeight: '92.66px',
+                            maxHeight: '144.13px',
+                            objectFit: 'cover', 
+                            borderRadius: '4px' 
+                          }}
+                        />
+                        <Badge
+                          size="xs"
+                          variant="filled"
+                          style={{
+                            position: 'absolute',
+                            top: 4,
+                            right: 4,
+                            backgroundColor: 'rgba(0, 0, 0, 0.7)'
+                          }}
+                        >
+                          {media[2].type.toUpperCase()}
+                        </Badge>
+                      </Paper>
+                    </Box>
+                  );
+                
+                default: // 4枚以上
+                  return (
+                    <Box style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '4px' }}>
+                      {media.slice(0, 4).map((item, index) => (
+                        <Paper key={item.id} withBorder style={{ position: 'relative' }}>
+                          <img
+                            src={item.previewUrl}
+                            alt={item.altText || 'メディア'}
+                            style={{ 
+                              width: '100%', 
+                              minWidth: '165.5px',
+                              maxWidth: '257px',
+                              minHeight: '92.66px',
+                              maxHeight: '144.13px', 
+                              objectFit: 'cover', 
+                              borderRadius: '4px' 
+                            }}
+                          />
+                          <Badge
+                            size="xs"
+                            variant="filled"
+                            style={{
+                              position: 'absolute',
+                              top: 4,
+                              right: 4,
+                              backgroundColor: 'rgba(0, 0, 0, 0.7)'
+                            }}
+                          >
+                            {item.type.toUpperCase()}
+                          </Badge>
+                          {index === 3 && media.length > 4 && (
+                            <Box
+                              style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                borderRadius: '4px',
+                              }}
+                            >
+                              <Text size="lg" fw={600} c="white">
+                                +{media.length - 4}
+                              </Text>
+                            </Box>
+                          )}
+                        </Paper>
+                      ))}
+                    </Box>
+                  );
+              }
+            })()}
           </Box>
         )}
         

@@ -124,7 +124,7 @@ export const sampleMediaItems: TweetMediaItem[][] = [
       height: 300
     }
   ],
-  // 4枚の画像（グリッドレイアウト）
+  // 3枚の画像（グリッドレイアウト）
   [
     {
       id: 'media-6',
@@ -152,9 +152,39 @@ export const sampleMediaItems: TweetMediaItem[][] = [
       altText: 'ヤミ',
       width: 300,
       height: 200
-    },
+    }
+  ],
+  // 4枚の画像（グリッドレイアウト）
+  [
     {
       id: 'media-9',
+      type: 'image',
+      url: 'https://pbs.twimg.com/media/G4LseiFX0AAWOpv?format=jpg&name=medium',
+      previewUrl: 'https://pbs.twimg.com/media/G4LseiFX0AAWOpv?format=jpg&name=small',
+      altText: '花隈千冬',
+      width: 300,
+      height: 200
+    },
+    {
+      id: 'media-10',
+      type: 'image',
+      url: 'https://pbs.twimg.com/media/G4E3v43WIAAVy1Z?format=jpg&name=medium',
+      previewUrl: 'https://pbs.twimg.com/media/G4E3v43WIAAVy1Z?format=jpg&name=small',
+      altText: 'ベロン',
+      width: 300,
+      height: 200
+    },
+    {
+      id: 'media-11',
+      type: 'image',
+      url: 'https://pbs.twimg.com/media/G3-5bdZWAAEp7QP?format=jpg&name=medium',
+      previewUrl: 'https://pbs.twimg.com/media/G3-5bdZWAAEp7QP?format=jpg&name=small',
+      altText: 'ヤミ',
+      width: 300,
+      height: 200
+    },
+    {
+      id: 'media-12',
       type: 'image',
       url: 'https://pbs.twimg.com/media/G30AmfmWIAAbeJr?format=jpg&name=small',
       previewUrl: 'https://pbs.twimg.com/media/G30AmfmWIAAbeJr?format=jpg&name=small',
