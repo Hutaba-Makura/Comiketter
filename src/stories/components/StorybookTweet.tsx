@@ -19,7 +19,7 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
   const createdAt = new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000);
 
   return (
-    <Paper p="md" withBorder>
+    <Paper p="md" withBorder style={{ maxWidth: '598px' , margin: '0 auto'}}>
       <Box style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         {/* ヘッダー */}
         <Box style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', width: '100%' }}>
@@ -75,7 +75,7 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                 <img
                   src={media[0].previewUrl}
                   alt={media[0].altText || 'メディア'}
-                  style={{ width: '100%', height: '300px', objectFit: 'cover', borderRadius: '4px' }}
+                  style={{ width: '100%', maxWidth: '516px', minWidth: '300px', minHeight: '300px', maxHeight: '417.33px',objectFit: 'cover', borderRadius: '4px' }}
                 />
                 <Badge
                   size="xs"
