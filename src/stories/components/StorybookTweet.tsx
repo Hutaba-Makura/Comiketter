@@ -96,7 +96,10 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                         overflow: 'hidden', 
                         borderRadius: '16px',
                         backgroundColor: 'transparent',
-                        transition: 'background-color 0.2s ease'
+                        transition: 'background-color 0.2s ease',
+                        display: 'inline-block',
+                        width: 'fit-content',
+                        height: 'fit-content'
                       }}
                       onMouseEnter={(e) => {
                         e.currentTarget.style.backgroundColor = 'rgba(29, 155, 240, 0.1)';
@@ -115,7 +118,8 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                           minHeight: '300px', 
                           maxHeight: '417.33px', 
                           objectFit: 'cover',
-                          pointerEvents: 'none'
+                          pointerEvents: 'none',
+                          display: 'block'
                         }}
                       />
                       <Badge
@@ -144,7 +148,9 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                         borderRadius: '16px',
                         position: 'relative',
                         backgroundColor: '#ffffff',
-                        transition: 'background-color 0.2s ease'
+                        transition: 'background-color 0.2s ease',
+                        width: 'fit-content',
+                        height: 'fit-content'
                       }}
                       onMouseEnter={(e) => {
                         e.currentTarget.style.backgroundColor = 'rgba(29, 155, 240, 0.1)';
@@ -163,6 +169,14 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                             overflow: 'hidden',
                             borderRight: index === 0 ? '0 solid black' : 'none',
                             borderLeft: index === 1 ? '0 solid black' : 'none',
+                            aspectRatio: '257 / 290.25',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            minWidth: '165.5px',
+                            maxWidth: '257px',
+                            minHeight: '187.31px',
+                            maxHeight: '290.25px'
                           }}
                         >
                           <img
@@ -170,12 +184,10 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                             alt={item.altText || 'メディア'}
                             style={{ 
                               width: '100%', 
-                              minWidth: '165.5px',
-                              maxWidth: '257px',
-                              minHeight: '187.31px',
-                              maxHeight: '290.25px', 
+                              height: '100%',
                               objectFit: 'cover',
-                              pointerEvents: 'none'
+                              pointerEvents: 'none',
+                              display: 'block'
                             }}
                           />
                           <Badge
@@ -209,11 +221,12 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                         gridTemplateColumns: '1fr 1fr', 
                         gridTemplateRows: '1fr 1fr', 
                         gap: '2px', 
-                        height: '300px',
                         borderRadius: '16px',
                         position: 'relative',
                         backgroundColor: '#ffffff',
-                        transition: 'background-color 0.2s ease'
+                        transition: 'background-color 0.2s ease',
+                        width: 'fit-content',
+                        height: 'fit-content'
                       }}
                       onMouseEnter={(e) => {
                         e.currentTarget.style.backgroundColor = 'rgba(29, 155, 240, 0.1)';
@@ -232,20 +245,28 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                           gridColumn: '1',
                           gridRow: '1 / 3',
                           borderRight: '0 solid black',
-                          backgroundColor: 'transparent'
+                          backgroundColor: 'transparent',
+                          aspectRatio: '257 / 290.25',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          minWidth: '165.5px',
+                          maxWidth: '257px',
+                          minHeight: '187.31px',
+                          maxHeight: '290.25px'
                         }}
                       >
                         <img
                           src={media[0].previewUrl}
                           alt={media[0].altText || 'メディア'}
                           style={{ 
+                            borderRadius: borderRadiusMap3[0],
                             width: '100%', 
-                            minWidth: '165.5px',
-                            maxWidth: '257px',
-                            minHeight: '187.31px',
-                            maxHeight: '290.25px',
+                            height: '100%',
                             objectFit: 'cover',
-                            pointerEvents: 'none'
+                            objectPosition: 'center',
+                            pointerEvents: 'none',
+                            display: 'block'
                           }}
                         />
                         <Badge
@@ -274,20 +295,27 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                           gridRow: '1',
                           borderLeft: '0 solid black',
                           borderBottom: '0 solid black',
-                          backgroundColor: 'transparent'
+                          backgroundColor: 'transparent',
+                          aspectRatio: '257 / 144.13',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          minWidth: '165.5px',
+                          maxWidth: '257px',
+                          minHeight: '92.66px',
+                          maxHeight: '144.13px'
                         }}
                       >
                         <img
                           src={media[1].previewUrl}
                           alt={media[1].altText || 'メディア'}
                           style={{ 
+                            borderRadius: borderRadiusMap3[1],
                             width: '100%', 
-                            minWidth: '165.5px',
-                            maxWidth: '257px',
-                            minHeight: '92.66px',
-                            maxHeight: '144.13px',
+                            height: '100%',
                             objectFit: 'cover',
-                            pointerEvents: 'none'
+                            pointerEvents: 'none',
+                            display: 'block'
                           }}
                         />
                         <Badge
@@ -316,20 +344,27 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                           gridRow: '2', 
                           borderLeft: '0 solid black',
                           borderTop: '0 solid black',
-                          backgroundColor: 'transparent'
+                          backgroundColor: 'transparent',
+                          aspectRatio: '257 / 144.13',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          minWidth: '165.5px',
+                          maxWidth: '257px',
+                          minHeight: '92.66px',
+                          maxHeight: '144.13px'
                         }}
                       >
                         <img
                           src={media[2].previewUrl}
                           alt={media[2].altText || 'メディア'}
                           style={{ 
+                            borderRadius: borderRadiusMap3[2],
                             width: '100%', 
-                            minWidth: '165.5px',
-                            maxWidth: '257px',
-                            minHeight: '92.66px',
-                            maxHeight: '144.13px',
+                            height: '100%',
                             objectFit: 'cover',
-                            pointerEvents: 'none'
+                            pointerEvents: 'none',
+                            display: 'block'
                           }}
                         />
                         <Badge
@@ -365,7 +400,9 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                         borderRadius: '16px',
                         position: 'relative',
                         backgroundColor: '#ffffff',
-                        transition: 'background-color 0.2s ease'
+                        transition: 'background-color 0.2s ease',
+                        width: 'fit-content',
+                        height: 'fit-content'
                       }}
                       onMouseEnter={(e) => {
                         e.currentTarget.style.backgroundColor = 'rgba(29, 155, 240, 0.1)';
@@ -385,20 +422,27 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                             borderLeft: (index%4 === 1 || index%4 === 2) ? '0 solid black' : 'none',
                             borderTop: (index%4 === 2 || index%4 === 3) ? '0 solid black' : 'none',
                             borderBottom: (index%4 === 0 || index%4 === 1) ? '0 solid black' : 'none',
-                            backgroundColor: 'transparent'
+                            backgroundColor: 'transparent',
+                            aspectRatio: '257 / 144.13',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            minWidth: '165.5px',
+                            maxWidth: '257px',
+                            minHeight: '92.66px',
+                            maxHeight: '144.13px'
                           }}
                         >
                           <img
                             src={item.previewUrl}
                             alt={item.altText || 'メディア'}
                             style={{ 
+                              borderRadius: borderRadiusMap4[index%4],
                               width: '100%', 
-                              minWidth: '165.5px',
-                              maxWidth: '257px',
-                              minHeight: '92.66px',
-                              maxHeight: '144.13px', 
+                              height: '100%',
                               objectFit: 'cover',
-                              pointerEvents: 'none'
+                              pointerEvents: 'none',
+                              display: 'block'
                             }}
                           />
                           <Badge
