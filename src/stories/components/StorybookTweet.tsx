@@ -74,7 +74,16 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
               switch (media.length) {
                 case 1:
                   return (
-                    <Paper withBorder style={{ position: 'relative', overflow: 'hidden', borderRadius: '16px' }}>
+                    <Paper withBorder style={{ 
+                      position: 'relative', 
+                      overflow: 'hidden', 
+                      borderRadius: '16px',
+                      backgroundColor: 'rgb(207, 217, 222)',
+                      '.hover': {
+                        backgroundColor: 'rgba(29, 155, 240, 0.1)',
+                        transitionDuration: '0.2s',
+                      }, 
+                      }}>
                       <img
                         src={media[0].previewUrl}
                         alt={media[0].altText || 'メディア'}
@@ -104,7 +113,17 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                 
                 case 2:
                   return (
-                    <Box style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '2px' }}>
+                    <Box style={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: 'repeat(2, 1fr)', 
+                      gap: '2px',
+                      borderRadius: '16px',
+                      backgroundColor: 'rgb(207, 217, 222)',
+                      '.hover': {
+                        backgroundColor: 'rgba(29, 155, 240, 0.1)',
+                        transitionDuration: '0.2s',
+                      }, 
+                      }}>
                       {media.map((item, index) => (
                         <Paper 
                           key={item.id} 
@@ -112,9 +131,9 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                           style={{ 
                             position: 'relative',
                             borderRadius: index === 0 ? '16px 0px 0px 16px' : '0px 16px 16px 0px',
-                            overflow: 'hidden',
-                            borderRight: index === 0 ? 'none' : '1px solid #e1e8ed',
-                            borderLeft: index === 1 ? 'none' : '1px solid #e1e8ed'
+                            overflow: 'hidden', 
+                            borderRight: index === 0 ? '0 solid black' : 'default',
+                            borderLeft: index === 1 ? '0 solid black' : 'default',
                           }}
                         >
                           <img
@@ -153,7 +172,19 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                       2: '0px 0px 16px 0px'
                     }
                   return (
-                    <Box style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr', gap: '2px', height: '300px' }}>
+                    <Box style={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: '1fr 1fr', 
+                      gridTemplateRows: '1fr 1fr', 
+                      gap: '2px', 
+                      height: '300px',
+                      borderRadius: '16px',
+                      backgroundColor: 'rgb(207, 217, 222)',
+                      '.hover': {
+                        backgroundColor: 'rgba(29, 155, 240, 0.1)',
+                        transitionDuration: '0.2s',
+                      }, 
+                      }}>
                       {/* 1枚目: 左半分全体 */}
                       <Paper 
                         key={media[0].id} 
@@ -163,7 +194,7 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                           borderRadius: borderRadiusMap3[0],
                           gridColumn: '1',
                           gridRow: '1 / 3',
-                          borderRight: '1px solid #e1e8ed'
+                          borderRight: '0 solid black'
                         }}
                       >
                         <img
@@ -175,8 +206,7 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                             maxWidth: '257px',
                             minHeight: '187.31px',
                             maxHeight: '290.25px',
-                            objectFit: 'cover', 
-                            borderRadius: '4px' 
+                            objectFit: 'cover'
                           }}
                         />
                         <Badge
@@ -202,8 +232,8 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                           borderRadius: borderRadiusMap3[1],
                           gridColumn: '2',
                           gridRow: '1',
-                          borderLeft: '1px solid #e1e8ed',
-                          borderBottom: '1px solid #e1e8ed'
+                          borderLeft: '0 solid black',
+                          borderBottom: '0 solid black'
                         }}
                       >
                         <img
@@ -215,8 +245,7 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                             maxWidth: '257px',
                             minHeight: '92.66px',
                             maxHeight: '144.13px',
-                            objectFit: 'cover', 
-                            borderRadius: '4px' 
+                            objectFit: 'cover'
                           }}
                         />
                         <Badge
@@ -242,8 +271,8 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                           borderRadius: borderRadiusMap3[2],
                           gridColumn: '2',
                           gridRow: '2', 
-                          borderLeft: '1px solid #e1e8ed',
-                          borderTop: '1px solid #e1e8ed'
+                          borderLeft: '0 solid black',
+                          borderTop: '0 solid black'
                         }}
                       >
                         <img
@@ -255,8 +284,7 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                             maxWidth: '257px',
                             minHeight: '92.66px',
                             maxHeight: '144.13px',
-                            objectFit: 'cover', 
-                            borderRadius: '4px' 
+                            objectFit: 'cover'
                           }}
                         />
                         <Badge
@@ -277,21 +305,31 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                 
                   default: // 4枚以上
                     const borderRadiusMap4: Record<number, string> = {
-                      0: '16px 0px 0px 16px',
+                      0: '16px 0px 0px 0px',
                       1: '0px 16px 0px 0px',
-                      2: '0px 0px 16px 0px',
-                      3: '0px 0px 0px 16px'
+                      2: '0px 0px 0px 16px',
+                      3: '0px 0px 16px 0px'
                     }
                   return (
-                    <Box style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '4px' }}>
+                    <Box style={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: 'repeat(2, 1fr)', 
+                      gap: '2px',
+                      borderRadius: '16px',
+                      backgroundColor: 'rgb(207, 217, 222)',
+                      '.hover': {
+                        backgroundColor: 'rgba(29, 155, 240, 0.1)',
+                        transitionDuration: '0.2s',
+                      }, 
+                      }}>
                       {media.slice(0, 4).map((item, index) => (
                         <Paper key={item.id} withBorder style={{ 
                           position: 'relative',
                           borderRadius: borderRadiusMap4[index%4], 
-                          borderRight: (index%4 === 0 || index%4 === 3) ? 'none' : '1px solid #e1e8ed',
-                          borderLeft: (index%4 === 1 || index%4 === 2) ? 'none' : '1px solid #e1e8ed',
-                          borderTop: (index%4 === 2 || index%4 === 3) ? 'none' : '1px solid #e1e8ed',
-                          borderBottom: (index%4 === 0 || index%4 === 1) ? 'none' : '1px solid #e1e8ed'
+                          borderRight: (index%4 === 0 || index%4 === 3) ? '0 solid black' : 'default',
+                          borderLeft: (index%4 === 1 || index%4 === 2) ? '0 solid black' : 'default',
+                          borderTop: (index%4 === 2 || index%4 === 3) ? '0 solid black' : 'default',
+                          borderBottom: (index%4 === 0 || index%4 === 1) ? '0 solid black' : 'default'
                           }}>
                           <img
                             src={item.previewUrl}
@@ -302,8 +340,7 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                               maxWidth: '257px',
                               minHeight: '92.66px',
                               maxHeight: '144.13px', 
-                              objectFit: 'cover', 
-                              borderRadius: '4px' 
+                              objectFit: 'cover'
                             }}
                           />
                           <Badge
