@@ -123,7 +123,6 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                           minHeight: '300px', 
                           maxHeight: '417.33px', 
                           objectFit: 'cover',
-                          cursor: 'zoom-in',
                           display: 'block'
                         }}
                         onClick={() => handleImageClick(media[0].url)}
@@ -192,7 +191,6 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                               width: '100%', 
                               height: '100%',
                               objectFit: 'cover',
-                              cursor: 'zoom-in',
                               display: 'block'
                             }}
                             onClick={() => handleImageClick(item.url)}
@@ -272,7 +270,6 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                             height: '100%',
                             objectFit: 'cover',
                             objectPosition: 'center',
-                            cursor: 'zoom-in',
                             display: 'block'
                           }}
                           onClick={() => handleImageClick(media[0].url)}
@@ -322,7 +319,6 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                             width: '100%', 
                             height: '100%',
                             objectFit: 'cover',
-                            cursor: 'zoom-in',
                             display: 'block'
                           }}
                           onClick={() => handleImageClick(media[1].url)}
@@ -372,7 +368,6 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                             width: '100%', 
                             height: '100%',
                             objectFit: 'cover',
-                            cursor: 'zoom-in',
                             display: 'block'
                           }}
                           onClick={() => handleImageClick(media[2].url)}
@@ -451,7 +446,6 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                               width: '100%', 
                               height: '100%',
                               objectFit: 'cover',
-                              cursor: 'zoom-in',
                               display: 'block'
                             }}
                             onClick={() => handleImageClick(item.url)}
@@ -578,8 +572,7 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            zIndex: 10000,
-            cursor: 'zoom-out'
+            zIndex: 10000
           }}
         >
           {/* クローズボタン（左上、36pxマージン） */}
@@ -596,7 +589,6 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
               backdropFilter: 'blur(4px)',
               WebkitBackdropFilter: 'blur(4px)',
               color: '#ffffff',
-              cursor: 'pointer',
               width: 38,
               height: 38,
               borderRadius: 9999,
@@ -615,8 +607,7 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
               height: '100vh',
               width: 'auto',
               maxWidth: '100vw',
-              objectFit: 'contain',
-              cursor: 'default'
+              objectFit: 'contain'
             }}
             onClick={(e) => e.stopPropagation()}
           />
