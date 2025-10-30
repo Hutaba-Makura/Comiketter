@@ -5,6 +5,14 @@ import { TweetAuthor, TweetStats, TweetMediaItem } from '../../bookmarks/types/t
  * 本番コードから完全に分離されたテスト用データ
  */
 
+// TweetStats拡張（Storybook用フラグ）
+export interface SampleTweetStats extends TweetStats {
+  // ユーザーがRT済みかどうか
+  isRetweeted: boolean;
+  // ユーザーがいいね済みかどうか
+  isFavorited: boolean;
+}
+
 // サンプルユーザーデータ
 export const sampleAuthors: TweetAuthor[] = [
   {
@@ -38,30 +46,38 @@ export const sampleAuthors: TweetAuthor[] = [
 ];
 
 // サンプル統計データ
-export const sampleStats: TweetStats[] = [
+export const sampleStats: SampleTweetStats[] = [
   {
     retweetCount: 156,
     likeCount: 1234,
     replyCount: 23,
-    quoteCount: 8
+    quoteCount: 8,
+    isRetweeted: true,
+    isFavorited: false
   },
   {
     retweetCount: 89,
     likeCount: 567,
     replyCount: 12,
-    quoteCount: 3
+    quoteCount: 3,
+    isRetweeted: false,
+    isFavorited: true
   },
   {
     retweetCount: 234,
     likeCount: 2345,
     replyCount: 45,
-    quoteCount: 12
+    quoteCount: 12,
+    isRetweeted: true,
+    isFavorited: true
   },
   {
     retweetCount: 45,
     likeCount: 234,
     replyCount: 8,
-    quoteCount: 2
+    quoteCount: 2,
+    isRetweeted: false,
+    isFavorited: false
   }
 ];
 

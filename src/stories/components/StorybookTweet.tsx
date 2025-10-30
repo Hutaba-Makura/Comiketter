@@ -504,20 +504,39 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
             
             {/* リツイート */}
             <Box style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
-              <ActionIcon variant="subtle" size="sm" color="gray">
+              <ActionIcon 
+                variant="subtle" 
+                size="sm" 
+                color="gray"
+                style={{ color: (stats as any).isRetweeted ? 'rgb(0, 186, 124)' : undefined }}
+              >
                 <IconRepeat size={16} />
               </ActionIcon>
-              <Text size="xs" c="dimmed">
+              <Text 
+                size="xs" 
+                c={(stats as any).isRetweeted ? 'rgb(0, 186, 124)' : 'dimmed'}
+              >
                 {formatCount(stats.retweetCount)}
               </Text>
             </Box>
             
             {/* いいね */}
             <Box style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
-              <ActionIcon variant="subtle" size="sm" color="gray">
-                <IconHeart size={16} />
+              <ActionIcon 
+                variant="subtle" 
+                size="sm" 
+                color="gray"
+                style={{ color: (stats as any).isFavorited ? 'rgb(249, 24, 128)' : undefined }}
+              >
+                <IconHeart 
+                  size={16} 
+                  fill={(stats as any).isFavorited ? 'currentColor' : 'none'}
+                />
               </ActionIcon>
-              <Text size="xs" c="dimmed">
+              <Text 
+                size="xs" 
+                c={(stats as any).isFavorited ? 'rgb(249, 24, 128)' : 'dimmed'}
+              >
                 {formatCount(stats.likeCount)}
               </Text>
             </Box>
