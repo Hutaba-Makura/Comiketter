@@ -1,6 +1,6 @@
 import React from 'react';
 import { Paper, Stack, Text, Group, Badge, Box, Avatar, ActionIcon } from '@mantine/core';
-import { IconHeart, IconRepeat, IconMessage, IconShare, IconUser, IconCheck } from '@tabler/icons-react';
+import { IconHeart, IconRepeat, IconMessage, IconShare, IconUser, IconCheck, IconX } from '@tabler/icons-react';
 import { sampleAuthors, sampleStats, sampleMediaItems, sampleTweetContents } from '../data/tweetSampleData';
 import { formatTweetId, formatRelativeTime, formatCount } from '../../bookmarks/utils/format';
 
@@ -17,6 +17,11 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
   const content = sampleTweetContents[tweetIndex % sampleTweetContents.length];
   const media = sampleMediaItems[tweetIndex % sampleMediaItems.length];
   const createdAt = new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000);
+
+  // 画像ライトボックス用の状態
+  const [lightboxSrc, setLightboxSrc] = React.useState<string | null>(null);
+  const handleImageClick = (src: string) => setLightboxSrc(src);
+  const handleCloseLightbox = () => setLightboxSrc(null);
 
   return (
     <Paper 
@@ -118,9 +123,10 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                           minHeight: '300px', 
                           maxHeight: '417.33px', 
                           objectFit: 'cover',
-                          pointerEvents: 'none',
+                          cursor: 'zoom-in',
                           display: 'block'
                         }}
+                        onClick={() => handleImageClick(media[0].url)}
                       />
                       <Badge
                         size="xs"
@@ -186,9 +192,10 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                               width: '100%', 
                               height: '100%',
                               objectFit: 'cover',
-                              pointerEvents: 'none',
+                              cursor: 'zoom-in',
                               display: 'block'
                             }}
+                            onClick={() => handleImageClick(item.url)}
                           />
                           <Badge
                             size="xs"
@@ -265,9 +272,10 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                             height: '100%',
                             objectFit: 'cover',
                             objectPosition: 'center',
-                            pointerEvents: 'none',
+                            cursor: 'zoom-in',
                             display: 'block'
                           }}
+                          onClick={() => handleImageClick(media[0].url)}
                         />
                         <Badge
                           size="xs"
@@ -314,9 +322,10 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                             width: '100%', 
                             height: '100%',
                             objectFit: 'cover',
-                            pointerEvents: 'none',
+                            cursor: 'zoom-in',
                             display: 'block'
                           }}
+                          onClick={() => handleImageClick(media[1].url)}
                         />
                         <Badge
                           size="xs"
@@ -363,9 +372,10 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                             width: '100%', 
                             height: '100%',
                             objectFit: 'cover',
-                            pointerEvents: 'none',
+                            cursor: 'zoom-in',
                             display: 'block'
                           }}
+                          onClick={() => handleImageClick(media[2].url)}
                         />
                         <Badge
                           size="xs"
@@ -441,9 +451,10 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                               width: '100%', 
                               height: '100%',
                               objectFit: 'cover',
-                              pointerEvents: 'none',
+                              cursor: 'zoom-in',
                               display: 'block'
                             }}
+                            onClick={() => handleImageClick(item.url)}
                           />
                           <Badge
                             size="xs"
@@ -555,6 +566,62 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
           </Badge>
         </Box>
       </Box>
+
+      {/* ライトボックス（背景クリックで閉じる） */}
+      {lightboxSrc && (
+        <Box
+          onClick={handleCloseLightbox}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.85)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 10000,
+            cursor: 'zoom-out'
+          }}
+        >
+          {/* クローズボタン（左上、36pxマージン） */}
+          <ActionIcon
+            onClick={(e) => { e.stopPropagation(); handleCloseLightbox(); }}
+            variant="subtle"
+            color="gray"
+            size="lg"
+            style={{
+              position: 'absolute',
+              top: 12,
+              left: 12,
+              backgroundColor: 'rgba(0, 0, 0, 0.75)',
+              backdropFilter: 'blur(4px)',
+              WebkitBackdropFilter: 'blur(4px)',
+              color: '#ffffff',
+              cursor: 'pointer',
+              width: 38,
+              height: 38,
+              borderRadius: 9999,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+            aria-label="閉じる"
+          >
+            <IconX size={24} />
+          </ActionIcon>
+          <img
+            src={lightboxSrc}
+            alt="preview"
+            style={{
+              height: '100vh',
+              width: 'auto',
+              maxWidth: '100vw',
+              objectFit: 'contain',
+              cursor: 'default'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          />
+        </Box>
+      )}
     </Paper>
   );
 }
