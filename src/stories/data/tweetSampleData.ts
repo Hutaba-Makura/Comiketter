@@ -207,6 +207,42 @@ export const sampleMediaItems: TweetMediaItem[][] = [
       altText: 'ネコネコ',
       width: 300,
       height: 200
+    },
+    {
+      id: 'media-13',
+      type: 'image',
+      url: 'https://pbs.twimg.com/media/G4h7kJZaQAAM-fX?format=jpg&name=large',
+      previewUrl: 'https://pbs.twimg.com/media/G4h7kJZaQAAM-fX?format=jpg&name=small',
+      altText: 'mikumiku',
+      width: 300,
+      height: 200
+    },
+    {
+      id: 'media-14',
+      type: 'image',
+      url: 'https://pbs.twimg.com/media/G4gFiyba8AQPjFw?format=jpg&name=large',
+      previewUrl: 'https://pbs.twimg.com/media/G4gFiyba8AQPjFw?format=jpg&name=small',
+      altText: 'ぼざろ',
+      width: 300,
+      height: 200
+    },
+    {
+      id: 'media-15',
+      type: 'image',
+      url: 'https://pbs.twimg.com/media/G4b96eUagAAWAe0?format=jpg&name=large',
+      previewUrl: 'https://pbs.twimg.com/media/G4b96eUagAAWAe0?format=jpg&name=small',
+      altText: 'あかり',
+      width: 300,
+      height: 200
+    },
+    {
+      id: 'media-16',
+      type: 'image',
+      url: 'https://pbs.twimg.com/media/G4gdc4XaMAAp7zb?format=jpg&name=4096x4096',
+      previewUrl: 'https://pbs.twimg.com/media/G4gdc4XaMAAp7zb?format=jpg&name=small',
+      altText: 'ハッカドール',
+      width: 4096,
+      height: 4096
     }
   ]
 ];
@@ -222,7 +258,18 @@ export const sampleTweetIds: string[] = [
   '1234567890123456795',
   '1234567890123456796',
   '1234567890123456797',
-  '1234567890123456798'
+  '1234567890123456798',
+  '1234567890123456799',
+  '1234567890123456800',
+  '1234567890123456801',
+  '1234567890123456802',
+  '1234567890123456803',
+  '1234567890123456804',
+  '1234567890123456805',
+  '1234567890123456806',
+  '1234567890123456807',
+  '1234567890123456808',
+  '1234567890123456809',
 ];
 
 // サンプルツイートコンテンツ
@@ -236,7 +283,15 @@ export const sampleTweetContents: string[] = [
   '助けてー！集団ストーカに襲われています！！',
   '修行をしています。いつの日か世界を救うと信じて',
   'ヘアメイクアップアーティストでタレントのIKKOこと豊田一幸は2017年10月24日～10月28日の間に全くの他人と入れ替わっている。',
-  'おはよう！朝４時に何してるんだい？'
+  'おはよう！朝４時に何してるんだい？',
+  'ロンドンのんかマジレンジャー好きだったなぁ…', 
+  'トホホ〜もう眠れない夜は雨の宿をくれなきゃいたずらしちゃうぞ',
+  '一度描いてみたかったﾄﾞﾛｼｰです',
+  '今日の季節だよ！そして今始まった、取れてた眉毛が戻ってきたよ！',
+  'めちゃくちゃ似合ってる',
+  '動かしたいと思って下書きしましたが下書きで満足しました\n頭デカすぎた(；；)\n後カラーセンスなくて泣ける',
+  '頭がすごく痛いよ',
+  '身分証を引き取るのにぴったりだよ。【Warthunder】',
 ];
 
 // サンプルCBデータ
@@ -247,4 +302,13 @@ export const sampleCbData = {
   tweetCount: 10,
   createdAt: new Date('2024-01-01'),
   updatedAt: new Date('2024-01-15')
+};
+
+export const sampleCbData2 = {
+  id: 'sample-cb-2',
+  name: 'イラスト',
+  description: 'イラストのCBやねん',
+  tweetCount: 10,
+  createdAt: new Date('2024-04-05'),
+  updatedAt: new Date('2024-10-15')
 };
