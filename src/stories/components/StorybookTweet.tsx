@@ -1,6 +1,6 @@
 import React from 'react';
 import { Paper, Stack, Text, Group, Badge, Box, Avatar, ActionIcon } from '@mantine/core';
-import { IconHeart, IconRepeat, IconMessage, IconShare, IconUser, IconCheck, IconX } from '@tabler/icons-react';
+import { IconHeart, IconRepeat, IconMessage, IconShare, IconUser, IconCheck, IconX, IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
 import { sampleAuthors, sampleStats, sampleMediaItems, sampleTweetContents } from '../data/tweetSampleData';
 import { formatTweetId, formatRelativeTime, formatCount } from '../../bookmarks/utils/format';
 
@@ -20,14 +20,40 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
 
   // 画像ライトボックス用の状態
   const [lightboxSrc, setLightboxSrc] = React.useState<string | null>(null);
+  const [currentImageIndex, setCurrentImageIndex] = React.useState<number | null>(null);
   const [lightboxOrigin, setLightboxOrigin] = React.useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [lightboxStage, setLightboxStage] = React.useState<'enter' | 'entered' | 'exit' | null>(null);
 
-  const handleImageClick = (e: React.MouseEvent<HTMLImageElement>, src: string) => {
+  const handleImageClick = (e: React.MouseEvent<HTMLImageElement>, src: string, index: number) => {
     setLightboxOrigin({ x: e.clientX, y: e.clientY });
     setLightboxSrc(src);
+    setCurrentImageIndex(index);
     setLightboxStage('enter');
     // 次フレームでenteredにしてトランジションを発火
+    requestAnimationFrame(() => setLightboxStage('entered'));
+  };
+
+  // 前の画像に切り替え
+  const handlePreviousImage = () => {
+    if (currentImageIndex === null || currentImageIndex <= 0) return;
+    const prevIndex = currentImageIndex - 1;
+    setLightboxSrc(media[prevIndex].url);
+    setCurrentImageIndex(prevIndex);
+    // アニメーションのため一旦リセットして再開
+    setLightboxStage('enter');
+    setLightboxOrigin({ x: window.innerWidth / 4, y: window.innerHeight / 2 });
+    requestAnimationFrame(() => setLightboxStage('entered'));
+  };
+
+  // 次の画像に切り替え
+  const handleNextImage = () => {
+    if (currentImageIndex === null || currentImageIndex >= media.length - 1) return;
+    const nextIndex = currentImageIndex + 1;
+    setLightboxSrc(media[nextIndex].url);
+    setCurrentImageIndex(nextIndex);
+    // アニメーションのため一旦リセットして再開
+    setLightboxStage('enter');
+    setLightboxOrigin({ x: (window.innerWidth / 4) * 3, y: window.innerHeight / 2 });
     requestAnimationFrame(() => setLightboxStage('entered'));
   };
 
@@ -35,11 +61,49 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
     setLightboxStage('exit');
     window.setTimeout(() => {
       setLightboxSrc(null);
+      setCurrentImageIndex(null);
       setLightboxStage(null);
     }, 200);
   };
 
   const handleCloseLightbox = () => startCloseLightbox();
+
+  // キーボードイベントリスナー（ライトボックスが開いている時のみ）
+  React.useEffect(() => {
+    if (!lightboxSrc || currentImageIndex === null) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        // 前の画像に切り替え
+        if (currentImageIndex > 0) {
+          const prevIndex = currentImageIndex - 1;
+          setLightboxSrc(media[prevIndex].url);
+          setCurrentImageIndex(prevIndex);
+          setLightboxStage('enter');
+          setLightboxOrigin({ x: window.innerWidth / 4, y: window.innerHeight / 2 });
+          requestAnimationFrame(() => setLightboxStage('entered'));
+        }
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        // 次の画像に切り替え
+        if (currentImageIndex < media.length - 1) {
+          const nextIndex = currentImageIndex + 1;
+          setLightboxSrc(media[nextIndex].url);
+          setCurrentImageIndex(nextIndex);
+          setLightboxStage('enter');
+          setLightboxOrigin({ x: (window.innerWidth / 4) * 3, y: window.innerHeight / 2 });
+          requestAnimationFrame(() => setLightboxStage('entered'));
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [lightboxSrc, currentImageIndex, media]);
 
   return (
     <Paper 
@@ -143,7 +207,7 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                           objectFit: 'cover',
                           display: 'block'
                         }}
-                        onClick={(e) => handleImageClick(e, media[0].url)}
+                        onClick={(e) => handleImageClick(e, media[0].url, 0)}
                       />
                       <Badge
                         size="xs"
@@ -211,7 +275,7 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                               objectFit: 'cover',
                               display: 'block'
                             }}
-                            onClick={(e) => handleImageClick(e, item.url)}
+                            onClick={(e) => handleImageClick(e, item.url, index)}
                           />
                           <Badge
                             size="xs"
@@ -290,7 +354,7 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                             objectPosition: 'center',
                             display: 'block'
                           }}
-                          onClick={(e) => handleImageClick(e, media[0].url)}
+                          onClick={(e) => handleImageClick(e, media[0].url, 0)}
                         />
                         <Badge
                           size="xs"
@@ -339,7 +403,7 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                             objectFit: 'cover',
                             display: 'block'
                           }}
-                          onClick={(e) => handleImageClick(e, media[1].url)}
+                          onClick={(e) => handleImageClick(e, media[1].url, 1)}
                         />
                         <Badge
                           size="xs"
@@ -388,7 +452,7 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                             objectFit: 'cover',
                             display: 'block'
                           }}
-                          onClick={(e) => handleImageClick(e, media[2].url)}
+                          onClick={(e) => handleImageClick(e, media[2].url, 2)}
                         />
                         <Badge
                           size="xs"
@@ -466,7 +530,7 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                               objectFit: 'cover',
                               display: 'block'
                             }}
-                            onClick={(e) => handleImageClick(e, item.url)}
+                            onClick={(e) => handleImageClick(e, item.url, index)}
                           />
                           <Badge
                             size="xs"
@@ -620,6 +684,70 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
           >
             <IconX size={24} />
           </ActionIcon>
+          {/* 前の画像ボタン（左側中央、隣接画像がある場合のみ表示） */}
+          {currentImageIndex !== null && currentImageIndex > 0 && (
+            <ActionIcon
+              onClick={(e) => {
+                e.stopPropagation();
+                handlePreviousImage();
+              }}
+              variant="subtle"
+              color="gray"
+              size="lg"
+              style={{
+                position: 'absolute',
+                left: 12,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                backgroundColor: 'rgba(0, 0, 0, 0.75)',
+                backdropFilter: 'blur(4px)',
+                WebkitBackdropFilter: 'blur(4px)',
+                color: '#ffffff',
+                width: 38,
+                height: 38,
+                borderRadius: 9999,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 10002
+              }}
+              aria-label="前の画像"
+            >
+              <IconChevronLeft size={24} />
+            </ActionIcon>
+          )}
+          {/* 次の画像ボタン（右側中央、隣接画像がある場合のみ表示） */}
+          {currentImageIndex !== null && currentImageIndex < media.length - 1 && (
+            <ActionIcon
+              onClick={(e) => {
+                e.stopPropagation();
+                handleNextImage();
+              }}
+              variant="subtle"
+              color="gray"
+              size="lg"
+              style={{
+                position: 'absolute',
+                right: 12,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                backgroundColor: 'rgba(0, 0, 0, 0.75)',
+                backdropFilter: 'blur(4px)',
+                WebkitBackdropFilter: 'blur(4px)',
+                color: '#ffffff',
+                width: 38,
+                height: 38,
+                borderRadius: 9999,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 10002
+              }}
+              aria-label="次の画像"
+            >
+              <IconChevronRight size={24} />
+            </ActionIcon>
+          )}
           {/* 画像の拡大/縮小アニメーション用ラッパー */}
           <Box
             style={{
