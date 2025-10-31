@@ -748,7 +748,7 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
               <IconChevronRight size={24} />
             </ActionIcon>
           )}
-          {/* 画像の拡大/縮小アニメーション用ラッパー */}
+          {/* メディアの拡大/縮小アニメーション用ラッパー */}
           <Box
             style={{
               transformOrigin: `${lightboxOrigin.x}px ${lightboxOrigin.y}px`,
@@ -760,18 +760,35 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
               justifyContent: 'center'
             }}
           >
-            <img
-              src={lightboxSrc}
-              alt="preview"
-              style={{
-                height: '100vh',
-                width: 'auto',
-                maxWidth: '100vw',
-                objectFit: 'contain',
-                zIndex: 10001
-              }}
-              onClick={(e) => e.stopPropagation()}
-            />
+            {currentImageIndex !== null && media[currentImageIndex] && (media[currentImageIndex].type === 'video' || media[currentImageIndex].type === 'gif') ? (
+              <video
+                src={lightboxSrc || undefined}
+                autoPlay
+                loop={media[currentImageIndex].type === 'gif'}
+                controls
+                style={{
+                  height: '100vh',
+                  width: 'auto',
+                  maxWidth: '100vw',
+                  objectFit: 'contain',
+                  zIndex: 10001
+                }}
+                onClick={(e) => e.stopPropagation()}
+              />
+            ) : (
+              <img
+                src={lightboxSrc || undefined}
+                alt="preview"
+                style={{
+                  height: '100vh',
+                  width: 'auto',
+                  maxWidth: '100vw',
+                  objectFit: 'contain',
+                  zIndex: 10001
+                }}
+                onClick={(e) => e.stopPropagation()}
+              />
+            )}
           </Box>
         </Box>
       )}
