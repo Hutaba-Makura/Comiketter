@@ -55,10 +55,9 @@ export function TweetEmbed({ id }: TweetEmbedProps) {
     <Box
       data-theme={themeValue}
       style={{
-        border: '1px solid #e1e8ed',
-        borderRadius: 8,
         overflow: 'hidden',
         position: 'relative',
+        width: '100%',
       }}
     >
       {/* ローディングオーバーレイ */}
