@@ -244,7 +244,7 @@ export function TimelineView() {
             />
           </Box>
         ) : (
-          <Stack gap="md">
+          <Stack gap="md" p="md">
             {filteredAndSortedTweetIds.map((id, index) => (
               <Box key={id}>
                 <TweetEmbed id={id} />
