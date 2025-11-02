@@ -189,6 +189,7 @@ export function CbSidebar() {
           paddingTop: '12px',
           paddingBottom: '12px',
           margin: '8px',
+          cursor: 'pointer',
         }}
         onClick={() => {
           if (chrome?.runtime?.openOptionsPage) {
