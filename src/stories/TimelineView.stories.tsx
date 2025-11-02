@@ -148,38 +148,6 @@ export const DarkTheme: Story = {
   ]
 };
 
-// レスポンシブ表示（モバイルサイズ）
-export const MobileView: Story = {
-  args: {
-    selectedCbId: 'sample-cb-1',
-    selectedCb: sampleCbData,
-    tweetIds: sampleTweetIds,
-    loading: false,
-    error: null
-  },
-  parameters: {
-    viewport: {
-      defaultViewport: 'mobile1'
-    }
-  }
-};
-
-// レスポンシブ表示（タブレットサイズ）
-export const TabletView: Story = {
-  args: {
-    selectedCbId: 'sample-cb-1',
-    selectedCb: sampleCbData,
-    tweetIds: sampleTweetIds,
-    loading: false,
-    error: null
-  },
-  parameters: {
-    viewport: {
-      defaultViewport: 'tablet'
-    }
-  }
-};
-
 // レスポンシブ表示（デスクトップサイズ）
 export const DesktopView: Story = {
   args: {

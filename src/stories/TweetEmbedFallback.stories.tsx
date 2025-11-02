@@ -86,30 +86,6 @@ export const DarkTheme: Story = {
   ]
 };
 
-// レスポンシブ表示（モバイルサイズ）
-export const MobileView: Story = {
-  args: {
-    id: '1234567890123456792'
-  },
-  parameters: {
-    viewport: {
-      defaultViewport: 'mobile1'
-    }
-  }
-};
-
-// レスポンシブ表示（タブレットサイズ）
-export const TabletView: Story = {
-  args: {
-    id: '1234567890123456793'
-  },
-  parameters: {
-    viewport: {
-      defaultViewport: 'tablet'
-    }
-  }
-};
-
 // インタラクション機能のテスト
 export const InteractiveFeatures: Story = {
   args: {

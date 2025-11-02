@@ -131,30 +131,3 @@ export const PerformanceTest: Story = {
   }
 };
 
-// レスポンシブ表示（モバイルサイズ）
-export const MobileView: Story = {
-  args: {
-    tweetIds: sampleTweetIds,
-    height: 500,
-    itemHeight: 180
-  },
-  parameters: {
-    viewport: {
-      defaultViewport: 'mobile1'
-    }
-  }
-};
-
-// レスポンシブ表示（タブレットサイズ）
-export const TabletView: Story = {
-  args: {
-    tweetIds: sampleTweetIds,
-    height: 600,
-    itemHeight: 200
-  },
-  parameters: {
-    viewport: {
-      defaultViewport: 'tablet'
-    }
-  }
-};

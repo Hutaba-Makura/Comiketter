@@ -155,26 +155,3 @@ export const DarkTheme: Story = {
   ]
 };
 
-// レスポンシブ表示（モバイルサイズ）
-export const MobileView: Story = {
-  args: {
-    media: sampleMediaItems[4]
-  },
-  parameters: {
-    viewport: {
-      defaultViewport: 'mobile1'
-    }
-  }
-};
-
-// レスポンシブ表示（タブレットサイズ）
-export const TabletView: Story = {
-  args: {
-    media: sampleMediaItems[4]
-  },
-  parameters: {
-    viewport: {
-      defaultViewport: 'tablet'
-    }
-  }
-};

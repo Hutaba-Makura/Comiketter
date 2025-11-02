@@ -55,24 +55,6 @@ export const AnimationState: Story = {
   }
 };
 
-// レスポンシブ表示（モバイルサイズ）
-export const MobileView: Story = {
-  parameters: {
-    viewport: {
-      defaultViewport: 'mobile1'
-    }
-  }
-};
-
-// レスポンシブ表示（タブレットサイズ）
-export const TabletView: Story = {
-  parameters: {
-    viewport: {
-      defaultViewport: 'tablet'
-    }
-  }
-};
-
 // レスポンシブ表示（デスクトップサイズ）
 export const DesktopView: Story = {
   parameters: {
