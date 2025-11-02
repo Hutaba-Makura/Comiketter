@@ -89,7 +89,7 @@ export function convertMediaToItem(media: ProcessedMedia): TweetMediaItem {
 /**
  * ProcessedTweetのcreated_at文字列をDateに変換
  */
-export function parseTweetDate(createdAt: string): Date {
+export function parseTweetDate(createdAt: string | Date): Date {
   // Twitter APIの日付フォーマット: "Mon Oct 23 12:34:56 +0000 2023"
   // もし既にDate形式の場合はそのまま返す
   if (createdAt instanceof Date) {
