@@ -184,11 +184,21 @@ export function CbSidebar() {
           gap: '12px',
           border: '1px solid var(--mantine-color-gray-2)',
           borderRadius: '9999px',
-          padding: '8px',
+          paddingLeft: '24px',
+          paddingRight: '16px',
+          paddingTop: '12px',
+          paddingBottom: '12px',
           margin: '8px',
         }}
+        onClick={() => {
+          if (chrome?.runtime?.openOptionsPage) {
+            chrome.runtime.openOptionsPage();
+          } else if (chrome?.runtime?.getURL) {
+            window.open(chrome.runtime.getURL('options.html'), '_blank');
+          }
+        }}
       >
-        <IconSettings size={32} style={{ marginRight: 16, marginLeft: 24}} />
+        <IconSettings size={32} />
         <Text size="xl" fw="bold">設定</Text>
       </Box>
     </Stack>
