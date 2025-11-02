@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { FixedSizeList as List } from 'react-window';
 import { Box, Divider } from '@mantine/core';
-import { TweetEmbed } from '../tweet/TweetEmbed';
+import { Tweet } from '../tweet/Tweet';
 
 interface VirtualizedTimelineProps {
   tweetIds: string[];
@@ -28,7 +28,7 @@ export function VirtualizedTimeline({
       return (
         <Box style={style}>
           <Box p="md">
-            <TweetEmbed id={tweetId} />
+            <Tweet id={tweetId} />
             {index < itemCount - 1 && <Divider my="md" />}
           </Box>
         </Box>

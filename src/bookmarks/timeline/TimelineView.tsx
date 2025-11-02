@@ -26,7 +26,7 @@ import {
 } from '@tabler/icons-react';
 import { useCbStore } from '../state/cbStore';
 import { useTimeline } from '../hooks/useTimeline';
-import { TweetEmbed } from '../tweet/TweetEmbed';
+import { Tweet } from '../tweet/Tweet';
 import { TimelineSkeleton } from './TimelineSkeleton';
 import { VirtualizedTimeline } from './VirtualizedTimeline';
 
@@ -247,7 +247,7 @@ export function TimelineView() {
           <Stack gap={0} p="md">
             {filteredAndSortedTweetIds.map((id, index) => (
               <Box key={id}>
-                <TweetEmbed id={id} />
+                <Tweet id={id} />
               </Box>
             ))}
           </Stack>
