@@ -4,7 +4,7 @@ import { TweetMedia } from '../bookmarks/tweet/TweetMedia';
 import { sampleMediaItems } from './data/tweetSampleData';
 
 const meta = {
-  title: 'Tweet/TweetMedia',
+  title: 'Local-DB-Tweet/TweetMedia',
   component: TweetMedia,
   parameters: {
     layout: 'padded',

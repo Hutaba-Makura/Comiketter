@@ -3,7 +3,7 @@ import { MantineProvider } from '@mantine/core';
 import { TimelineSkeleton } from '../bookmarks/timeline/TimelineSkeleton';
 
 const meta = {
-  title: 'Timeline/TimelineSkeleton',
+  title: 'Local-DB-Tweet/TimelineSkeleton',
   component: TimelineSkeleton,
   parameters: {
     layout: 'fullscreen',

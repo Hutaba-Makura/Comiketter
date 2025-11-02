@@ -1,14 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { MantineProvider } from '@mantine/core';
 import { BookmarkLayout } from './BookmarkLayout';
-import { StorybookTimelineViewWrapper } from './StorybookTimelineViewWrapper';
-import { withCbStore, withExtendedCbStore } from '../test/storybookDecorators';
+import { withCbStore } from '../test/storybookDecorators';
 
 /**
  * BookmarkLayoutコンポーネントのメタデータ
  */
 const meta: Meta<typeof BookmarkLayout> = {
-  title: 'Bookmarks/Layout/BookmarkLayout',
+  title: 'ReactTweet/BookmarkLayout',
   component: BookmarkLayout,
   parameters: {
     layout: 'fullscreen',
@@ -64,28 +63,3 @@ export const LightTheme: Story = {
   },
 };
 
-/**
- * 複数のCBとツイート群を含むレイアウト
- * 8つのCBとそれぞれに複数のツイートが格納されているケース
- */
-export const MultipleCbsWithTweets: Story = {
-  args: {
-    timelineViewComponent: StorybookTimelineViewWrapper,
-  },
-  decorators: [
-    (Story) => (
-      <MantineProvider>
-        <Story />
-      </MantineProvider>
-    ),
-    withExtendedCbStore,
-  ],
-  parameters: {
-    layout: 'fullscreen',
-    docs: {
-      description: {
-        story: '8つのCBとそれぞれに複数のツイート群が格納されているレイアウトです。サイドバーでCBを選択すると、対応するツイート群がタイムラインに表示されます。StorybookTimelineViewとStorybookTweetを使用しています。',
-      },
-    },
-  },
-};

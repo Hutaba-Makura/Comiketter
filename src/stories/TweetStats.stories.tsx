@@ -4,7 +4,7 @@ import { TweetStats } from '../bookmarks/tweet/TweetStats';
 import { sampleStats } from './data/tweetSampleData';
 
 const meta = {
-  title: 'Tweet/TweetStats',
+  title: 'Local-DB-Tweet/TweetStats',
   component: TweetStats,
   parameters: {
     layout: 'padded',

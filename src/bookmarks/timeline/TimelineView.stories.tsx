@@ -6,7 +6,7 @@ import { useCbStore } from '../state/cbStore';
  * TimelineViewコンポーネントのメタデータ
  */
 const meta: Meta<typeof TimelineView> = {
-  title: 'Bookmarks/Timeline/TimelineView',
+  title: 'ReactTweet/TimelineView',
   component: TimelineView,
   parameters: {
     layout: 'padded',

@@ -3,7 +3,7 @@ import { MantineProvider } from '@mantine/core';
 import { TweetEmbedFallback } from '../bookmarks/tweet/TweetEmbedFallback';
 
 const meta = {
-  title: 'Tweet/TweetEmbedFallback',
+  title: 'Local-DB-Tweet/TweetEmbedFallback',
   component: TweetEmbedFallback,
   parameters: {
     layout: 'padded',

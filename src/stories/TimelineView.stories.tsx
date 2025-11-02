@@ -4,7 +4,7 @@ import { StorybookTimelineView } from './components/StorybookTimelineView';
 import { sampleCbData, sampleTweetIds } from './data/tweetSampleData';
 
 const meta = {
-  title: 'Timeline/TimelineView',
+  title: 'Local-DB-Tweet/TimelineView',
   component: StorybookTimelineView,
   parameters: {
     layout: 'fullscreen',

@@ -4,7 +4,7 @@ import { VirtualizedTimeline } from '../bookmarks/timeline/VirtualizedTimeline';
 import { sampleTweetIds } from './data/tweetSampleData';
 
 const meta = {
-  title: 'Timeline/VirtualizedTimeline',
+  title: 'ReactTweet/VirtualizedTimeline',
   component: VirtualizedTimeline,
   parameters: {
     layout: 'fullscreen',

@@ -4,7 +4,7 @@ import { TweetHeader } from '../bookmarks/tweet/TweetHeader';
 import { sampleAuthors } from './data/tweetSampleData';
 
 const meta = {
-  title: 'Tweet/TweetHeader',
+  title: 'Local-DB-Tweet/TweetHeader',
   component: TweetHeader,
   parameters: {
     layout: 'padded',
