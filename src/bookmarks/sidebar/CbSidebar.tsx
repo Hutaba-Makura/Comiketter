@@ -12,7 +12,7 @@ import {
   ScrollArea,
   LoadingOverlay
 } from '@mantine/core';
-import { IconPlus, IconSearch, IconBookmark } from '@tabler/icons-react';
+import { IconPlus, IconSearch, IconBookmark, IconSettings} from '@tabler/icons-react';
 import { useCbStore } from '../state/cbStore';
 import { CbSidebarItem } from './CbSidebarItem';
 import { cbService } from '../services/cbService';
@@ -172,6 +172,24 @@ export function CbSidebar() {
             </Stack>
           )}
         </ScrollArea>
+      </Box>
+
+      {/* 設定 */}
+      <Box 
+        display="flex"
+        style={{ 
+          marginTop: 'auto',
+          justifyContent: 'start',
+          alignItems: 'center',
+          gap: '12px',
+          border: '1px solid var(--mantine-color-gray-2)',
+          borderRadius: '9999px',
+          padding: '8px',
+          margin: '8px',
+        }}
+      >
+        <IconSettings size={32} style={{ marginRight: 16, marginLeft: 24}} />
+        <Text size="xl" fw="bold">設定</Text>
       </Box>
     </Stack>
   );

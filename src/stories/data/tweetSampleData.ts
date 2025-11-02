@@ -17,30 +17,30 @@ export interface SampleTweetStats extends TweetStats {
 export const sampleAuthors: TweetAuthor[] = [
   {
     id: 'user-1',
-    username: 'comiket_official',
-    displayName: 'コミックマーケット',
-    profileImageUrl: '',
+    username: 'hulijinq',
+    displayName: 'hulijinq',
+    profileImageUrl: 'https://pbs.twimg.com/profile_images/1973663178316980227/ygUB-C6-_400x400.jpg',
     verified: true
   },
   {
     id: 'user-2',
     username: 'sample_artist',
-    displayName: 'サンプルアーティスト',
-    profileImageUrl: '',
+    displayName: 'ブルーアーカイブ公式',
+    profileImageUrl: 'https://pbs.twimg.com/profile_images/1686315947550965760/9JfkH8rT_400x400.jpg',
     verified: false
   },
   {
     id: 'user-3',
-    username: 'cosplayer_jp',
-    displayName: 'コスプレイヤー日本',
-    profileImageUrl: '',
+    username: 'omooo109817',
+    displayName: 'omo',
+    profileImageUrl: 'https://pbs.twimg.com/profile_images/1944148535898669056/Xvm8-_4x_400x400.jpg',
     verified: true
   },
   {
     id: 'user-4',
-    username: 'doujin_circle',
-    displayName: '同人サークル「サンプル」',
-    profileImageUrl: '',
+    username: 'LeafySky22',
+    displayName: 'LeafySky',
+    profileImageUrl: 'https://pbs.twimg.com/profile_images/1984773800685137920/mrKPSgiV_400x400.jpg',
     verified: false
   }
 ];
