@@ -78,7 +78,19 @@ export function Tweet({ id }: TweetProps) {
       } catch (err) {
         if (cancelled) return;
         console.error('Comiketter: ツイート取得エラー:', err);
-        setError(err instanceof Error ? err.message : 'ツイートの取得に失敗しました');
+        
+        // エラーメッセージを適切に処理
+        let errorMessage = 'ツイートの取得に失敗しました';
+        if (err instanceof Error) {
+          // クォータ超過エラーの場合は特別なメッセージ
+          if (err.message.includes('QuotaExceededError') || err.message.includes('quota')) {
+            errorMessage = 'ストレージの容量が不足しています。古いデータを削除してください。';
+          } else {
+            errorMessage = err.message;
+          }
+        }
+        
+        setError(errorMessage);
         setLoading(false);
       }
     }
