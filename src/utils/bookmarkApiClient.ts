@@ -104,7 +104,11 @@ export class BookmarkApiClient {
     mediaTypes?: string[],
     replyToTweetId?: string,
     replyToUsername?: string,
-    saveType: 'url' | 'blob' | 'mixed' = 'url'
+    saveType: 'url' | 'blob' | 'mixed' = 'url',
+    authorProfileImageUrl?: string,
+    favoriteCount?: number,
+    retweetCount?: number,
+    replyCount?: number
   ): Promise<BookmarkedTweet> {
     return await this.sendMessage('addBookmarkedTweet', {
       bookmarkId,
@@ -112,6 +116,7 @@ export class BookmarkApiClient {
       authorUsername,
       authorDisplayName,
       authorId,
+      authorProfileImageUrl,
       content,
       mediaUrls,
       mediaTypes,
@@ -121,6 +126,9 @@ export class BookmarkApiClient {
       replyToTweetId,
       replyToUsername,
       saveType,
+      favoriteCount,
+      retweetCount,
+      replyCount,
     });
   }
 
@@ -202,44 +210,80 @@ export class BookmarkApiClient {
         existingTweet.mediaTypes,
         existingTweet.replyToTweetId,
         existingTweet.replyToUsername,
-        existingTweet.saveType
-      );
-    } else if (tweetInfo) {
-      // ツイート情報が提供されている場合は、それを使用して新しいブックマーク済みツイートを作成
-      await this.addBookmarkedTweet(
-        bookmarkId,
-        tweetId,
-        tweetInfo.author?.username || 'unknown',
-        tweetInfo.author?.displayName || '',
-        tweetInfo.author?.id || '',
-        tweetInfo.text || '',
-        tweetInfo.createdAt || new Date().toISOString(),
-        false, // isRetweet
-        false, // isReply
-        tweetInfo.media?.map((m: any) => m.url) || [],
-        tweetInfo.media?.map((m: any) => m.type) || [],
-        undefined, // replyToTweetId
-        undefined, // replyToUsername
-        'url' // saveType
+        existingTweet.saveType,
+        existingTweet.authorProfileImageUrl,
+        existingTweet.favoriteCount,
+        existingTweet.retweetCount,
+        existingTweet.replyCount
       );
     } else {
-      // ツイート情報がない場合は、最小限の情報で作成
-      await this.addBookmarkedTweet(
-        bookmarkId,
-        tweetId,
-        'unknown',
-        '',
-        '',
-        `Tweet ID: ${tweetId}`,
-        new Date().toISOString(),
-        false,
-        false,
-        [],
-        [],
-        undefined,
-        undefined,
-        'url'
-      );
+      // ProcessedTweetをキャッシュから取得
+      const { ApiCacheManager } = await import('../utils/api-cache');
+      const cachedTweet = await ApiCacheManager.findTweetById(tweetId);
+      
+      if (cachedTweet) {
+        // ProcessedTweetから情報を抽出して保存
+        await this.addBookmarkedTweet(
+          bookmarkId,
+          tweetId,
+          cachedTweet.user.screen_name,
+          cachedTweet.user.name,
+          cachedTweet.user.screen_name, // ProcessedUserにはidがないためscreen_nameを使用
+          cachedTweet.full_text || '',
+          cachedTweet.created_at || new Date().toISOString(),
+          !!cachedTweet.retweeted_status,
+          !!cachedTweet.in_reply_to_status_id_str,
+          cachedTweet.media?.map(m => m.media_url_https) || [],
+          cachedTweet.media?.map(m => m.type) || [],
+          cachedTweet.in_reply_to_status_id_str,
+          cachedTweet.in_reply_to_screen_name,
+          'url',
+          cachedTweet.user.avatar_url,
+          cachedTweet.favorite_count,
+          cachedTweet.retweet_count,
+          cachedTweet.reply_count
+        );
+      } else if (tweetInfo) {
+        // ツイート情報が提供されている場合は、それを使用して新しいブックマーク済みツイートを作成
+        await this.addBookmarkedTweet(
+          bookmarkId,
+          tweetId,
+          tweetInfo.author?.username || 'unknown',
+          tweetInfo.author?.displayName || '',
+          tweetInfo.author?.id || '',
+          tweetInfo.text || '',
+          tweetInfo.createdAt || new Date().toISOString(),
+          false, // isRetweet
+          false, // isReply
+          tweetInfo.media?.map((m: any) => m.url) || [],
+          tweetInfo.media?.map((m: any) => m.type) || [],
+          undefined, // replyToTweetId
+          undefined, // replyToUsername
+          'url', // saveType
+          tweetInfo.author?.profileImageUrl,
+          tweetInfo.stats?.likeCount,
+          tweetInfo.stats?.retweetCount,
+          tweetInfo.stats?.replyCount
+        );
+      } else {
+        // ツイート情報がない場合は、最小限の情報で作成
+        await this.addBookmarkedTweet(
+          bookmarkId,
+          tweetId,
+          'unknown',
+          '',
+          '',
+          `Tweet ID: ${tweetId}`,
+          new Date().toISOString(),
+          false,
+          false,
+          [],
+          [],
+          undefined,
+          undefined,
+          'url'
+        );
+      }
     }
   }
 

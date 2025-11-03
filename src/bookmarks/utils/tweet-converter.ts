@@ -145,22 +145,21 @@ export function convertBookmarkedTweetToAuthor(tweet: BookmarkedTweetDB): TweetA
     id: tweet.authorId || tweet.authorUsername,
     username: tweet.authorUsername,
     displayName: tweet.authorDisplayName || tweet.authorUsername,
-    profileImageUrl: '', // BookmarkedTweetDBにはプロフィール画像URLがないため空文字
+    profileImageUrl: tweet.authorProfileImageUrl || '', // BookmarkedTweetDBにプロフィール画像URLがある場合は使用
     verified: false // BookmarkedTweetDBには認証情報がないためデフォルトでfalse
   };
 }
 
 /**
  * BookmarkedTweetDBをTweetStatsに変換
- * 不完全なデータのため、デフォルト値（0）を返す
  */
 export function convertBookmarkedTweetToStats(tweet: BookmarkedTweetDB): TweetStats {
-  // BookmarkedTweetDBには統計情報がないため、デフォルト値（0）を返す
+  // BookmarkedTweetDBに統計情報がある場合は使用、ない場合はデフォルト値（0）を返す
   return {
-    retweetCount: 0,
-    likeCount: 0,
-    replyCount: 0,
-    quoteCount: 0
+    retweetCount: tweet.retweetCount ?? 0,
+    likeCount: tweet.favoriteCount ?? 0,
+    replyCount: tweet.replyCount ?? 0,
+    quoteCount: 0 // BookmarkedTweetDBにはquote_countがないためデフォルト値
   };
 }
 
@@ -204,8 +203,17 @@ export function isBookmarkedTweetComplete(tweet: BookmarkedTweetDB): boolean {
     return false;
   }
 
-  // 基本的な情報があれば完全とみなす（統計情報などはオプション）
-  // 将来的にProcessedTweetの全情報が保存されるようになったら、その判定も追加
+  // 統計情報とプロフィール画像URLが必須項目として追加されたため、それらもチェック
+  // ただし、既存データとの後方互換性のため、undefinedの場合は不完全とみなす
+  if (
+    tweet.favoriteCount === undefined ||
+    tweet.retweetCount === undefined ||
+    tweet.replyCount === undefined ||
+    !tweet.authorProfileImageUrl
+  ) {
+    return false;
+  }
+
   return true;
 }
 

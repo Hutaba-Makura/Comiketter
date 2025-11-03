@@ -20,6 +20,7 @@ export interface BookmarkedTweetDB {
   authorUsername: string;
   authorDisplayName?: string;
   authorId?: string;
+  authorProfileImageUrl?: string;
   content: string;
   mediaUrls?: string[];
   mediaTypes?: string[];
@@ -30,6 +31,10 @@ export interface BookmarkedTweetDB {
   replyToTweetId?: string;
   replyToUsername?: string;
   saveType: 'url' | 'blob' | 'mixed';
+  // 統計情報
+  favoriteCount?: number;
+  retweetCount?: number;
+  replyCount?: number;
 }
 
 export interface BookmarkStats {

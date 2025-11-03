@@ -107,7 +107,11 @@ export class BookmarkManager {
     mediaTypes?: string[],
     replyToTweetId?: string,
     replyToUsername?: string,
-    saveType: 'url' | 'blob' | 'mixed' = 'url'
+    saveType: 'url' | 'blob' | 'mixed' = 'url',
+    authorProfileImageUrl?: string,
+    favoriteCount?: number,
+    retweetCount?: number,
+    replyCount?: number
   ): Promise<BookmarkedTweet> {
     // 重複チェック：同じツイートIDとブックマークIDの組み合わせが既に存在するかチェック
     const existingTweets = await this.getBookmarkedTweetByTweetId(tweetId);
@@ -127,6 +131,7 @@ export class BookmarkManager {
       authorUsername,
       authorDisplayName,
       authorId,
+      authorProfileImageUrl,
       content,
       mediaUrls,
       mediaTypes,
@@ -136,6 +141,9 @@ export class BookmarkManager {
       replyToTweetId,
       replyToUsername,
       saveType,
+      favoriteCount,
+      retweetCount,
+      replyCount,
     });
 
     this.bookmarkedTweets.push(newTweet);
