@@ -48,6 +48,27 @@ export class BookmarkApiClient {
   }
 
   /**
+   * background scriptにキャッシュアクションのメッセージを送信
+   */
+  private async sendCacheMessage(action: string, data?: any): Promise<any> {
+    try {
+      const response = await chrome.runtime.sendMessage({
+        type: 'CACHE_ACTION',
+        payload: { action, data }
+      });
+      
+      if (response && response.success === false) {
+        throw new Error(response.error || 'Unknown error');
+      }
+      
+      return response.data || response;
+    } catch (error) {
+      console.error('BookmarkApiClient: Failed to send cache message:', error);
+      throw error;
+    }
+  }
+
+  /**
    * 全ブックマークを取得
    */
   async getBookmarks(): Promise<CustomBookmark[]> {
@@ -218,71 +239,118 @@ export class BookmarkApiClient {
       );
     } else {
       // ProcessedTweetをキャッシュから取得
-      const { ApiCacheManager } = await import('../utils/api-cache');
-      const cachedTweet = await ApiCacheManager.findTweetById(tweetId);
+      // background script経由でキャッシュから取得
+      try {
+        const cachedTweet = await this.sendCacheMessage('findTweetById', {
+          id_str: tweetId
+        });
       
-      if (cachedTweet) {
-        // ProcessedTweetから情報を抽出して保存
-        await this.addBookmarkedTweet(
-          bookmarkId,
-          tweetId,
-          cachedTweet.user.screen_name,
-          cachedTweet.user.name,
-          cachedTweet.user.screen_name, // ProcessedUserにはidがないためscreen_nameを使用
-          cachedTweet.full_text || '',
-          cachedTweet.created_at || new Date().toISOString(),
-          !!cachedTweet.retweeted_status,
-          !!cachedTweet.in_reply_to_status_id_str,
-          cachedTweet.media?.map(m => m.media_url_https) || [],
-          cachedTweet.media?.map(m => m.type) || [],
-          cachedTweet.in_reply_to_status_id_str,
-          cachedTweet.in_reply_to_screen_name,
-          'url',
-          cachedTweet.user.avatar_url,
-          cachedTweet.favorite_count,
-          cachedTweet.retweet_count,
-          cachedTweet.reply_count
-        );
-      } else if (tweetInfo) {
-        // ツイート情報が提供されている場合は、それを使用して新しいブックマーク済みツイートを作成
-        await this.addBookmarkedTweet(
-          bookmarkId,
-          tweetId,
-          tweetInfo.author?.username || 'unknown',
-          tweetInfo.author?.displayName || '',
-          tweetInfo.author?.id || '',
-          tweetInfo.text || '',
-          tweetInfo.createdAt || new Date().toISOString(),
-          false, // isRetweet
-          false, // isReply
-          tweetInfo.media?.map((m: any) => m.url) || [],
-          tweetInfo.media?.map((m: any) => m.type) || [],
-          undefined, // replyToTweetId
-          undefined, // replyToUsername
-          'url', // saveType
-          tweetInfo.author?.profileImageUrl,
-          tweetInfo.stats?.likeCount,
-          tweetInfo.stats?.retweetCount,
-          tweetInfo.stats?.replyCount
-        );
-      } else {
-        // ツイート情報がない場合は、最小限の情報で作成
-        await this.addBookmarkedTweet(
-          bookmarkId,
-          tweetId,
-          'unknown',
-          '',
-          '',
-          `Tweet ID: ${tweetId}`,
-          new Date().toISOString(),
-          false,
-          false,
-          [],
-          [],
-          undefined,
-          undefined,
-          'url'
-        );
+        if (cachedTweet) {
+          // ProcessedTweetから情報を抽出して保存
+          await this.addBookmarkedTweet(
+            bookmarkId,
+            tweetId,
+            cachedTweet.user.screen_name,
+            cachedTweet.user.name,
+            cachedTweet.user.screen_name, // ProcessedUserにはidがないためscreen_nameを使用
+            cachedTweet.full_text || '',
+            cachedTweet.created_at || new Date().toISOString(),
+            !!cachedTweet.retweeted_status,
+            !!cachedTweet.in_reply_to_status_id_str,
+            cachedTweet.media?.map((m: any) => m.media_url_https) || [],
+            cachedTweet.media?.map((m: any) => m.type) || [],
+            cachedTweet.in_reply_to_status_id_str,
+            cachedTweet.in_reply_to_screen_name,
+            'url',
+            cachedTweet.user.avatar_url,
+            cachedTweet.favorite_count,
+            cachedTweet.retweet_count,
+            cachedTweet.reply_count
+          );
+        } else if (tweetInfo) {
+          // ツイート情報が提供されている場合は、それを使用して新しいブックマーク済みツイートを作成
+          await this.addBookmarkedTweet(
+            bookmarkId,
+            tweetId,
+            tweetInfo.author?.username || 'unknown',
+            tweetInfo.author?.displayName || '',
+            tweetInfo.author?.id || '',
+            tweetInfo.text || '',
+            tweetInfo.createdAt || new Date().toISOString(),
+            false, // isRetweet
+            false, // isReply
+            tweetInfo.media?.map((m: any) => m.url) || [],
+            tweetInfo.media?.map((m: any) => m.type) || [],
+            undefined, // replyToTweetId
+            undefined, // replyToUsername
+            'url', // saveType
+            tweetInfo.author?.profileImageUrl,
+            tweetInfo.stats?.likeCount,
+            tweetInfo.stats?.retweetCount,
+            tweetInfo.stats?.replyCount
+          );
+        } else {
+          // ツイート情報がない場合は、最小限の情報で作成
+          await this.addBookmarkedTweet(
+            bookmarkId,
+            tweetId,
+            'unknown',
+            '',
+            '',
+            `Tweet ID: ${tweetId}`,
+            new Date().toISOString(),
+            false,
+            false,
+            [],
+            [],
+            undefined,
+            undefined,
+            'url'
+          );
+        }
+      } catch (error) {
+        console.error('Comiketter: Failed to get cached tweet:', error);
+        // エラーが発生した場合でも、tweetInfoがあればそれを使用
+        if (tweetInfo) {
+          await this.addBookmarkedTweet(
+            bookmarkId,
+            tweetId,
+            tweetInfo.author?.username || 'unknown',
+            tweetInfo.author?.displayName || '',
+            tweetInfo.author?.id || '',
+            tweetInfo.text || '',
+            tweetInfo.createdAt || new Date().toISOString(),
+            false,
+            false,
+            tweetInfo.media?.map((m: any) => m.url) || [],
+            tweetInfo.media?.map((m: any) => m.type) || [],
+            undefined,
+            undefined,
+            'url',
+            tweetInfo.author?.profileImageUrl,
+            tweetInfo.stats?.likeCount,
+            tweetInfo.stats?.retweetCount,
+            tweetInfo.stats?.replyCount
+          );
+        } else {
+          // tweetInfoもない場合は、最小限の情報で作成
+          await this.addBookmarkedTweet(
+            bookmarkId,
+            tweetId,
+            'unknown',
+            '',
+            '',
+            `Tweet ID: ${tweetId}`,
+            new Date().toISOString(),
+            false,
+            false,
+            [],
+            [],
+            undefined,
+            undefined,
+            'url'
+          );
+        }
       }
     }
   }
