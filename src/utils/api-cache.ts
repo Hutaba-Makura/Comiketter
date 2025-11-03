@@ -72,17 +72,29 @@ export class ApiCacheManager {
         filteredCache.push(cacheEntry);
       }
 
+      // 期限切れキャッシュを削除
+      const currentTimestamp = Date.now();
+      const validCache = filteredCache.filter(
+        entry => entry.expires_at > currentTimestamp
+      );
+
       // 最大エントリ数を超えた場合、古いものから削除
-      if (filteredCache.length > CACHE_CONFIG.MAX_CACHE_ENTRIES) {
-        const beforeCount = filteredCache.length;
-        filteredCache.sort((a, b) => b.timestamp - a.timestamp);
-        filteredCache.splice(CACHE_CONFIG.MAX_CACHE_ENTRIES);
-        const afterCount = filteredCache.length;
+      if (validCache.length > CACHE_CONFIG.MAX_CACHE_ENTRIES) {
+        const beforeCount = validCache.length;
+        validCache.sort((a, b) => b.timestamp - a.timestamp);
+        validCache.splice(CACHE_CONFIG.MAX_CACHE_ENTRIES);
+        const afterCount = validCache.length;
         console.log(`Comiketter: 最大エントリ数超過により削除 - ${beforeCount - afterCount}件`);
       }
 
+      // 期限切れデータが削除された場合、ログ出力
+      if (validCache.length < filteredCache.length) {
+        const removedCount = filteredCache.length - validCache.length;
+        console.log(`Comiketter: 期限切れキャッシュを自動削除 - ${removedCount}件`);
+      }
+
       await chrome.storage.local.set({
-        [CACHE_CONFIG.STORAGE_KEY]: filteredCache
+        [CACHE_CONFIG.STORAGE_KEY]: validCache
       });
     } catch (error) {
       console.error('Comiketter: APIキャッシュ保存エラー:', error);

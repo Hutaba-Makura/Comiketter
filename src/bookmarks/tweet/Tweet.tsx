@@ -23,11 +23,15 @@ import {
   IconChevronRight,
   IconAlertCircle
 } from '@tabler/icons-react';
-import { ApiCacheManager } from '../../utils/api-cache';
-import { convertCachedTweetToUITweet } from '../utils/tweet-converter';
+import { bookmarkDB } from '../../utils/bookmarkDB';
+import { 
+  convertBookmarkedTweetToUITweet,
+  isBookmarkedTweetComplete 
+} from '../utils/tweet-converter';
 import { formatTweetId, formatRelativeTime, formatCount } from '../utils/format';
 import { TweetAuthor, TweetStats, TweetMediaItem } from '../types/tweet';
 import { TweetEmbedFallback } from './TweetEmbedFallback';
+import { TweetEmbed } from './TweetEmbed';
 
 /**
  * 本番用ツイート表示コンポーネント
@@ -45,8 +49,9 @@ export function Tweet({ id }: TweetProps) {
   const [createdAt, setCreatedAt] = useState<Date | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [useEmbedTweet, setUseEmbedTweet] = useState(false);
 
-  // Localデータからツイート情報を取得
+  // BookmarkDBからツイート情報を取得
   useEffect(() => {
     let cancelled = false;
 
@@ -54,20 +59,35 @@ export function Tweet({ id }: TweetProps) {
       try {
         setLoading(true);
         setError(null);
+        setUseEmbedTweet(false);
 
-        // キャッシュからツイートを取得
-        const cachedTweet = await ApiCacheManager.findTweetById(id);
+        // BookmarkDBからツイートを取得
+        const bookmarkedTweets = await bookmarkDB.getBookmarkedTweetByTweetId(id);
         
         if (cancelled) return;
 
-        if (!cachedTweet) {
-          setError('ツイートが見つかりませんでした');
+        if (!bookmarkedTweets || bookmarkedTweets.length === 0) {
+          // BookmarkDBにデータがない場合は、TweetEmbedを表示
+          console.log(`Comiketter: ツイートが見つかりませんでした (BookmarkDB) - ${id}`);
+          setUseEmbedTweet(true);
           setLoading(false);
           return;
         }
 
-        // ProcessedTweetをUI用の型に変換
-        const uiTweet = convertCachedTweetToUITweet(cachedTweet);
+        // 最初のブックマーク済みツイートを使用（同じツイートが複数のブックマークに登録されている可能性があるため）
+        const bookmarkedTweet = bookmarkedTweets[0];
+
+        // データが不完全かどうかを判定
+        if (!isBookmarkedTweetComplete(bookmarkedTweet)) {
+          // 不完全なデータの場合は、TweetEmbedを表示
+          console.log(`Comiketter: 不完全なデータのためTweetEmbedを表示 - ${id}`);
+          setUseEmbedTweet(true);
+          setLoading(false);
+          return;
+        }
+
+        // BookmarkedTweetDBをUI用の型に変換
+        const uiTweet = convertBookmarkedTweetToUITweet(bookmarkedTweet);
         
         setAuthor(uiTweet.author);
         setStats(uiTweet.stats);
@@ -79,18 +99,8 @@ export function Tweet({ id }: TweetProps) {
         if (cancelled) return;
         console.error('Comiketter: ツイート取得エラー:', err);
         
-        // エラーメッセージを適切に処理
-        let errorMessage = 'ツイートの取得に失敗しました';
-        if (err instanceof Error) {
-          // クォータ超過エラーの場合は特別なメッセージ
-          if (err.message.includes('QuotaExceededError') || err.message.includes('quota')) {
-            errorMessage = 'ストレージの容量が不足しています。古いデータを削除してください。';
-          } else {
-            errorMessage = err.message;
-          }
-        }
-        
-        setError(errorMessage);
+        // エラーの場合は、TweetEmbedを表示
+        setUseEmbedTweet(true);
         setLoading(false);
       }
     }
@@ -214,8 +224,18 @@ export function Tweet({ id }: TweetProps) {
     );
   }
 
-  // エラー状態
-  if (error || !author || !stats || !createdAt) {
+  // データが不完全な場合、またはエラーの場合はTweetEmbedを表示
+  if (useEmbedTweet || error || !author || !stats || !createdAt) {
+    if (useEmbedTweet || (!author && !stats && !createdAt)) {
+      // TweetEmbedを表示
+      return (
+        <Box style={{ maxWidth: '598px', margin: '0 auto' }}>
+          <TweetEmbed id={id} />
+        </Box>
+      );
+    }
+    
+    // その他のエラーの場合は、TweetEmbedFallbackを表示
     return (
       <Box style={{ maxWidth: '598px', margin: '0 auto' }}>
         <TweetEmbedFallback 
@@ -223,24 +243,32 @@ export function Tweet({ id }: TweetProps) {
           onRetry={() => {
             setLoading(true);
             setError(null);
+            setUseEmbedTweet(false);
             // 再取得をトリガー
             const fetchTweet = async () => {
               try {
-                const cachedTweet = await ApiCacheManager.findTweetById(id);
-                if (cachedTweet) {
-                  const uiTweet = convertCachedTweetToUITweet(cachedTweet);
-                  setAuthor(uiTweet.author);
-                  setStats(uiTweet.stats);
-                  setContent(uiTweet.content);
-                  setMedia(uiTweet.media);
-                  setCreatedAt(uiTweet.createdAt);
-                  setLoading(false);
+                const bookmarkedTweets = await bookmarkDB.getBookmarkedTweetByTweetId(id);
+                if (bookmarkedTweets && bookmarkedTweets.length > 0) {
+                  const bookmarkedTweet = bookmarkedTweets[0];
+                  if (isBookmarkedTweetComplete(bookmarkedTweet)) {
+                    const uiTweet = convertBookmarkedTweetToUITweet(bookmarkedTweet);
+                    setAuthor(uiTweet.author);
+                    setStats(uiTweet.stats);
+                    setContent(uiTweet.content);
+                    setMedia(uiTweet.media);
+                    setCreatedAt(uiTweet.createdAt);
+                    setLoading(false);
+                  } else {
+                    setUseEmbedTweet(true);
+                    setLoading(false);
+                  }
                 } else {
-                  setError('ツイートが見つかりませんでした');
+                  setUseEmbedTweet(true);
                   setLoading(false);
                 }
               } catch (err) {
                 setError(err instanceof Error ? err.message : 'ツイートの取得に失敗しました');
+                setUseEmbedTweet(true);
                 setLoading(false);
               }
             };

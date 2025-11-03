@@ -13,6 +13,7 @@ import {
   TweetStats,
   TweetMediaItem
 } from '../types/tweet';
+import type { BookmarkedTweetDB } from '../../utils/bookmarkDB';
 
 /**
  * ProcessedUserをTweetAuthorに変換
@@ -133,6 +134,97 @@ export function convertCachedTweetToUITweet(tweet: CachedTweet | ProcessedTweet)
       : [],
     content: targetTweet.full_text || '',
     createdAt: parseTweetDate(targetTweet.created_at)
+  };
+}
+
+/**
+ * BookmarkedTweetDBをTweetAuthorに変換
+ */
+export function convertBookmarkedTweetToAuthor(tweet: BookmarkedTweetDB): TweetAuthor {
+  return {
+    id: tweet.authorId || tweet.authorUsername,
+    username: tweet.authorUsername,
+    displayName: tweet.authorDisplayName || tweet.authorUsername,
+    profileImageUrl: '', // BookmarkedTweetDBにはプロフィール画像URLがないため空文字
+    verified: false // BookmarkedTweetDBには認証情報がないためデフォルトでfalse
+  };
+}
+
+/**
+ * BookmarkedTweetDBをTweetStatsに変換
+ * 不完全なデータのため、デフォルト値（0）を返す
+ */
+export function convertBookmarkedTweetToStats(tweet: BookmarkedTweetDB): TweetStats {
+  // BookmarkedTweetDBには統計情報がないため、デフォルト値（0）を返す
+  return {
+    retweetCount: 0,
+    likeCount: 0,
+    replyCount: 0,
+    quoteCount: 0
+  };
+}
+
+/**
+ * BookmarkedTweetDBのメディア情報をTweetMediaItemの配列に変換
+ */
+export function convertBookmarkedTweetMedia(tweet: BookmarkedTweetDB): TweetMediaItem[] {
+  if (!tweet.mediaUrls || !tweet.mediaTypes || tweet.mediaUrls.length === 0) {
+    return [];
+  }
+
+  return tweet.mediaUrls.map((url, index) => {
+    const mediaType = tweet.mediaTypes?.[index] || 'image';
+    
+    // mediaTypeをTweetMediaItemの型に変換
+    let type: 'image' | 'video' | 'gif' = 'image';
+    if (mediaType === 'video') {
+      type = 'video';
+    } else if (mediaType === 'animated_gif' || mediaType === 'gif') {
+      type = 'gif';
+    }
+
+    return {
+      id: `bookmark-${tweet.id}-${index}`,
+      type,
+      url,
+      previewUrl: url, // BookmarkedTweetDBにはプレビューURLがないため、元のURLを使用
+      altText: undefined,
+      width: undefined,
+      height: undefined
+    };
+  });
+}
+
+/**
+ * BookmarkedTweetDBが完全なデータかどうかを判定
+ */
+export function isBookmarkedTweetComplete(tweet: BookmarkedTweetDB): boolean {
+  // 最小限の必須情報をチェック
+  if (!tweet.content || !tweet.authorUsername || !tweet.tweetDate) {
+    return false;
+  }
+
+  // 基本的な情報があれば完全とみなす（統計情報などはオプション）
+  // 将来的にProcessedTweetの全情報が保存されるようになったら、その判定も追加
+  return true;
+}
+
+/**
+ * BookmarkedTweetDBをTweetAuthor、TweetStats、TweetMediaItemの配列に変換
+ */
+export function convertBookmarkedTweetToUITweet(tweet: BookmarkedTweetDB): {
+  author: TweetAuthor;
+  stats: TweetStats;
+  media: TweetMediaItem[];
+  content: string;
+  createdAt: Date;
+} {
+  return {
+    author: convertBookmarkedTweetToAuthor(tweet),
+    stats: convertBookmarkedTweetToStats(tweet),
+    media: convertBookmarkedTweetMedia(tweet),
+    content: tweet.content || '',
+    createdAt: parseTweetDate(tweet.tweetDate)
   };
 }
 
