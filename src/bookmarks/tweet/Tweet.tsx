@@ -78,13 +78,13 @@ export function Tweet({ id }: TweetProps) {
         const bookmarkedTweet = bookmarkedTweets[0];
 
         // データが不完全かどうかを判定
-        if (!isBookmarkedTweetComplete(bookmarkedTweet)) {
-          // 不完全なデータの場合は、TweetEmbedを表示
-          console.log(`Comiketter: 不完全なデータのためTweetEmbedを表示 - ${id}`);
-          setUseEmbedTweet(true);
-          setLoading(false);
-          return;
-        }
+        // if (!isBookmarkedTweetComplete(bookmarkedTweet)) {
+        //   // 不完全なデータの場合は、TweetEmbedを表示
+        //   console.log(`Comiketter: 不完全なデータのためTweetEmbedを表示 - ${id}`);
+        //   setUseEmbedTweet(true);
+        //   setLoading(false);
+        //   return;
+        // }
 
         // BookmarkedTweetDBをUI用の型に変換
         const uiTweet = convertBookmarkedTweetToUITweet(bookmarkedTweet);
