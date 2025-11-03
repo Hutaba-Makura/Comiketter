@@ -264,27 +264,47 @@ export class ApiCacheManager {
 
   /**
    * 指定されたid_strでツイートを検索
+   * @param id_str ツイートID
+   * @param includeExpired 期限切れのキャッシュも検索するか（デフォルト: true）
    */
-  static async findTweetById(id_str: string): Promise<CachedTweet | null> {
+  static async findTweetById(id_str: string, includeExpired: boolean = true): Promise<CachedTweet | null> {
     try {
       const cacheEntries = await this.getCacheEntries();
       const currentTimestamp = Date.now();
       
       // 有効期限が切れていないキャッシュエントリから検索
-      const validEntries = cacheEntries.filter(
-        entry => entry.expires_at > currentTimestamp
-      );
+      let searchEntries = cacheEntries;
+      if (!includeExpired) {
+        searchEntries = cacheEntries.filter(
+          entry => entry.expires_at > currentTimestamp
+        );
+      } else {
+        // 有効期限内のエントリを優先
+        const validEntries = cacheEntries.filter(
+          entry => entry.expires_at > currentTimestamp
+        );
+        const expiredEntries = cacheEntries.filter(
+          entry => entry.expires_at <= currentTimestamp
+        );
+        // 有効期限内のエントリを先に検索
+        searchEntries = [...validEntries, ...expiredEntries];
+      }
 
       // 全ツイートをフラット化して検索
-      for (const entry of validEntries) {
+      for (const entry of searchEntries) {
         const foundTweet = entry.tweets.find(tweet => tweet.id_str === id_str);
         if (foundTweet) {
-          console.log(`Comiketter: キャッシュからツイートを発見 - ${id_str} (API: ${entry.api_type})`);
+          const isExpired = entry.expires_at <= currentTimestamp;
+          if (isExpired) {
+            console.warn(`Comiketter: 期限切れキャッシュからツイートを発見 - ${id_str} (API: ${entry.api_type}, 期限切れ: ${Math.floor((currentTimestamp - entry.expires_at) / 1000 / 60 / 60)}時間前)`);
+          } else {
+            console.log(`Comiketter: キャッシュからツイートを発見 - ${id_str} (API: ${entry.api_type})`);
+          }
           return foundTweet;
         }
       }
 
-      console.log(`Comiketter: キャッシュにツイートが見つかりませんでした - ${id_str}`);
+      console.log(`Comiketter: キャッシュにツイートが見つかりませんでした - ${id_str} (検索エントリ数: ${searchEntries.length}, 総エントリ数: ${cacheEntries.length})`);
       return null;
     } catch (error) {
       console.error('Comiketter: ツイート検索エラー:', error);

@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { MantineProvider } from '@mantine/core';
 import { BookmarkLayout } from './BookmarkLayout';
+import { StorybookTimelineViewWrapper } from './StorybookTimelineViewWrapper';
 import { withCbStore } from '../test/storybookDecorators';
 
 /**
@@ -36,14 +37,18 @@ type Story = StoryObj<typeof meta>;
  * デフォルトのレイアウト
  */
 export const Default: Story = {
-  args: {},
+  args: {
+    timelineViewComponent: StorybookTimelineViewWrapper,
+  },
 };
 
 /**
  * ダークテーマでのレイアウト
  */
 export const DarkTheme: Story = {
-  args: {},
+  args: {
+    timelineViewComponent: StorybookTimelineViewWrapper,
+  },
   parameters: {
     backgrounds: {
       default: 'dark',
@@ -55,7 +60,9 @@ export const DarkTheme: Story = {
  * ライトテーマでのレイアウト
  */
 export const LightTheme: Story = {
-  args: {},
+  args: {
+    timelineViewComponent: StorybookTimelineViewWrapper,
+  },
   parameters: {
     backgrounds: {
       default: 'light',
