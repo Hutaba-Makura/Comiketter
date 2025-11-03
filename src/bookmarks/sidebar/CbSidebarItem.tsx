@@ -8,19 +8,21 @@ import {
   Menu,
   Tooltip,
   Box,
-  Transition
+  Transition,
+  Button,
+  Stack
 } from '@mantine/core';
 import { 
   IconBookmark, 
   IconDotsVertical, 
   IconTrash, 
   IconEdit, 
-  IconCopy,
-  IconShare
+  IconCopy
 } from '@tabler/icons-react';
 import { Cb } from '../types/cb';
 import { useCbStore } from '../state/cbStore';
 import { formatCount } from '../utils/format';
+import { cbService } from '../services/cbService';
 
 interface CbSidebarItemProps {
   cb: Cb;
@@ -30,8 +32,10 @@ interface CbSidebarItemProps {
  * CBサイドバーアイテムコンポーネント
  */
 export function CbSidebarItem({ cb }: CbSidebarItemProps) {
-  const { selectedCbId, selectCb } = useCbStore();
+  const { selectedCbId, selectCb, removeCb } = useCbStore();
   const [isHovered, setIsHovered] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const isSelected = selectedCbId === cb.id;
 
   const handleSelect = () => {
@@ -39,8 +43,25 @@ export function CbSidebarItem({ cb }: CbSidebarItemProps) {
   };
 
   const handleDelete = () => {
-    // TODO: 削除確認モーダルを開く
-    console.log('CB削除:', cb.id);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    setIsDeleting(true);
+    try {
+      await cbService.deleteCb(cb.id);
+      removeCb(cb.id);
+      setIsDeleteModalOpen(false);
+    } catch (error) {
+      console.error('CB削除エラー:', error);
+      alert('CBの削除に失敗しました');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setIsDeleteModalOpen(false);
   };
 
   const handleEdit = () => {
@@ -53,15 +74,11 @@ export function CbSidebarItem({ cb }: CbSidebarItemProps) {
     console.log('CBコピー:', cb.id);
   };
 
-  const handleShare = () => {
-    // TODO: 共有機能を実装
-    console.log('CB共有:', cb.id);
-  };
-
   return (
-    <Transition mounted={true} transition="fade" duration={200}>
-      {(styles) => (
-        <Paper
+    <>
+      <Transition mounted={true} transition="fade" duration={200}>
+        {(styles) => (
+          <Paper
           p="sm"
           withBorder
           style={{
@@ -144,7 +161,7 @@ export function CbSidebarItem({ cb }: CbSidebarItemProps) {
               
               <Transition mounted={isHovered || isSelected} transition="fade" duration={150}>
                 {(menuStyles) => (
-                  <Menu shadow="md" width={200} position="bottom-end">
+                  <Menu shadow="md" width={150} position="bottom-end">
                     <Menu.Target>
                       <ActionIcon
                         variant="subtle"
@@ -168,12 +185,6 @@ export function CbSidebarItem({ cb }: CbSidebarItemProps) {
                       >
                         コピー
                       </Menu.Item>
-                      <Menu.Item
-                        leftSection={<IconShare size={14} />}
-                        onClick={handleShare}
-                      >
-                        共有
-                      </Menu.Item>
                       <Menu.Divider />
                       <Menu.Item
                         leftSection={<IconTrash size={14} />}
@@ -189,7 +200,88 @@ export function CbSidebarItem({ cb }: CbSidebarItemProps) {
             </Group>
           </Group>
         </Paper>
+        )}
+      </Transition>
+
+      {/* 削除確認モーダル */}
+      {isDeleteModalOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.4)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+          onClick={handleCancelDelete}
+        >
+          <Box
+            style={{
+              backgroundColor: 'white',
+              borderRadius: '16px',
+              padding: '32px',
+              maxWidth: '320px',
+              width: '90%',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Text
+              size="xl"
+              fw={700}
+              style={{
+                color: 'black',
+                marginBottom: '8px',
+              }}
+            >
+              カスタムブックマークを削除しますか？
+            </Text>
+            <Text
+              style={{
+                color: 'rgb(83, 100, 113)',
+                marginBottom: '24px',
+                fontSize: '15px',
+              }}
+            >
+              この操作は取り消せません
+            </Text>
+            <Stack gap="xs">
+              <Button
+                color="rgb(244, 33, 46)"
+                size="lg"
+                radius="xl"
+                fullWidth
+                onClick={handleConfirmDelete}
+                loading={isDeleting}
+                style={{
+                  borderColor: 'rgb(207, 217, 222)',
+                }}
+              >
+                削除
+              </Button>
+              <Button
+                variant="default"
+                size="lg"
+                radius="xl"
+                fullWidth
+                onClick={handleCancelDelete}
+                disabled={isDeleting}
+                style={{
+                  backgroundColor: 'white',
+                  color: 'black',
+                  borderColor: 'rgb(207, 217, 222)',
+                }}
+              >
+                キャンセル
+              </Button>
+            </Stack>
+          </Box>
+        </div>
       )}
-    </Transition>
+  </>
   );
 }
