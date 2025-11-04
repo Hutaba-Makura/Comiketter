@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { 
   Stack, 
   Text, 
@@ -29,22 +29,42 @@ import { useTimeline } from '../hooks/useTimeline';
 import { Tweet } from '../tweet/Tweet';
 import { TimelineSkeleton } from './TimelineSkeleton';
 import { VirtualizedTimeline } from './VirtualizedTimeline';
+import { cbService } from '../services/cbService';
 
 /**
  * タイムライン表示コンポーネント
  */
 export function TimelineView() {
-  const { selectedCbId, cbs } = useCbStore();
+  const { selectedCbId, cbs, updateCb: updateCbInStore } = useCbStore();
   const { tweetIds, loading, error, refetch } = useTimeline(selectedCbId);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
   const [useVirtualization, setUseVirtualization] = useState(false);
+  
+  // 編集モードの状態管理
+  const [editingName, setEditingName] = useState(false);
+  const [editingDescription, setEditingDescription] = useState(false);
+  const [nameValue, setNameValue] = useState('');
+  const [descriptionValue, setDescriptionValue] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const nameInputRef = useRef<HTMLInputElement>(null);
+  const descriptionInputRef = useRef<HTMLInputElement>(null);
 
   // 選択されたCBを計算（Zustandのgetterは反応しないため、コンポーネント内で計算）
   const selectedCb = useMemo(() => {
     if (!selectedCbId) return undefined;
     return cbs.find(cb => cb.id === selectedCbId);
   }, [cbs, selectedCbId]);
+
+  // 選択されたCBが変更されたら、編集用の値をリセット
+  useEffect(() => {
+    if (selectedCb) {
+      setNameValue(selectedCb.name);
+      setDescriptionValue(selectedCb.description || '');
+      setEditingName(false);
+      setEditingDescription(false);
+    }
+  }, [selectedCb?.id]);
 
   // フィルタリングとソート
   const filteredAndSortedTweetIds = useMemo(() => {
@@ -67,6 +87,130 @@ export function TimelineView() {
 
   // 仮想化を使用するかどうかを決定（100件以上の場合）
   const shouldUseVirtualization = useVirtualization && filteredAndSortedTweetIds.length >= 100;
+
+  // 名前の編集開始
+  const handleNameClick = () => {
+    if (!selectedCb) return;
+    setEditingName(true);
+    setNameValue(selectedCb.name);
+    setTimeout(() => {
+      nameInputRef.current?.focus();
+      nameInputRef.current?.select();
+    }, 0);
+  };
+
+  // 説明文の編集開始
+  const handleDescriptionClick = () => {
+    if (!selectedCb) return;
+    setEditingDescription(true);
+    setDescriptionValue(selectedCb.description || '');
+    setTimeout(() => {
+      descriptionInputRef.current?.focus();
+      descriptionInputRef.current?.select();
+    }, 0);
+  };
+
+  // 名前の保存
+  const handleNameSave = async () => {
+    if (!selectedCbId || !selectedCb) return;
+    
+    const trimmedName = nameValue.trim();
+    if (!trimmedName) {
+      // 空の場合は元に戻す
+      setNameValue(selectedCb.name);
+      setEditingName(false);
+      return;
+    }
+
+    if (trimmedName === selectedCb.name) {
+      // 変更がない場合は編集モードを終了
+      setEditingName(false);
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const updatedCb = await cbService.updateCb(selectedCbId, { name: trimmedName });
+      updateCbInStore(selectedCbId, { name: trimmedName });
+      setEditingName(false);
+    } catch (error) {
+      console.error('CB名の更新エラー:', error);
+      // エラー時は元の値に戻す
+      setNameValue(selectedCb.name);
+      setEditingName(false);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // 説明文の保存
+  const handleDescriptionSave = async () => {
+    if (!selectedCbId || !selectedCb) return;
+    
+    const trimmedDescription = descriptionValue.trim();
+    const currentDescription = selectedCb.description || '';
+
+    if (trimmedDescription === currentDescription) {
+      // 変更がない場合は編集モードを終了
+      setEditingDescription(false);
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const updatedCb = await cbService.updateCb(selectedCbId, { 
+        description: trimmedDescription || undefined 
+      });
+      updateCbInStore(selectedCbId, { 
+        description: trimmedDescription || undefined 
+      });
+      setEditingDescription(false);
+    } catch (error) {
+      console.error('CB説明文の更新エラー:', error);
+      // エラー時は元の値に戻す
+      setDescriptionValue(currentDescription);
+      setEditingDescription(false);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // 名前の編集キャンセル
+  const handleNameCancel = () => {
+    if (selectedCb) {
+      setNameValue(selectedCb.name);
+    }
+    setEditingName(false);
+  };
+
+  // 説明文の編集キャンセル
+  const handleDescriptionCancel = () => {
+    if (selectedCb) {
+      setDescriptionValue(selectedCb.description || '');
+    }
+    setEditingDescription(false);
+  };
+
+  // Enterキーで保存、Escapeキーでキャンセル
+  const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleNameSave();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      handleNameCancel();
+    }
+  };
+
+  const handleDescriptionKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleDescriptionSave();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      handleDescriptionCancel();
+    }
+  };
 
   // CBが選択されていない場合
   if (!selectedCbId) {
@@ -127,13 +271,74 @@ export function TimelineView() {
       {/* CB情報ヘッダー */}
       <Box p="md" style={{ borderBottom: '1px solid #e1e8ed' }}>
         <Group justify="space-between" align="center">
-          <Stack gap={4}>
-            <Text size="xl" fw={600}>
-              {selectedCb?.name || 'CB名'}
-            </Text>
-            <Text size="sm" c="dimmed">
-              {selectedCb?.description || 'CBの説明'}
-            </Text>
+          <Stack gap={4} style={{ flex: 1, minWidth: 0 }}>
+            {editingName ? (
+              <TextInput
+                ref={nameInputRef}
+                value={nameValue}
+                onChange={(e) => setNameValue(e.currentTarget.value)}
+                onBlur={handleNameSave}
+                onKeyDown={handleNameKeyDown}
+                size="lg"
+                style={{ fontWeight: 600 }}
+                disabled={isSaving}
+                autoFocus
+              />
+            ) : (
+              <Text 
+                size="xl" 
+                fw={600}
+                style={{ 
+                  cursor: 'pointer',
+                  padding: '2px 4px',
+                  borderRadius: '4px',
+                  transition: 'background-color 0.2s'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'var(--mantine-color-gray-1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                }}
+                onClick={handleNameClick}
+              >
+                {selectedCb?.name || 'CB名'}
+              </Text>
+            )}
+            {editingDescription ? (
+              <TextInput
+                ref={descriptionInputRef}
+                value={descriptionValue}
+                onChange={(e) => setDescriptionValue(e.currentTarget.value)}
+                onBlur={handleDescriptionSave}
+                onKeyDown={handleDescriptionKeyDown}
+                size="sm"
+                placeholder="CBの説明"
+                disabled={isSaving}
+                autoFocus
+              />
+            ) : (
+              <Text 
+                size="sm" 
+                c="dimmed"
+                style={{ 
+                  cursor: 'pointer',
+                  padding: '2px 4px',
+                  borderRadius: '4px',
+                  transition: 'background-color 0.2s',
+                  minHeight: '20px'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'var(--mantine-color-gray-1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                }}
+                onClick={handleDescriptionClick}
+              >
+                {selectedCb?.description || 'CBの説明（クリックして編集）'}
+              </Text>
+            )}
           </Stack>
           <Group gap="xs">
             <Badge variant="light" size="lg">

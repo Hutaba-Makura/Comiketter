@@ -135,21 +135,21 @@ export class CbDataService {
    * CBを更新
    */
   async updateCb(cbId: string, updates: { name?: string; description?: string }): Promise<Cb> {
-    // TODO: 型エラーを修正後に実装
-    throw new Error('CB更新機能は一時的に無効化されています');
-    
-    /*
     try {
       const bookmark = await this.db.getBookmarkById(cbId);
       if (!bookmark) {
         throw new Error('CBが見つかりません');
       }
 
-      const updatedBookmark = await this.db.updateBookmark(cbId, {
-        ...bookmark,
-        ...updates,
-        updatedAt: new Date().toISOString()
+      await this.db.updateBookmark(cbId, {
+        name: updates.name ?? bookmark.name,
+        description: updates.description ?? bookmark.description
       });
+
+      const updatedBookmark = await this.db.getBookmarkById(cbId);
+      if (!updatedBookmark) {
+        throw new Error('更新後のCBが見つかりません');
+      }
 
       const tweetCount = await this.getTweetCountByCbId(cbId);
 
@@ -166,7 +166,6 @@ export class CbDataService {
       console.error('CB更新エラー:', error);
       throw new Error('CBの更新に失敗しました');
     }
-    */
   }
 
   /**
