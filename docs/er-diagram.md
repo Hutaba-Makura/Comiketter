@@ -102,6 +102,11 @@ erDiagram
 **インデックス:**
 - `idx_bookmarks_name` (name)
 - `idx_bookmarks_created_at` (created_at)
+- `idx_bookmarks_updated_at` (updated_at)
+
+**注意事項:**
+- `updated_at`は、ブックマークの作成・更新時に自動的に設定されます
+- ツイートの追加・削除時にも、親ブックマークの`updated_at`が自動的に更新されます
 
 ### 2. BOOKMARKED_TWEETS（ブックマーク済みツイート）
 
