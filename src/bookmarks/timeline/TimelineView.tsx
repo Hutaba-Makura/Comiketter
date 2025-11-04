@@ -34,11 +34,17 @@ import { VirtualizedTimeline } from './VirtualizedTimeline';
  * タイムライン表示コンポーネント
  */
 export function TimelineView() {
-  const { selectedCbId, selectedCb } = useCbStore();
+  const { selectedCbId, cbs } = useCbStore();
   const { tweetIds, loading, error, refetch } = useTimeline(selectedCbId);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
   const [useVirtualization, setUseVirtualization] = useState(false);
+
+  // 選択されたCBを計算（Zustandのgetterは反応しないため、コンポーネント内で計算）
+  const selectedCb = useMemo(() => {
+    if (!selectedCbId) return undefined;
+    return cbs.find(cb => cb.id === selectedCbId);
+  }, [cbs, selectedCbId]);
 
   // フィルタリングとソート
   const filteredAndSortedTweetIds = useMemo(() => {
@@ -117,20 +123,35 @@ export function TimelineView() {
   }
 
   return (
-    <Box p="xl" style={{ position: 'relative', height: '100vh', display: 'flex', flexDirection: 'column' }}>
-      {/* ヘッダーとツールバーを1行に横並びに配置（固定） */}
-      <Box style={{ flexShrink: 0 }}>
+    <Box style={{ position: 'relative', height: '100vh', display: 'flex', flexDirection: 'column' }}>
+      {/* CB情報ヘッダー */}
+      <Box p="md" style={{ borderBottom: '1px solid #e1e8ed' }}>
+        <Group justify="space-between" align="center">
+          <Stack gap={4}>
+            <Text size="xl" fw={600}>
+              {selectedCb?.name || 'CB名'}
+            </Text>
+            <Text size="sm" c="dimmed">
+              {selectedCb?.description || 'CBの説明'}
+            </Text>
+          </Stack>
+          <Group gap="xs">
+            <Badge variant="light" size="lg">
+              {filteredAndSortedTweetIds.length} ツイート
+            </Badge>
+            <Tooltip label="更新">
+              <ActionIcon variant="subtle" size="lg" onClick={refetch} loading={loading}>
+                <IconRefresh size={20} />
+              </ActionIcon>
+            </Tooltip>
+          </Group>
+        </Group>
+        <Divider my="md" />
+      </Box>
+
+      {/* ツールバー */}
+      <Box style={{ flexShrink: 0 }} p="md">
         <Group gap="lg" align="center" mb="md" wrap="nowrap">
-          {/* CB名 */}
-          <Text size="xl" fw={600} style={{ flexShrink: 0 }}>
-            {selectedCb?.name || 'CB'}
-          </Text>
-
-          {/* ツイート数 */}
-          <Badge variant="light" size="lg" style={{ flexShrink: 0 }}>
-            {tweetIds.length} ツイート
-          </Badge>
-
           {/* 検索バー */}
           <TextInput
             placeholder="ツイートを検索..."
@@ -150,7 +171,7 @@ export function TimelineView() {
               { value: 'oldest', label: '古い順' }
             ]}
             size="sm"
-            style={{ width: 120, flexShrink: 0 }}
+            style={{ width: 130, flexShrink: 0 }}
             leftSection={
               sortOrder === 'newest' ? 
                 <IconSortDescending size={14} /> : 
@@ -158,26 +179,20 @@ export function TimelineView() {
             }
           />
 
-          {/* 更新ボタン */}
-          <Tooltip label="更新">
-            <ActionIcon
-              variant="light"
-              size="md"
-              onClick={refetch}
-              loading={loading}
-              style={{ flexShrink: 0 }}
-            >
-              <IconRefresh size={16} />
-            </ActionIcon>
-          </Tooltip>
+          {/* 仮想化スイッチ */}
+          {filteredAndSortedTweetIds.length >= 100 && (
+            <Group gap="xs" align="center" style={{ flexShrink: 0 }}>
+              <Text size="sm" c="dimmed">
+                仮想化
+              </Text>
+              <Switch
+                checked={useVirtualization}
+                onChange={(event) => setUseVirtualization(event.currentTarget.checked)}
+                size="sm"
+              />
+            </Group>
+          )}
         </Group>
-
-        {/* CBの説明文（別行に表示） */}
-        {selectedCb?.description && (
-          <Text size="sm" c="dimmed" mb="md">
-            {selectedCb.description}
-          </Text>
-        )}
 
         {/* 検索結果表示 */}
         {searchQuery && (
@@ -185,20 +200,6 @@ export function TimelineView() {
             {filteredAndSortedTweetIds.length}件の結果
           </Text>
         )}
-
-        {/* 仮想化スイッチ */}
-        {filteredAndSortedTweetIds.length >= 100 && (
-          <Box mb="md">
-            <Switch
-              label="仮想化表示"
-              checked={useVirtualization}
-              onChange={(event) => setUseVirtualization(event.currentTarget.checked)}
-              size="sm"
-            />
-          </Box>
-        )}
-
-        <Divider mb="md" />
       </Box>
 
       {/* ツイート一覧（スクロール可能） */}
