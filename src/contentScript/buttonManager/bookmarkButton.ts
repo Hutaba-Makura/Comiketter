@@ -598,8 +598,26 @@ export class BookmarkButton extends BaseButton {
     // 既存のコンテンツをクリア
     content.innerHTML = '';
     
+    // contentのパディングを考慮してフォームコンテナを作成
+    // contentのパディングは左右20pxずつ（合計40px）
+    // 最大横幅400pxにするため、フォームの幅 = 400px - 40px = 360px
+    const formContainer = document.createElement('div');
+    formContainer.style.cssText = `
+      max-width: 400px;
+      margin: 0 auto;
+      padding: 0;
+      box-sizing: border-box;
+    `;
+    
     // フォームを作成
     const form = document.createElement('div');
+    form.style.cssText = `
+      width: 100%;
+      max-width: 360px;
+      margin: 0 auto;
+      padding: 0;
+      box-sizing: border-box;
+    `;
     
     const nameLabel = document.createElement('label');
     nameLabel.textContent = 'ブックマーク名 *';
@@ -615,6 +633,7 @@ export class BookmarkButton extends BaseButton {
       border-radius: 8px;
       font-size: 14px;
       margin-bottom: 16px;
+      box-sizing: border-box;
     `;
     
     const descLabel = document.createElement('label');
@@ -632,6 +651,7 @@ export class BookmarkButton extends BaseButton {
       min-height: 80px;
       resize: vertical;
       margin-bottom: 16px;
+      box-sizing: border-box;
     `;
     
     const createButton = document.createElement('button');
@@ -644,6 +664,7 @@ export class BookmarkButton extends BaseButton {
       border-radius: 20px;
       cursor: pointer;
       margin-right: 8px;
+      box-sizing: border-box;
     `;
     createButton.addEventListener('click', () => {
       this.createBookmark(nameInput.value, descInput.value);
@@ -658,6 +679,7 @@ export class BookmarkButton extends BaseButton {
       padding: 8px 16px;
       border-radius: 20px;
       cursor: pointer;
+      box-sizing: border-box;
     `;
     cancelButton.addEventListener('click', () => {
       this.hideBookmarkSelector();
@@ -670,7 +692,8 @@ export class BookmarkButton extends BaseButton {
     form.appendChild(createButton);
     form.appendChild(cancelButton);
     
-    content.appendChild(form);
+    formContainer.appendChild(form);
+    content.appendChild(formContainer);
   }
 
   /**
