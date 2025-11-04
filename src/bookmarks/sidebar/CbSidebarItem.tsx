@@ -32,7 +32,7 @@ interface CbSidebarItemProps {
  * CBサイドバーアイテムコンポーネント
  */
 export function CbSidebarItem({ cb }: CbSidebarItemProps) {
-  const { selectedCbId, selectCb, removeCb } = useCbStore();
+  const { selectedCbId, selectCb, removeCb, selectCbAndEditName } = useCbStore();
   const [isHovered, setIsHovered] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -64,9 +64,10 @@ export function CbSidebarItem({ cb }: CbSidebarItemProps) {
     setIsDeleteModalOpen(false);
   };
 
-  const handleEdit = () => {
-    // TODO: 編集モーダルを開く
-    console.log('CB編集:', cb.id);
+  // CBの名前の編集を開始（TimelineViewのCB情報ヘッダーで編集）
+  const handleEdit: React.MouseEventHandler<HTMLButtonElement> = (e) => {
+    e.stopPropagation(); // PaperのonClickを防ぐ
+    selectCbAndEditName(cb.id); // CBを選択して編集モードに入る
   };
 
   const handleCopy = () => {
@@ -285,3 +286,5 @@ export function CbSidebarItem({ cb }: CbSidebarItemProps) {
   </>
   );
 }
+
+

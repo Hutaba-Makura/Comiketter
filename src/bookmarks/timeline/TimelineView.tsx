@@ -35,7 +35,7 @@ import { cbService } from '../services/cbService';
  * タイムライン表示コンポーネント
  */
 export function TimelineView() {
-  const { selectedCbId, cbs, updateCb: updateCbInStore } = useCbStore();
+  const { selectedCbId, cbs, updateCb: updateCbInStore, shouldEditName, setShouldEditName } = useCbStore();
   const { tweetIds, loading, error, refetch } = useTimeline(selectedCbId);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
@@ -65,6 +65,19 @@ export function TimelineView() {
       setEditingDescription(false);
     }
   }, [selectedCb?.id]);
+
+  // ストアのshouldEditNameフラグを監視して編集モードに入る
+  useEffect(() => {
+    if (shouldEditName && selectedCb) {
+      setEditingName(true);
+      setNameValue(selectedCb.name);
+      setShouldEditName(false); // フラグをリセット
+      setTimeout(() => {
+        nameInputRef.current?.focus();
+        nameInputRef.current?.select();
+      }, 0);
+    }
+  }, [shouldEditName, selectedCb, setShouldEditName]);
 
   // フィルタリングとソート
   const filteredAndSortedTweetIds = useMemo(() => {
