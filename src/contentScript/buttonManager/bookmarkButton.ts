@@ -483,9 +483,47 @@ export class BookmarkButton extends BaseButton {
     const content = document.createElement('div');
     content.className = 'comiketter-bookmark-selector-content';
     
-          // BookmarkApiClientからブックマーク一覧を取得
-      const bookmarkManager = BookmarkApiClient.getInstance();
-      const bookmarks = await bookmarkManager.getBookmarks();
+    // ブックマーク一覧を表示
+    await this.showBookmarkList(content);
+    
+    // アクション
+    const actions = document.createElement('div');
+    actions.className = 'comiketter-bookmark-actions';
+    
+    const cancelButton = document.createElement('button');
+    cancelButton.className = 'comiketter-bookmark-button-secondary';
+    cancelButton.textContent = 'キャンセル';
+    cancelButton.addEventListener('click', () => {
+      this.hideBookmarkSelector();
+    });
+    
+    const saveButton = document.createElement('button');
+    saveButton.className = 'comiketter-bookmark-button-primary';
+    saveButton.textContent = '保存';
+    saveButton.addEventListener('click', () => {
+      this.saveBookmarks();
+    });
+    
+    actions.appendChild(cancelButton);
+    actions.appendChild(saveButton);
+    
+    selector.appendChild(header);
+    selector.appendChild(content);
+    selector.appendChild(actions);
+    
+    return selector;
+  }
+
+  /**
+   * ブックマーク一覧を表示
+   */
+  private async showBookmarkList(content: HTMLElement): Promise<void> {
+    // 既存のコンテンツをクリア
+    content.innerHTML = '';
+    
+    // BookmarkApiClientからブックマーク一覧を取得
+    const bookmarkManager = BookmarkApiClient.getInstance();
+    const bookmarks = await bookmarkManager.getBookmarks();
     
     if (bookmarks.length === 0) {
       // ブックマークがない場合
@@ -562,33 +600,6 @@ export class BookmarkButton extends BaseButton {
       });
       content.appendChild(createButton);
     }
-    
-    // アクション
-    const actions = document.createElement('div');
-    actions.className = 'comiketter-bookmark-actions';
-    
-    const cancelButton = document.createElement('button');
-    cancelButton.className = 'comiketter-bookmark-button-secondary';
-    cancelButton.textContent = 'キャンセル';
-    cancelButton.addEventListener('click', () => {
-      this.hideBookmarkSelector();
-    });
-    
-    const saveButton = document.createElement('button');
-    saveButton.className = 'comiketter-bookmark-button-primary';
-    saveButton.textContent = '保存';
-    saveButton.addEventListener('click', () => {
-      this.saveBookmarks();
-    });
-    
-    actions.appendChild(cancelButton);
-    actions.appendChild(saveButton);
-    
-    selector.appendChild(header);
-    selector.appendChild(content);
-    selector.appendChild(actions);
-    
-    return selector;
   }
 
   /**
@@ -681,8 +692,8 @@ export class BookmarkButton extends BaseButton {
       cursor: pointer;
       box-sizing: border-box;
     `;
-    cancelButton.addEventListener('click', () => {
-      this.hideBookmarkSelector();
+    cancelButton.addEventListener('click', async () => {
+      await this.showBookmarkList(content);
     });
     
     form.appendChild(nameLabel);
@@ -709,9 +720,13 @@ export class BookmarkButton extends BaseButton {
       const bookmarkManager = BookmarkApiClient.getInstance();
       const newBookmark = await bookmarkManager.addBookmark(name.trim(), description.trim());
       
-      // ブックマーク選択UIを再表示
-      this.hideBookmarkSelector();
-      await this.showBookmarkSelector();
+      // ブックマーク一覧を再表示
+      if (this.bookmarkSelector) {
+        const content = this.bookmarkSelector.querySelector('.comiketter-bookmark-selector-content') as HTMLElement;
+        if (content) {
+          await this.showBookmarkList(content);
+        }
+      }
       
       console.log('Comiketter: Created new bookmark:', newBookmark);
     } catch (error) {
