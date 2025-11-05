@@ -11,7 +11,8 @@ import {
   Loader,
   Alert,
   Menu,
-  Transition
+  Transition,
+  Button
 } from '@mantine/core';
 import { 
   IconHeart, 
@@ -37,6 +38,8 @@ import { formatTweetId, formatRelativeTime, formatCount } from '../utils/format'
 import { TweetAuthor, TweetStats, TweetMediaItem } from '../types/tweet';
 import { TweetEmbedFallback } from './TweetEmbedFallback';
 import { TweetEmbed } from './TweetEmbed';
+import { useCbStore } from '../state/cbStore';
+import { cbService } from '../services/cbService';
 
 /**
  * 本番用ツイート表示コンポーネント
@@ -44,9 +47,12 @@ import { TweetEmbed } from './TweetEmbed';
  */
 interface TweetProps {
   id: string;
+  /** 削除後に呼び出されるコールバック関数 */
+  onDelete?: () => void;
 }
 
-export function Tweet({ id }: TweetProps) {
+export function Tweet({ id, onDelete }: TweetProps) {
+  const { selectedCbId } = useCbStore();
   const [author, setAuthor] = useState<TweetAuthor | null>(null);
   const [stats, setStats] = useState<TweetStats | null>(null);
   const [content, setContent] = useState<string>('');
@@ -55,6 +61,8 @@ export function Tweet({ id }: TweetProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [useEmbedTweet, setUseEmbedTweet] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // BookmarkDBからツイート情報を取得
   useEffect(() => {
@@ -116,6 +124,41 @@ export function Tweet({ id }: TweetProps) {
       cancelled = true;
     };
   }, [id]);
+
+  // 削除処理
+  const handleDelete = () => {
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!selectedCbId) {
+      alert('CBが選択されていません');
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      await cbService.removeTweetFromCb(selectedCbId, id);
+      setIsDeleteModalOpen(false);
+      // 親コンポーネントのrefetchを呼び出してタイムラインを更新
+      onDelete?.();
+    } catch (error) {
+      console.error('ツイート削除エラー:', error);
+      alert('ツイートの削除に失敗しました');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setIsDeleteModalOpen(false);
+  };
+
+  // 編集処理（CBに追加）
+  const handleEdit = () => {
+    // TODO: CBに追加する処理を実装
+    console.log('CBに追加:', id);
+  };
 
   // 画像ライトボックス用の状態
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
@@ -360,29 +403,32 @@ export function Tweet({ id }: TweetProps) {
           {/* ツイートの編集ボタン */}
           <Transition mounted={true} transition="fade" duration={150}>
                 {(menuStyles) => (
-                  <Menu shadow="md" width={150} position="bottom-end">
+                  <Menu shadow="md" width={150} position="bottom-end" styles={{ dropdown: { borderRadius: '12px', backgroundColor: 'white' } }}>
                     <Menu.Target>
                       <ActionIcon
                         variant="subtle"
-                        size="xs"
+                        size="lg"
+                        radius="xl"
                         style={menuStyles}
                       >
-                        <IconDots size={18.75} />
+                        <IconDots size={18.75} color="var(--mantine-color-gray-6)" />
                       </ActionIcon>
                     </Menu.Target>
 
                     <Menu.Dropdown>
                       <Menu.Item
-                        leftSection={<IconEdit size={14} />}
+                        leftSection={<IconEdit size={18.75} />}
                         onClick={handleEdit}
+                        style={{ fontSize: '15px' }}
                       >
                         CBに追加
                       </Menu.Item>
                       <Menu.Divider />
                       <Menu.Item
-                        leftSection={<IconTrash size={14} />}
+                        leftSection={<IconTrash size={18.75} />}
                         color="red"
                         onClick={handleDelete}
+                        style={{ fontSize: '15px' }}
                       >
                         削除
                       </Menu.Item>
@@ -808,8 +854,8 @@ export function Tweet({ id }: TweetProps) {
           {/* 左側のアクションボタン */}
           <Box style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
             {/* リプライ */}
-            <Box style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
-              <ActionIcon variant="subtle" size="sm" color="gray">
+            <Box style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'cursor' }}>
+              <ActionIcon variant="subtle" size="lg" color="gray" radius="xl">
                 <IconMessage size={16} />
               </ActionIcon>
               <Text size="xs" c="dimmed">
@@ -818,8 +864,8 @@ export function Tweet({ id }: TweetProps) {
             </Box>
             
             {/* リツイート */}
-            <Box style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
-              <ActionIcon variant="subtle" size="sm" color="gray">
+            <Box style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'cursor' }}>
+              <ActionIcon variant="subtle" size="lg" color="gray" radius="xl">
                 <IconRepeat size={16} />
               </ActionIcon>
               <Text size="xs" c="dimmed">
@@ -828,8 +874,8 @@ export function Tweet({ id }: TweetProps) {
             </Box>
             
             {/* いいね */}
-            <Box style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
-              <ActionIcon variant="subtle" size="sm" color="gray">
+            <Box style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'cursor' }}>
+              <ActionIcon variant="subtle" size="lg" color="gray" radius="xl">
                 <IconHeart size={16} />
               </ActionIcon>
               <Text size="xs" c="dimmed">
@@ -839,7 +885,7 @@ export function Tweet({ id }: TweetProps) {
           </Box>
           
           {/* 右側のシェアボタン */}
-          <ActionIcon variant="subtle" size="sm" color="gray" style={{ cursor: 'pointer' }}>
+          <ActionIcon variant="subtle" size="lg" color="gray" radius="xl" style={{ cursor: 'pointer' }}>
             <IconShare size={16} />
           </ActionIcon>
         </Box>
@@ -993,6 +1039,86 @@ export function Tweet({ id }: TweetProps) {
             )}
           </Box>
         </Box>
+      )}
+
+      {/* 削除確認モーダル */}
+      {isDeleteModalOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.4)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+          onClick={handleCancelDelete}
+        >
+          <Box
+            style={{
+              backgroundColor: 'white',
+              borderRadius: '16px',
+              padding: '32px',
+              maxWidth: '320px',
+              width: '90%',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Text
+              size="xl"
+              fw={700}
+              style={{
+                color: 'black',
+                marginBottom: '8px',
+              }}
+            >
+              ツイートを削除しますか？
+            </Text>
+            <Text
+              style={{
+                color: 'rgb(83, 100, 113)',
+                marginBottom: '24px',
+                fontSize: '15px',
+              }}
+            >
+              この操作は取り消せません
+            </Text>
+            <Stack gap="xs">
+              <Button
+                color="rgb(244, 33, 46)"
+                size="lg"
+                radius="xl"
+                fullWidth
+                onClick={handleConfirmDelete}
+                loading={isDeleting}
+                style={{
+                  borderColor: 'rgb(207, 217, 222)',
+                }}
+              >
+                削除
+              </Button>
+              <Button
+                variant="default"
+                size="lg"
+                radius="xl"
+                fullWidth
+                onClick={handleCancelDelete}
+                disabled={isDeleting}
+                style={{
+                  backgroundColor: 'white',
+                  color: 'black',
+                  borderColor: 'rgb(207, 217, 222)',
+                }}
+              >
+                キャンセル
+              </Button>
+            </Stack>
+          </Box>
+        </div>
       )}
     </Paper>
   );

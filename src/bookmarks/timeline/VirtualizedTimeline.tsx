@@ -7,6 +7,8 @@ interface VirtualizedTimelineProps {
   tweetIds: string[];
   height: number;
   itemHeight?: number;
+  /** 削除後に呼び出されるコールバック関数 */
+  onDelete?: () => void;
 }
 
 /**
@@ -16,7 +18,8 @@ interface VirtualizedTimelineProps {
 export function VirtualizedTimeline({ 
   tweetIds, 
   height, 
-  itemHeight = 200 
+  itemHeight = 200,
+  onDelete
 }: VirtualizedTimelineProps) {
   const itemCount = tweetIds.length;
 
@@ -28,13 +31,13 @@ export function VirtualizedTimeline({
       return (
         <Box style={style}>
           <Box p="md">
-            <Tweet id={tweetId} />
+            <Tweet id={tweetId} onDelete={onDelete} />
             {index < itemCount - 1 && <Divider my="md" />}
           </Box>
         </Box>
       );
     };
-  }, [tweetIds, itemCount]);
+  }, [tweetIds, itemCount, onDelete]);
 
   if (itemCount === 0) {
     return null;

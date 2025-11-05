@@ -472,7 +472,7 @@ export function TimelineView() {
               { value: 'oldest_posted', label: '投稿が古い順' }
             ]}
             size="sm"
-            style={{ width: 130, flexShrink: 0 }}
+            style={{ width: 150, flexShrink: 0 }}
             leftSection={
               sortOrder === 'newest_registered' || sortOrder === 'newest_posted' ? 
                 <IconSortDescending size={14} /> : 
@@ -543,13 +543,14 @@ export function TimelineView() {
               tweetIds={filteredAndSortedTweetIds}
               height={600}
               itemHeight={200}
+              onDelete={refetch}
             />
           </Box>
         ) : (
           <Stack gap={0} p="md">
             {filteredAndSortedTweetIds.map((id, index) => (
               <Box key={id}>
-                <Tweet id={id} />
+                <Tweet id={id} onDelete={refetch} />
               </Box>
             ))}
           </Stack>

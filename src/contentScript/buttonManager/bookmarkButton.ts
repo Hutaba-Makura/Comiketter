@@ -727,7 +727,7 @@ export class BookmarkButton extends BaseButton {
     
     try {
       const bookmarkManager = BookmarkApiClient.getInstance();
-      const newBookmark = await bookmarkManager.addBookmark(name.trim(), description.trim());
+      const newBookmark = await bookmarkManager.createCb(name.trim(), description.trim());
       
       // ブックマーク一覧を再表示
       if (this.bookmarkSelector) {

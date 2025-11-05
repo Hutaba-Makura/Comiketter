@@ -77,7 +77,7 @@ export class BookmarkApiClient {
   }
 
   /**
-   * カスタムブックマークを追加
+   * カスタムブックマークを追加（非推奨: createCbを使用してください）
    */
   async addBookmark(name: string, description?: string, color?: string): Promise<CustomBookmark> {
     return await this.sendMessage('addBookmark', {
@@ -86,6 +86,27 @@ export class BookmarkApiClient {
       color,
       isActive: true,
     });
+  }
+
+  /**
+   * CBを作成（推奨）
+   */
+  async createCb(name: string, description?: string): Promise<CustomBookmark> {
+    const cb = await this.sendMessage('createCb', {
+      name,
+      description,
+    });
+    
+    // Cb型をCustomBookmark型に変換
+    return {
+      id: cb.id,
+      name: cb.name,
+      description: cb.description,
+      createdAt: cb.createdAt.toISOString(),
+      updatedAt: cb.updatedAt.toISOString(),
+      isActive: true,
+      tweetCount: cb.tweetCount,
+    };
   }
 
   /**

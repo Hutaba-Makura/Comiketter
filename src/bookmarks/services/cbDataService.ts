@@ -129,10 +129,6 @@ export class CbDataService {
    * 新しいCBを作成
    */
   async createCb(name: string, description?: string): Promise<Cb> {
-    // TODO: 型エラーを修正後に実装
-    throw new Error('CB作成機能は一時的に無効化されています');
-    
-    /*
     try {
       const result = await this.db.addBookmark({
         name,
@@ -146,7 +142,7 @@ export class CbDataService {
         throw new Error('CBの作成に失敗しました');
       }
 
-      const bookmark = result as BookmarkDB;
+      const bookmark = result;
 
       return {
         id: bookmark.id,
@@ -161,7 +157,6 @@ export class CbDataService {
       console.error('CB作成エラー:', error);
       throw new Error('CBの作成に失敗しました');
     }
-    */
   }
 
   /**
@@ -345,9 +340,20 @@ export class CbDataService {
    */
   async removeTweetFromCb(cbId: string, tweetId: string): Promise<void> {
     try {
-      const tweetIdToDelete = `${cbId}_${tweetId}`;
-      await this.db.deleteBookmarkedTweet(tweetIdToDelete);
-      console.log(`ツイートをCBから削除完了: ${tweetId} <- ${cbId}`);
+      // まず、ツイートIDで該当するツイートを取得
+      const bookmarkedTweets = await this.db.getBookmarkedTweetByTweetId(tweetId);
+      
+      // 指定されたCBに属するツイートを見つける
+      const targetTweet = bookmarkedTweets.find(tweet => tweet.bookmarkId === cbId);
+      
+      if (!targetTweet) {
+        console.warn(`ツイートが見つかりませんでした: ${tweetId} in CB ${cbId}`);
+        throw new Error(`ツイートが見つかりませんでした: ${tweetId}`);
+      }
+      
+      // 見つかったツイートのIDを使って削除
+      await this.db.deleteBookmarkedTweet(targetTweet.id);
+      console.log(`ツイートをCBから削除完了: ${tweetId} <- ${cbId} (ID: ${targetTweet.id})`);
     } catch (error) {
       console.error('ツイート削除エラー:', error);
       throw new Error('ツイートの削除に失敗しました');

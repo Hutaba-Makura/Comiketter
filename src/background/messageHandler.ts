@@ -13,6 +13,7 @@ import { VideoDownloader, type VideoDownloadRequest } from '../downloaders/video
 import { ImageDownloader, type ImageDownloadRequest } from '../downloaders/image-downloader';
 import { MediaDownloader, type MediaDownloadRequest } from '../downloaders/media-downloader';
 import type { ApiResponseMessage } from '../api-processor/types';
+import { cbService } from '../bookmarks/services/cbService';
 
 export class MessageHandler {
   private downloadManager: DownloadManager;
@@ -460,6 +461,9 @@ export class MessageHandler {
 
         case 'addBookmark':
           return await StorageManager.addCustomBookmark(data);
+
+        case 'createCb':
+          return await cbService.createCb(data.name, data.description);
 
         case 'updateBookmark':
           return await StorageManager.updateCustomBookmark(data.id, data.updates);
