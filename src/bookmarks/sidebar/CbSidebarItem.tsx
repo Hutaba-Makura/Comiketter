@@ -32,7 +32,7 @@ interface CbSidebarItemProps {
  * CBサイドバーアイテムコンポーネント
  */
 export function CbSidebarItem({ cb }: CbSidebarItemProps) {
-  const { selectedCbId, selectCb, removeCb, selectCbAndEditName } = useCbStore();
+  const { selectedCbId, selectCb, removeCb, selectCbAndEditName, addCb } = useCbStore();
   const [isHovered, setIsHovered] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -70,9 +70,20 @@ export function CbSidebarItem({ cb }: CbSidebarItemProps) {
     selectCbAndEditName(cb.id); // CBを選択して編集モードに入る
   };
 
-  const handleCopy = () => {
-    // TODO: CB情報をクリップボードにコピー
-    console.log('CBコピー:', cb.id);
+  const handleCopy: React.MouseEventHandler<HTMLButtonElement> = async (e) => {
+    e.stopPropagation(); // PaperのonClickを防ぐ
+    try {
+      // CBをコピー
+      const newCb = await cbService.copyCb(cb.id);
+      
+      // サイドバーに追加
+      addCb(newCb);
+      
+      console.log('CBコピー完了:', newCb.id);
+    } catch (error) {
+      console.error('CBコピーエラー:', error);
+      alert('CBのコピーに失敗しました');
+    }
   };
 
   return (

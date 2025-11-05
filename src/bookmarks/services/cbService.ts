@@ -133,6 +133,19 @@ export class CbService {
   }
 
   /**
+   * CBをコピー
+   * 元のCBとそのツイートを全てコピーして新しいCBを作成
+   */
+  async copyCb(cbId: string): Promise<Cb> {
+    try {
+      return await cbDataService.copyCb(cbId);
+    } catch (error) {
+      console.error('CBコピーエラー:', error);
+      throw new Error('CBのコピーに失敗しました');
+    }
+  }
+
+  /**
    * ツイートをCBに追加
    */
   async addTweetToCb(cbId: string, tweetId: string, tweetData: {
