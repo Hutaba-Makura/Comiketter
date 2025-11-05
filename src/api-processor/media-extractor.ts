@@ -88,6 +88,7 @@ export class MediaExtractor {
 
   /**
    * 最適な動画URLを取得（最高画質）
+   * MP4形式のバリアントをフィルタリングし、最高ビットレートのものを選択
    */
   getBestVideoUrl(media: ProcessedMedia): string | null {
     if (media.type !== 'video' && media.type !== 'animated_gif') {
@@ -99,8 +100,25 @@ export class MediaExtractor {
       return null;
     }
 
-    // 最初のバリアント（最高画質）のURLを返す
-    return variants[0].url;
+    // MP4形式のバリアントのみをフィルタリング
+    const mp4Variants = variants.filter(
+      variant => variant.content_type === 'video/mp4'
+    );
+
+    if (mp4Variants.length === 0) {
+      // MP4形式が見つからない場合は、最初のバリアントを使用（フォールバック）
+      return variants[0].url;
+    }
+
+    // 最高ビットレートのバリアントを選択
+    // response-processing-rule.md: "...video_info.variants[].bitrate を取得し、その中で最も数値が大きいもののURLを ...video_info.variants[].url で取得"
+    const bestVariant = mp4Variants.reduce((best, current) => {
+      const bestBitrate = best.bitrate || 0;
+      const currentBitrate = current.bitrate || 0;
+      return currentBitrate > bestBitrate ? current : best;
+    });
+
+    return bestVariant.url;
   }
 
   /**

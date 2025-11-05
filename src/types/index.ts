@@ -121,6 +121,7 @@ export interface BookmarkedTweet {
   content: string;
   mediaUrls?: string[];
   mediaTypes?: string[];
+  mediaPreviewUrls?: string[]; // メディアのサムネイルURL（動画/GIFのプレビュー用）
   tweetDate: string;
   savedAt: string;
   isRetweet: boolean;

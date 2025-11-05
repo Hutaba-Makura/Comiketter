@@ -162,6 +162,25 @@ export function Tweet({ id }: TweetProps) {
 
   const handleCloseLightbox = () => startCloseLightbox();
 
+  // ビデオ/GIF再生時のデバッグログ
+  useEffect(() => {
+    if (lightboxSrc && currentImageIndex !== null && media[currentImageIndex]) {
+      const currentMedia = media[currentImageIndex];
+      if (currentMedia.type === 'video' || currentMedia.type === 'gif') {
+        console.log(
+          `Comiketter: ${currentMedia.type === 'gif' ? 'GIF' : 'ビデオ'}を再生します`,
+          {
+            type: currentMedia.type,
+            url: lightboxSrc,
+            previewUrl: currentMedia.previewUrl,
+            index: currentImageIndex,
+            mediaId: currentMedia.id
+          }
+        );
+      }
+    }
+  }, [lightboxSrc, currentImageIndex, media]);
+
   // キーボードイベントリスナー（ライトボックスが開いている時のみ）
   useEffect(() => {
     if (!lightboxSrc || currentImageIndex === null) return;

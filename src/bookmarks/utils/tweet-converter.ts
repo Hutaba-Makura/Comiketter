@@ -182,11 +182,14 @@ export function convertBookmarkedTweetMedia(tweet: BookmarkedTweetDB): TweetMedi
       type = 'gif';
     }
 
+    // プレビューURLを取得（mediaPreviewUrlsがある場合はそれを使用、なければurlを使用）
+    const previewUrl = tweet.mediaPreviewUrls?.[index] || url;
+
     return {
       id: `bookmark-${tweet.id}-${index}`,
       type,
       url,
-      previewUrl: url, // BookmarkedTweetDBにはプレビューURLがないため、元のURLを使用
+      previewUrl,
       altText: undefined,
       width: undefined,
       height: undefined

@@ -7,6 +7,7 @@
  */
 
 import type { CustomBookmark, BookmarkedTweet, BookmarkStats } from '../types';
+import { MediaExtractor } from '../api-processor/media-extractor';
 
 /**
  * コンテンツスクリプトからbackground scriptを経由してブックマーク機能にアクセスするクライアント
@@ -129,7 +130,8 @@ export class BookmarkApiClient {
     authorProfileImageUrl?: string,
     favoriteCount?: number,
     retweetCount?: number,
-    replyCount?: number
+    replyCount?: number,
+    mediaPreviewUrls?: string[]
   ): Promise<BookmarkedTweet> {
     return await this.sendMessage('addBookmarkedTweet', {
       bookmarkId,
@@ -141,6 +143,7 @@ export class BookmarkApiClient {
       content,
       mediaUrls,
       mediaTypes,
+      mediaPreviewUrls,
       tweetDate,
       isRetweet,
       isReply,
@@ -235,7 +238,8 @@ export class BookmarkApiClient {
         existingTweet.authorProfileImageUrl,
         existingTweet.favoriteCount,
         existingTweet.retweetCount,
-        existingTweet.replyCount
+        existingTweet.replyCount,
+        existingTweet.mediaPreviewUrls
       );
     } else {
       // ProcessedTweetをキャッシュから取得
@@ -246,6 +250,38 @@ export class BookmarkApiClient {
         });
       
         if (cachedTweet) {
+          // ProcessedTweetからメディアURLを抽出
+          // MediaExtractorを使用して統一されたロジックで動画URLを取得
+          const mediaExtractor = new MediaExtractor();
+          
+          const mediaUrls: string[] = [];
+          const mediaTypes: string[] = [];
+          const mediaPreviewUrls: string[] = [];
+          
+          if (cachedTweet.media && Array.isArray(cachedTweet.media)) {
+            for (const m of cachedTweet.media) {
+              mediaTypes.push(m.type || 'photo');
+              
+              // 動画やGIFの場合はMediaExtractorを使用して実際の動画URLを取得
+              if (m.type === 'video' || m.type === 'animated_gif') {
+                const videoUrl = mediaExtractor.getBestVideoUrl(m);
+                if (videoUrl) {
+                  mediaUrls.push(videoUrl);
+                  // プレビューURLとしてmedia_url_httpsを保存
+                  mediaPreviewUrls.push(m.media_url_https || '');
+                } else {
+                  // フォールバック: media_url_httpsを使用
+                  mediaUrls.push(m.media_url_https || '');
+                  mediaPreviewUrls.push(m.media_url_https || '');
+                }
+              } else {
+                // 画像の場合はmedia_url_httpsを使用
+                mediaUrls.push(m.media_url_https || '');
+                mediaPreviewUrls.push(m.media_url_https || '');
+              }
+            }
+          }
+          
           // ProcessedTweetから情報を抽出して保存
           await this.addBookmarkedTweet(
             bookmarkId,
@@ -257,18 +293,33 @@ export class BookmarkApiClient {
             cachedTweet.created_at || new Date().toISOString(),
             !!cachedTweet.retweeted_status,
             !!cachedTweet.in_reply_to_status_id_str,
-            cachedTweet.media?.map((m: any) => m.media_url_https) || [],
-            cachedTweet.media?.map((m: any) => m.type) || [],
+            mediaUrls,
+            mediaTypes,
             cachedTweet.in_reply_to_status_id_str,
             cachedTweet.in_reply_to_screen_name,
             'url',
             cachedTweet.user.avatar_url,
             cachedTweet.favorite_count,
             cachedTweet.retweet_count,
-            cachedTweet.reply_count
+            cachedTweet.reply_count,
+            mediaPreviewUrls
           );
         } else if (tweetInfo) {
           // ツイート情報が提供されている場合は、それを使用して新しいブックマーク済みツイートを作成
+          // メディア情報を抽出（プレビューURLはpreviewUrlを使用）
+          const mediaUrls: string[] = [];
+          const mediaTypes: string[] = [];
+          const mediaPreviewUrls: string[] = [];
+          
+          if (tweetInfo.media && Array.isArray(tweetInfo.media)) {
+            for (const m of tweetInfo.media) {
+              mediaUrls.push(m.url || '');
+              mediaTypes.push(m.type || 'image');
+              // previewUrlがあればそれを使用、なければurlを使用
+              mediaPreviewUrls.push(m.previewUrl || m.url || '');
+            }
+          }
+          
           await this.addBookmarkedTweet(
             bookmarkId,
             tweetId,
@@ -279,15 +330,16 @@ export class BookmarkApiClient {
             tweetInfo.createdAt || new Date().toISOString(),
             false, // isRetweet
             false, // isReply
-            tweetInfo.media?.map((m: any) => m.url) || [],
-            tweetInfo.media?.map((m: any) => m.type) || [],
+            mediaUrls,
+            mediaTypes,
             undefined, // replyToTweetId
             undefined, // replyToUsername
             'url', // saveType
             tweetInfo.author?.profileImageUrl,
             tweetInfo.stats?.likeCount,
             tweetInfo.stats?.retweetCount,
-            tweetInfo.stats?.replyCount
+            tweetInfo.stats?.replyCount,
+            mediaPreviewUrls
           );
         } else {
           // ツイート情報がない場合は、最小限の情報で作成
@@ -305,13 +357,32 @@ export class BookmarkApiClient {
             [],
             undefined,
             undefined,
-            'url'
+            'url',
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            []
           );
         }
       } catch (error) {
         console.error('Comiketter: Failed to get cached tweet:', error);
         // エラーが発生した場合でも、tweetInfoがあればそれを使用
         if (tweetInfo) {
+          // メディア情報を抽出（プレビューURLはpreviewUrlを使用）
+          const mediaUrls: string[] = [];
+          const mediaTypes: string[] = [];
+          const mediaPreviewUrls: string[] = [];
+          
+          if (tweetInfo.media && Array.isArray(tweetInfo.media)) {
+            for (const m of tweetInfo.media) {
+              mediaUrls.push(m.url || '');
+              mediaTypes.push(m.type || 'image');
+              // previewUrlがあればそれを使用、なければurlを使用
+              mediaPreviewUrls.push(m.previewUrl || m.url || '');
+            }
+          }
+          
           await this.addBookmarkedTweet(
             bookmarkId,
             tweetId,
@@ -322,15 +393,16 @@ export class BookmarkApiClient {
             tweetInfo.createdAt || new Date().toISOString(),
             false,
             false,
-            tweetInfo.media?.map((m: any) => m.url) || [],
-            tweetInfo.media?.map((m: any) => m.type) || [],
+            mediaUrls,
+            mediaTypes,
             undefined,
             undefined,
             'url',
             tweetInfo.author?.profileImageUrl,
             tweetInfo.stats?.likeCount,
             tweetInfo.stats?.retweetCount,
-            tweetInfo.stats?.replyCount
+            tweetInfo.stats?.replyCount,
+            mediaPreviewUrls
           );
         } else {
           // tweetInfoもない場合は、最小限の情報で作成
@@ -348,7 +420,12 @@ export class BookmarkApiClient {
             [],
             undefined,
             undefined,
-            'url'
+            'url',
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            []
           );
         }
       }
