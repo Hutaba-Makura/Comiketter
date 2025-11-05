@@ -81,9 +81,9 @@ export function TimelineView() {
     }
   }, [shouldEditName, selectedCb, setShouldEditName]);
 
-  // 投稿日時でソートする場合、ツイートデータを取得
+  // イートデータを取得
   useEffect(() => {
-    if ((sortOrder === 'newest_posted' || sortOrder === 'oldest_posted') && selectedCbId && tweetIds.length > 0) {
+    if (selectedCbId && tweetIds.length > 0) {
       const fetchTweetData = async () => {
         try {
           const tweets = await bookmarkDB.getBookmarkedTweetsByBookmarkId(selectedCbId);
@@ -112,47 +112,70 @@ export function TimelineView() {
         id.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
+
+    // ソート処理
+    if (sortOrder === 'newest_registered') {
+      // 元のtweetIdsの順序を保持（検索フィルタリング後も順序を維持）
+      if (searchQuery) {
+        // 検索フィルタリングがある場合のみ、順序を維持するためにソート
+        const tweetIdsIndexMap = new Map(tweetIds.map((id, index) => [id, index]));
+        filtered = [...filtered].sort((a, b) => {
+          const aIndex = tweetIdsIndexMap.get(a) ?? Infinity;
+          const bIndex = tweetIdsIndexMap.get(b) ?? Infinity;
+          return aIndex - bIndex;
+        });
+      }
+      // 検索がない場合は、filteredは既にtweetIdsと同じ順序なので何もしない
+    }
     
-    // ソート（登録日時でソート）
     if (sortOrder === 'oldest_registered') {
-      filtered = [...filtered].reverse();
+      // 元のtweetIdsの逆順（検索フィルタリング後も順序を維持）
+      const tweetIdsIndexMap = new Map(tweetIds.map((id, index) => [id, index]));
+      filtered = [...filtered].sort((a, b) => {
+        const aIndex = tweetIdsIndexMap.get(a) ?? Infinity;
+        const bIndex = tweetIdsIndexMap.get(b) ?? Infinity;
+        return bIndex - aIndex; // 逆順
+      });
     }
 
     if (sortOrder === 'newest_posted') {
-      filtered = filtered.sort((a, b) => {
+      // 投稿日時で新しい順にソート
+      filtered = [...filtered].sort((a, b) => {
         const aData = tweetDataMap.get(a);
         const bData = tweetDataMap.get(b);
         
+        // データがない場合は元の順序を維持
         if (!aData && !bData) return 0;
-        if (!aData) return 1;
-        if (!bData) return -1;
+        if (!aData) return 1; // aが後ろに
+        if (!bData) return -1; // bが後ろに
         
         const aDate = new Date(aData.tweetDate).getTime();
         const bDate = new Date(bData.tweetDate).getTime();
         
-        return bDate - aDate; // 新しい順
+        // 新しい順: bDate - aDate (値が大きい方が新しい)
+        return bDate - aDate;
       });
     }
 
     if (sortOrder === 'oldest_posted') {
-      filtered = filtered.sort((a, b) => {
+      // 投稿日時で古い順にソート
+      filtered = [...filtered].sort((a, b) => {
         const aData = tweetDataMap.get(a);
         const bData = tweetDataMap.get(b);
         
+        // データがない場合は元の順序を維持
         if (!aData && !bData) return 0;
-        if (!aData) return 1;
-        if (!bData) return -1;
+        if (!aData) return 1; // aが後ろに
+        if (!bData) return -1; // bが後ろに
         
         const aDate = new Date(aData.tweetDate).getTime();
         const bDate = new Date(bData.tweetDate).getTime();
         
-        return aDate - bDate; // 古い順
+        // 古い順: aDate - bDate (値が小さい方が古い)
+        return aDate - bDate;
       });
     }
 
-
-
-    
     return filtered;
   }, [tweetIds, searchQuery, sortOrder, tweetDataMap]);
 
