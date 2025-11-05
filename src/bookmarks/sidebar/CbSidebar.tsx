@@ -93,9 +93,9 @@ export function CbSidebar() {
   if (error) {
     return (
       <Stack gap="md" p="md">
-        <Group justify="space-between" align="center">
+        <Group display="flex" justify="start" align="center" gap="0">
+          <IconBookmark size={24}/>
           <Title order={3} size="h4">
-            <IconBookmark size={20} style={{ marginRight: 8 }} />
             カスタムブックマーク
           </Title>
         </Group>
@@ -121,9 +121,9 @@ export function CbSidebar() {
     <>
       <Stack gap="md" p="md" h="100%">
         {/* ヘッダー */}
-        <Group justify="space-between" align="center">
+        <Group display="flex" justify="start" align="center" gap="0">
+          <IconBookmark size={24}/>
           <Title order={3} size="h4">
-            <IconBookmark size={24}/>
             カスタムブックマーク
           </Title>
         </Group>

@@ -98,12 +98,27 @@ export class BookmarkApiClient {
     });
     
     // Cb型をCustomBookmark型に変換
+    // Chrome Extensionのメッセージパッシングでは、Dateオブジェクトが文字列に変換されるため
+    // createdAtとupdatedAtが既に文字列の場合はそのまま使用し、
+    // Dateオブジェクトの場合のみtoISOString()を呼び出す
+    const createdAt = typeof cb.createdAt === 'string' 
+      ? cb.createdAt 
+      : cb.createdAt instanceof Date 
+        ? cb.createdAt.toISOString()
+        : new Date(cb.createdAt).toISOString();
+    
+    const updatedAt = typeof cb.updatedAt === 'string'
+      ? cb.updatedAt
+      : cb.updatedAt instanceof Date
+        ? cb.updatedAt.toISOString()
+        : new Date(cb.updatedAt).toISOString();
+    
     return {
       id: cb.id,
       name: cb.name,
       description: cb.description,
-      createdAt: cb.createdAt.toISOString(),
-      updatedAt: cb.updatedAt.toISOString(),
+      createdAt,
+      updatedAt,
       isActive: true,
       tweetCount: cb.tweetCount,
     };
