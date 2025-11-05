@@ -9,7 +9,9 @@ import {
   Avatar, 
   ActionIcon,
   Loader,
-  Alert
+  Alert,
+  Menu,
+  Transition
 } from '@mantine/core';
 import { 
   IconHeart, 
@@ -21,7 +23,10 @@ import {
   IconX, 
   IconChevronLeft, 
   IconChevronRight,
-  IconAlertCircle
+  IconAlertCircle,
+  IconDots,
+  IconEdit,
+  IconTrash
 } from '@tabler/icons-react';
 import { bookmarkDB } from '../../utils/bookmarkDB';
 import { 
@@ -334,23 +339,57 @@ export function Tweet({ id }: TweetProps) {
           <Box style={{ display: 'flex', flexDirection: 'column', gap: '2px', flex: 1, minWidth: 0 }}>
             {/* ユーザー名、認証マーク、ユーザーID、時刻を横並び */}
             <Box style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
-              <Text size="sm" fw={600} style={{ whiteSpace: 'nowrap' }}>
+              <Text size="15px" fw={600} style={{ whiteSpace: 'nowrap' }}>
                 {author.displayName}
               </Text>
               
               {author.verified && (
-                <IconCheck size={14} color="var(--mantine-color-blue-6)" style={{ flexShrink: 0 }} />
+                <IconCheck size={15} color="var(--mantine-color-blue-6)" style={{ flexShrink: 0 }} />
               )}
               
-              <Text size="sm" c="dimmed" style={{ whiteSpace: 'nowrap' }}>
+              <Text size="15px" c="dimmed" style={{ whiteSpace: 'nowrap' }}>
                 @{author.username}
               </Text>
               
-              <Text size="sm" c="dimmed" style={{ whiteSpace: 'nowrap' }}>
+              <Text size="15px" c="dimmed" style={{ whiteSpace: 'nowrap' }}>
                 · {formatRelativeTime(createdAt)}
               </Text>
             </Box>
           </Box>
+
+          {/* ツイートの編集ボタン */}
+          <Transition mounted={true} transition="fade" duration={150}>
+                {(menuStyles) => (
+                  <Menu shadow="md" width={150} position="bottom-end">
+                    <Menu.Target>
+                      <ActionIcon
+                        variant="subtle"
+                        size="xs"
+                        style={menuStyles}
+                      >
+                        <IconDots size={18.75} />
+                      </ActionIcon>
+                    </Menu.Target>
+
+                    <Menu.Dropdown>
+                      <Menu.Item
+                        leftSection={<IconEdit size={14} />}
+                        onClick={handleEdit}
+                      >
+                        CBに追加
+                      </Menu.Item>
+                      <Menu.Divider />
+                      <Menu.Item
+                        leftSection={<IconTrash size={14} />}
+                        color="red"
+                        onClick={handleDelete}
+                      >
+                        削除
+                      </Menu.Item>
+                    </Menu.Dropdown>
+                  </Menu>
+                )}
+              </Transition>
         </Box>
         
         {/* ツイート内容 */}

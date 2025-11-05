@@ -1,6 +1,6 @@
 import React from 'react';
 import { Paper, Stack, Text, Group, Badge, Box, Avatar, ActionIcon } from '@mantine/core';
-import { IconHeart, IconRepeat, IconMessage, IconShare, IconUser, IconCheck, IconX, IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
+import { IconHeart, IconRepeat, IconMessage, IconShare, IconUser, IconCheck, IconX, IconChevronLeft, IconChevronRight, IconDots } from '@tabler/icons-react';
 import { sampleAuthors, sampleStats, sampleMediaItems, sampleTweetContents } from '../data/tweetSampleData';
 import { formatTweetId, formatRelativeTime, formatCount } from '../../bookmarks/utils/format';
 
@@ -157,6 +157,11 @@ export function StorybookTweet({ id }: StorybookTweetProps) {
                 · {formatRelativeTime(createdAt)}
               </Text>
             </Box>
+          </Box>
+
+          {/* ツイートの編集ボタン */}
+          <Box style={{ marginLeft: 'auto' }}>
+            <IconDots size={14}/>
           </Box>
         </Box>
         
