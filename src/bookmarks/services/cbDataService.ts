@@ -287,7 +287,7 @@ export class CbDataService {
   }
 
   /**
-   * ツイートをCBに追加
+   * ツイートをCBに追加（既に存在する場合は上書き）
    */
   async addTweetToCb(cbId: string, tweetId: string, tweetData: {
     authorUsername: string;
@@ -303,15 +303,15 @@ export class CbDataService {
     replyToUsername?: string;
   }): Promise<void> {
     try {
-      // 既に存在するかチェック
+      // 既に存在するかチェック（ログ出力用）
       const existingTweets = await this.db.getBookmarkedTweetsByBookmarkId(cbId);
       const alreadyExists = existingTweets.some(tweet => tweet.tweetId === tweetId);
       
       if (alreadyExists) {
-        console.log(`ツイートは既にCBに存在します: ${tweetId}`);
-        return;
+        console.log(`ツイートは既にCBに存在します。最新情報で上書きします: ${tweetId}`);
       }
 
+      // addBookmarkedTweetは既に存在する場合は上書きするように実装されている
       await this.db.addBookmarkedTweet({
         bookmarkId: cbId,
         tweetId,
@@ -329,7 +329,11 @@ export class CbDataService {
         saveType: 'url'
       });
 
-      console.log(`ツイートをCBに追加完了: ${tweetId} -> ${cbId}`);
+      if (alreadyExists) {
+        console.log(`ツイートをCBに更新完了: ${tweetId} -> ${cbId}`);
+      } else {
+        console.log(`ツイートをCBに追加完了: ${tweetId} -> ${cbId}`);
+      }
     } catch (error) {
       console.error('ツイート追加エラー:', error);
       throw new Error('ツイートの追加に失敗しました');

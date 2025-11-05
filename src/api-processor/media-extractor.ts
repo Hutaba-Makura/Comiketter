@@ -91,22 +91,35 @@ export class MediaExtractor {
    * MP4形式のバリアントをフィルタリングし、最高ビットレートのものを選択
    */
   getBestVideoUrl(media: ProcessedMedia): string | null {
+    console.log('Comiketter: [MediaExtractor] getBestVideoUrl called with:', {
+      type: media.type,
+      has_video_info: !!media.video_info,
+      variants_count: media.video_info?.variants?.length || 0
+    });
+    
     if (media.type !== 'video' && media.type !== 'animated_gif') {
+      console.warn('Comiketter: [MediaExtractor] Media type is not video/gif:', media.type);
       return null;
     }
 
     const variants = media.video_info?.variants;
     if (!variants?.length) {
+      console.warn('Comiketter: [MediaExtractor] No video variants found');
       return null;
     }
+
+    console.log('Comiketter: [MediaExtractor] Total variants:', variants.length);
 
     // MP4形式のバリアントのみをフィルタリング
     const mp4Variants = variants.filter(
       variant => variant.content_type === 'video/mp4'
     );
 
+    console.log('Comiketter: [MediaExtractor] MP4 variants:', mp4Variants.length);
+
     if (mp4Variants.length === 0) {
       // MP4形式が見つからない場合は、最初のバリアントを使用（フォールバック）
+      console.warn('Comiketter: [MediaExtractor] No MP4 variants found, using first variant as fallback');
       return variants[0].url;
     }
 
@@ -116,6 +129,11 @@ export class MediaExtractor {
       const bestBitrate = best.bitrate || 0;
       const currentBitrate = current.bitrate || 0;
       return currentBitrate > bestBitrate ? current : best;
+    });
+
+    console.log('Comiketter: [MediaExtractor] Selected best variant:', {
+      bitrate: bestVariant.bitrate,
+      url: bestVariant.url
     });
 
     return bestVariant.url;

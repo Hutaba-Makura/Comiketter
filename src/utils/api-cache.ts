@@ -139,6 +139,7 @@ export class ApiCacheManager {
 
   /**
    * キャッシュ機能を使用してAPIレスポンスを処理
+   * 同じツイートが読み込まれたら最新情報で上書きする
    */
   static async processWithCache(
     apiType: ApiType,
@@ -157,16 +158,38 @@ export class ApiCacheManager {
       const cachedTweets = await this.getCachedTweets(apiType, apiPath, timestamp);
       const cachedTweetIds = new Set(cachedTweets.map(tweet => tweet.id_str));
 
-      // 新規ツイートのみを抽出
-      const newTweetsOnly = newTweets.filter(tweet => !cachedTweetIds.has(tweet.id_str));
+      // 新規ツイートと既存ツイートを分離
+      const newTweetsOnly: ProcessedTweet[] = [];
+      const updatedTweets: ProcessedTweet[] = [];
+
+      for (const tweet of newTweets) {
+        if (cachedTweetIds.has(tweet.id_str)) {
+          // 既存のツイートは最新情報で上書き
+          updatedTweets.push(tweet);
+          console.log(`Comiketter: キャッシュ内のツイートを更新: ${tweet.id_str}`);
+        } else {
+          // 新規ツイート
+          newTweetsOnly.push(tweet);
+        }
+      }
 
       // 初回キャッシュの場合は、新規ツイートが0件でも保存
       const isFirstTimeCache = cachedTweets.length === 0;
       
-      if (newTweetsOnly.length > 0 || isFirstTimeCache) {
-        // キャッシュ済みツイートと新しいツイートを統合して保存
-        const allTweets = [...cachedTweets, ...newTweetsOnly];
+      if (newTweetsOnly.length > 0 || updatedTweets.length > 0 || isFirstTimeCache) {
+        // 既存のキャッシュから更新対象のツイートを削除
+        const updatedTweetIds = new Set(updatedTweets.map(t => t.id_str));
+        const cachedTweetsWithoutUpdated = cachedTweets.filter(
+          tweet => !updatedTweetIds.has(tweet.id_str)
+        );
+
+        // 更新されたツイートと新しいツイートを統合して保存
+        const allTweets = [...cachedTweetsWithoutUpdated, ...updatedTweets, ...newTweetsOnly];
         await this.saveCache(apiType, apiPath, allTweets, timestamp);
+
+        if (updatedTweets.length > 0) {
+          console.log(`Comiketter: キャッシュ更新 - ${apiType} (更新: ${updatedTweets.length}件, 新規: ${newTweetsOnly.length}件)`);
+        }
       }
 
       result.cached_tweets = cachedTweets;

@@ -475,15 +475,9 @@ export class BookmarkDatabase {
   // ===== ブックマーク済みツイート操作 =====
 
   /**
-   * ブックマーク済みツイートを追加
+   * ブックマーク済みツイートを追加（既に存在する場合は上書き）
    */
   async addBookmarkedTweet(tweet: Omit<BookmarkedTweetDB, 'id' | 'savedAt'>): Promise<BookmarkedTweetDB> {
-    const newTweet: BookmarkedTweetDB = {
-      ...tweet,
-      id: this.generateId(),
-      savedAt: new Date().toISOString(),
-    };
-
     if (this.useIndexedDB) {
       try {
         const db = await this.init();
@@ -493,48 +487,86 @@ export class BookmarkDatabase {
           const bookmarkStore = transaction.objectStore(this.bookmarkStoreName);
 
           return new Promise((resolve, reject) => {
-            const addRequest = tweetStore.add(newTweet);
+            // 同じbookmarkIdとtweetIdの組み合わせが既に存在するかチェック
+            const bookmarkIdIndex = tweetStore.index('bookmarkId');
+            const bookmarkIdRequest = bookmarkIdIndex.getAll(IDBKeyRange.only(tweet.bookmarkId));
 
-            addRequest.onsuccess = () => {
-              // 親ブックマークのupdatedAtを更新
-              const getBookmarkRequest = bookmarkStore.get(tweet.bookmarkId);
-              
-              getBookmarkRequest.onsuccess = () => {
-                const bookmark = getBookmarkRequest.result;
-                if (bookmark) {
-                  const updatedBookmark = {
-                    ...bookmark,
-                    updatedAt: new Date().toISOString(),
-                  };
-                  const updateRequest = bookmarkStore.put(updatedBookmark);
-                  
-                  updateRequest.onsuccess = () => {
-                    console.log('Comiketter: Bookmarked tweet added to IndexedDB:', newTweet.id);
-                    console.log('Comiketter: Bookmark updatedAt updated:', tweet.bookmarkId);
-                    resolve(newTweet);
-                  };
-                  
-                  updateRequest.onerror = () => {
-                    console.warn('Comiketter: Failed to update bookmark updatedAt:', updateRequest.error);
-                    // ブックマーク更新の失敗は警告のみで、ツイート追加は成功とする
-                    resolve(newTweet);
-                  };
-                } else {
-                  console.warn('Comiketter: Bookmark not found for updatedAt update:', tweet.bookmarkId);
-                  resolve(newTweet);
-                }
+            bookmarkIdRequest.onsuccess = () => {
+              const existingTweets = bookmarkIdRequest.result;
+              const existingTweet = existingTweets.find(t => t.tweetId === tweet.tweetId);
+
+              let finalTweet: BookmarkedTweetDB;
+
+              if (existingTweet) {
+                // 既に存在する場合は、既存のIDを使って更新（最新情報で上書き）
+                finalTweet = {
+                  ...tweet,
+                  id: existingTweet.id,
+                  savedAt: new Date().toISOString(), // 保存日時を更新
+                };
+                console.log('Comiketter: 既存のツイートを更新:', finalTweet.id);
+              } else {
+                // 新規追加
+                finalTweet = {
+                  ...tweet,
+                  id: this.generateId(),
+                  savedAt: new Date().toISOString(),
+                };
+                console.log('Comiketter: 新しいツイートを追加:', finalTweet.id);
+              }
+
+              const putRequest = tweetStore.put(finalTweet);
+
+              putRequest.onsuccess = () => {
+                // 親ブックマークのupdatedAtを更新
+                const getBookmarkRequest = bookmarkStore.get(tweet.bookmarkId);
+                
+                getBookmarkRequest.onsuccess = () => {
+                  const bookmark = getBookmarkRequest.result;
+                  if (bookmark) {
+                    const updatedBookmark = {
+                      ...bookmark,
+                      updatedAt: new Date().toISOString(),
+                    };
+                    const updateRequest = bookmarkStore.put(updatedBookmark);
+                    
+                    updateRequest.onsuccess = () => {
+                      if (existingTweet) {
+                        console.log('Comiketter: Bookmarked tweet updated in IndexedDB:', finalTweet.id);
+                      } else {
+                        console.log('Comiketter: Bookmarked tweet added to IndexedDB:', finalTweet.id);
+                      }
+                      console.log('Comiketter: Bookmark updatedAt updated:', tweet.bookmarkId);
+                      resolve(finalTweet);
+                    };
+                    
+                    updateRequest.onerror = () => {
+                      console.warn('Comiketter: Failed to update bookmark updatedAt:', updateRequest.error);
+                      // ブックマーク更新の失敗は警告のみで、ツイート追加は成功とする
+                      resolve(finalTweet);
+                    };
+                  } else {
+                    console.warn('Comiketter: Bookmark not found for updatedAt update:', tweet.bookmarkId);
+                    resolve(finalTweet);
+                  }
+                };
+                
+                getBookmarkRequest.onerror = () => {
+                  console.warn('Comiketter: Failed to get bookmark for updatedAt update:', getBookmarkRequest.error);
+                  // ブックマーク取得の失敗は警告のみで、ツイート追加は成功とする
+                  resolve(finalTweet);
+                };
               };
-              
-              getBookmarkRequest.onerror = () => {
-                console.warn('Comiketter: Failed to get bookmark for updatedAt update:', getBookmarkRequest.error);
-                // ブックマーク取得の失敗は警告のみで、ツイート追加は成功とする
-                resolve(newTweet);
+
+              putRequest.onerror = () => {
+                console.error('Comiketter: Failed to add/update bookmarked tweet in IndexedDB:', putRequest.error);
+                reject(putRequest.error);
               };
             };
 
-            addRequest.onerror = () => {
-              console.error('Comiketter: Failed to add bookmarked tweet to IndexedDB:', addRequest.error);
-              reject(addRequest.error);
+            bookmarkIdRequest.onerror = () => {
+              console.error('Comiketter: Failed to check existing tweet in IndexedDB:', bookmarkIdRequest.error);
+              reject(bookmarkIdRequest.error);
             };
           });
         }
@@ -546,7 +578,31 @@ export class BookmarkDatabase {
 
     // chrome.storageフォールバック
     const tweets = await this.getBookmarkedTweetsFromStorage();
-    tweets.push(newTweet);
+    const existingTweetIndex = tweets.findIndex(
+      t => t.bookmarkId === tweet.bookmarkId && t.tweetId === tweet.tweetId
+    );
+
+    let finalTweet: BookmarkedTweetDB;
+    if (existingTweetIndex !== -1) {
+      // 既に存在する場合は、既存のIDを使って更新（最新情報で上書き）
+      finalTweet = {
+        ...tweet,
+        id: tweets[existingTweetIndex].id,
+        savedAt: new Date().toISOString(), // 保存日時を更新
+      };
+      tweets[existingTweetIndex] = finalTweet;
+      console.log('Comiketter: 既存のツイートを更新:', finalTweet.id);
+    } else {
+      // 新規追加
+      finalTweet = {
+        ...tweet,
+        id: this.generateId(),
+        savedAt: new Date().toISOString(),
+      };
+      tweets.push(finalTweet);
+      console.log('Comiketter: 新しいツイートを追加:', finalTweet.id);
+    }
+
     await this.saveBookmarkedTweetsToStorage(tweets);
     
     // 親ブックマークのupdatedAtを更新
@@ -557,8 +613,12 @@ export class BookmarkDatabase {
       console.warn('Comiketter: Failed to update bookmark updatedAt in storage:', error);
     }
     
-    console.log('Comiketter: Bookmarked tweet added to storage:', newTweet.id);
-    return newTweet;
+    if (existingTweetIndex !== -1) {
+      console.log('Comiketter: Bookmarked tweet updated in storage:', finalTweet.id);
+    } else {
+      console.log('Comiketter: Bookmarked tweet added to storage:', finalTweet.id);
+    }
+    return finalTweet;
   }
 
   /**
