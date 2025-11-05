@@ -191,12 +191,10 @@ export class CbDataService {
       const originalTweets = await this.db.getBookmarkedTweetsByBookmarkId(cbId);
 
       // 古い順（昇順）にソートして、新しいツイートが最後に登録されるようにする
-      const sortedTweets = [...originalTweets].sort((a, b) => 
-        new Date(a.savedAt).getTime() - new Date(b.savedAt).getTime()
-      );
+      const reversedTweets = [...originalTweets].reverse();
 
       // ツイートを新しいCBにコピー
-      for (const tweet of sortedTweets) {
+      for (const tweet of reversedTweets) {
         await this.db.addBookmarkedTweet({
           bookmarkId: newBookmark.id,
           tweetId: tweet.tweetId,

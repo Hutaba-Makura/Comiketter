@@ -30,6 +30,7 @@ import { Tweet } from '../tweet/Tweet';
 import { TimelineSkeleton } from './TimelineSkeleton';
 import { VirtualizedTimeline } from './VirtualizedTimeline';
 import { cbService } from '../services/cbService';
+import { bookmarkDB } from '../../utils/bookmarkDB';
 
 /**
  * タイムライン表示コンポーネント
@@ -38,8 +39,9 @@ export function TimelineView() {
   const { selectedCbId, cbs, updateCb: updateCbInStore, shouldEditName, setShouldEditName } = useCbStore();
   const { tweetIds, loading, error, refetch } = useTimeline(selectedCbId);
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
+  const [sortOrder, setSortOrder] = useState<'newest_posted' | 'oldest_posted' | 'newest_registered' | 'oldest_registered'>('newest_registered');
   const [useVirtualization, setUseVirtualization] = useState(false);
+  const [tweetDataMap, setTweetDataMap] = useState<Map<string, { tweetDate: string }>>(new Map());
   
   // 編集モードの状態管理
   const [editingName, setEditingName] = useState(false);
@@ -79,6 +81,27 @@ export function TimelineView() {
     }
   }, [shouldEditName, selectedCb, setShouldEditName]);
 
+  // 投稿日時でソートする場合、ツイートデータを取得
+  useEffect(() => {
+    if ((sortOrder === 'newest_posted' || sortOrder === 'oldest_posted') && selectedCbId && tweetIds.length > 0) {
+      const fetchTweetData = async () => {
+        try {
+          const tweets = await bookmarkDB.getBookmarkedTweetsByBookmarkId(selectedCbId);
+          const map = new Map<string, { tweetDate: string }>();
+          tweets.forEach(tweet => {
+            map.set(tweet.tweetId, { tweetDate: tweet.tweetDate });
+          });
+          setTweetDataMap(map);
+        } catch (err) {
+          console.error('ツイートデータ取得エラー:', err);
+        }
+      };
+      fetchTweetData();
+    } else {
+      setTweetDataMap(new Map());
+    }
+  }, [selectedCbId, tweetIds, sortOrder]);
+
   // フィルタリングとソート
   const filteredAndSortedTweetIds = useMemo(() => {
     let filtered = tweetIds;
@@ -90,13 +113,48 @@ export function TimelineView() {
       );
     }
     
-    // ソート（現在は順序を維持）
-    if (sortOrder === 'oldest') {
+    // ソート（登録日時でソート）
+    if (sortOrder === 'oldest_registered') {
       filtered = [...filtered].reverse();
     }
+
+    if (sortOrder === 'newest_posted') {
+      filtered = filtered.sort((a, b) => {
+        const aData = tweetDataMap.get(a);
+        const bData = tweetDataMap.get(b);
+        
+        if (!aData && !bData) return 0;
+        if (!aData) return 1;
+        if (!bData) return -1;
+        
+        const aDate = new Date(aData.tweetDate).getTime();
+        const bDate = new Date(bData.tweetDate).getTime();
+        
+        return bDate - aDate; // 新しい順
+      });
+    }
+
+    if (sortOrder === 'oldest_posted') {
+      filtered = filtered.sort((a, b) => {
+        const aData = tweetDataMap.get(a);
+        const bData = tweetDataMap.get(b);
+        
+        if (!aData && !bData) return 0;
+        if (!aData) return 1;
+        if (!bData) return -1;
+        
+        const aDate = new Date(aData.tweetDate).getTime();
+        const bDate = new Date(bData.tweetDate).getTime();
+        
+        return aDate - bDate; // 古い順
+      });
+    }
+
+
+
     
     return filtered;
-  }, [tweetIds, searchQuery, sortOrder]);
+  }, [tweetIds, searchQuery, sortOrder, tweetDataMap]);
 
   // 仮想化を使用するかどうかを決定（100件以上の場合）
   const shouldUseVirtualization = useVirtualization && filteredAndSortedTweetIds.length >= 100;
@@ -383,15 +441,17 @@ export function TimelineView() {
           {/* ソート選択 */}
           <Select
             value={sortOrder}
-            onChange={(value) => setSortOrder(value as 'newest' | 'oldest')}
+            onChange={(value) => setSortOrder(value as 'newest_registered' | 'oldest_registered' | 'newest_posted' | 'oldest_posted')}
             data={[
-              { value: 'newest', label: '新しい順' },
-              { value: 'oldest', label: '古い順' }
+              { value: 'newest_registered', label: '登録が新しい順' },
+              { value: 'oldest_registered', label: '登録が古い順' },
+              { value: 'newest_posted', label: '投稿が新しい順' },
+              { value: 'oldest_posted', label: '投稿が古い順' }
             ]}
             size="sm"
             style={{ width: 130, flexShrink: 0 }}
             leftSection={
-              sortOrder === 'newest' ? 
+              sortOrder === 'newest_registered' || sortOrder === 'newest_posted' ? 
                 <IconSortDescending size={14} /> : 
                 <IconSortAscending size={14} />
             }
