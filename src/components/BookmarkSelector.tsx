@@ -128,7 +128,7 @@ const getThemeStyles = (theme: 'light' | 'darkBlue' | 'black') => {
         },
         secondaryButton: {
           backgroundColor: 'transparent',
-          border: '1px solid #e1e8ed',
+          border: '1px solid #rgb(207, 217, 222)',
           color: '#14171a',
         },
         createButton: {

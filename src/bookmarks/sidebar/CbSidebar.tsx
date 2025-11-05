@@ -310,6 +310,7 @@ export function CbSidebar() {
                   disabled={isCreating}
                   style={{
                     backgroundColor: '#f7f9fa',
+                    borderColor: 'rgb(207, 217, 222)',
                     borderRadius: '20px',
                   }}
                 >

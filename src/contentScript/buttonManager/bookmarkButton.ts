@@ -493,6 +493,15 @@ export class BookmarkButton extends BaseButton {
     const cancelButton = document.createElement('button');
     cancelButton.className = 'comiketter-bookmark-button-secondary';
     cancelButton.textContent = 'キャンセル';
+    cancelButton.style.cssText = `
+      background: #f7f9fa;
+      color: #14171a;
+      padding: 8px 16px;
+      border-radius: 20px;
+      border: 1px solid rgb(207, 217, 222);
+      cursor: pointer;
+      box-sizing: border-box;
+    `;
     cancelButton.addEventListener('click', () => {
       this.hideBookmarkSelector();
     });
@@ -686,9 +695,9 @@ export class BookmarkButton extends BaseButton {
     cancelButton.style.cssText = `
       background: #f7f9fa;
       color: #14171a;
-      border: none;
       padding: 8px 16px;
       border-radius: 20px;
+      border: 1px solid rgb(207, 217, 222);
       cursor: pointer;
       box-sizing: border-box;
     `;
