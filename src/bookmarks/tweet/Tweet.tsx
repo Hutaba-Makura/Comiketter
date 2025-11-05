@@ -27,7 +27,8 @@ import {
   IconAlertCircle,
   IconDots,
   IconEdit,
-  IconTrash
+  IconTrash,
+  IconLink
 } from '@tabler/icons-react';
 import { bookmarkDB } from '../../utils/bookmarkDB';
 import { 
@@ -158,6 +159,23 @@ export function Tweet({ id, onDelete }: TweetProps) {
   const handleEdit = () => {
     // TODO: CBに追加する処理を実装
     console.log('CBに追加:', id);
+  };
+
+  // リンクをコピー
+  const handleCopyLink = async () => {
+    if (!author) {
+      alert('ユーザー情報が取得できませんでした');
+      return;
+    }
+
+    try {
+      const url = `https://x.com/${author.username}/status/${id}`;
+      await navigator.clipboard.writeText(url);
+      alert('リンクをコピーしました');
+    } catch (error) {
+      console.error('リンクのコピーに失敗しました:', error);
+      alert('リンクのコピーに失敗しました');
+    }
   };
 
   // 画像ライトボックス用の状態
@@ -866,7 +884,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
             {/* リツイート */}
             <Box style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'cursor' }}>
               <ActionIcon variant="subtle" size="lg" color="gray" radius="xl">
-                <IconRepeat size={16} />
+                <IconRepeat size={18.75} />
               </ActionIcon>
               <Text size="xs" c="dimmed">
                 {formatCount(stats.retweetCount)}
@@ -876,7 +894,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
             {/* いいね */}
             <Box style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'cursor' }}>
               <ActionIcon variant="subtle" size="lg" color="gray" radius="xl">
-                <IconHeart size={16} />
+                <IconHeart size={18.75} />
               </ActionIcon>
               <Text size="xs" c="dimmed">
                 {formatCount(stats.likeCount)}
@@ -885,9 +903,32 @@ export function Tweet({ id, onDelete }: TweetProps) {
           </Box>
           
           {/* 右側のシェアボタン */}
-          <ActionIcon variant="subtle" size="lg" color="gray" radius="xl" style={{ cursor: 'pointer' }}>
-            <IconShare size={16} />
-          </ActionIcon>
+          <Transition mounted={true} transition="fade" duration={150}>
+                {(menuStyles) => (
+                  <Menu shadow="md" width={175} position="bottom-end" styles={{ dropdown: { borderRadius: '12px', backgroundColor: 'white' } }}>
+                    <Menu.Target>
+                      <ActionIcon
+                        variant="subtle"
+                        size="lg"
+                        radius="xl"
+                        style={menuStyles}
+                      >
+                        <IconShare size={18.75} color="var(--mantine-color-gray-6)" />
+                      </ActionIcon>
+                    </Menu.Target>
+
+                    <Menu.Dropdown>
+                      <Menu.Item
+                        leftSection={<IconLink size={18.75} stroke={2.0}/>}
+                        onClick={handleCopyLink}
+                        style={{ fontSize: '15px', fontWeight: 'bold'}}
+                      >
+                        リンクをコピー
+                      </Menu.Item>
+                    </Menu.Dropdown>
+                  </Menu>
+                )}
+              </Transition>
         </Box>
       </Box>
 

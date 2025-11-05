@@ -472,7 +472,7 @@ export function TimelineView() {
               { value: 'oldest_posted', label: '投稿が古い順' }
             ]}
             size="sm"
-            style={{ width: 150, flexShrink: 0 }}
+            style={{ width: 180, flexShrink: 0 }}
             leftSection={
               sortOrder === 'newest_registered' || sortOrder === 'newest_posted' ? 
                 <IconSortDescending size={14} /> : 
