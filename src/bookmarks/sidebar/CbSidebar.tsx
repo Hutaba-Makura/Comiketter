@@ -13,7 +13,7 @@ import {
   ScrollArea,
   LoadingOverlay
 } from '@mantine/core';
-import { IconPlus, IconSearch, IconBookmark, IconSettings} from '@tabler/icons-react';
+import { IconPencilPlus, IconSearch, IconBookmark, IconSettings} from '@tabler/icons-react';
 import { useCbStore } from '../state/cbStore';
 import { CbSidebarItem } from './CbSidebarItem';
 import { cbService } from '../services/cbService';
@@ -126,15 +126,6 @@ export function CbSidebar() {
             <IconBookmark size={20} style={{ marginRight: 8 }} />
             カスタムブックマーク
           </Title>
-          <Button
-            variant="filled"
-            color="blue"
-            size="xs"
-            leftSection={<IconPlus size={14} />}
-            onClick={handleCreateCb}
-          >
-            新規作成
-          </Button>
         </Group>
 
         {/* 統計情報 */}
@@ -206,34 +197,62 @@ export function CbSidebar() {
           </ScrollArea>
         </Box>
 
-        {/* 設定 */}
-        <Box 
-          display="flex"
-          style={{ 
-            marginTop: 'auto',
-            justifyContent: 'start',
-            alignItems: 'center',
-            gap: '12px',
-            border: '1px solid var(--mantine-color-gray-2)',
-            borderRadius: '9999px',
-            paddingLeft: '24px',
-            paddingRight: '16px',
-            paddingTop: '12px',
-            paddingBottom: '12px',
-            margin: '8px',
-            cursor: 'pointer',
-          }}
-          onClick={() => {
-            if (chrome?.runtime?.openOptionsPage) {
-              chrome.runtime.openOptionsPage();
-            } else if (chrome?.runtime?.getURL) {
-              window.open(chrome.runtime.getURL('options.html'), '_blank');
-            }
-          }}
-        >
-          <IconSettings size={32} />
-          <Text size="xl" fw="bold">設定</Text>
-        </Box>
+        <Stack gap={0}>
+          {/* CB新規作成ボタン */}
+          <Box 
+            display="flex"
+            style={{ 
+              marginTop: 'auto',
+              justifyContent: 'start',
+              alignItems: 'center',
+              gap: '12px',
+              backgroundColor: 'var(--mantine-color-blue-6)',
+              color: 'white',
+              border: '1px solid var(--mantine-color-gray-2)',
+              borderRadius: '9999px',
+              paddingLeft: '24px',
+              paddingRight: '16px',
+              paddingTop: '12px',
+              paddingBottom: '12px',
+              margin: '8px',
+              cursor: 'pointer',
+            }}
+            onClick={handleCreateCb}
+          >
+            <IconPencilPlus size={32} />
+            <Text size="xl" fw="bold">新規作成</Text>
+          </Box>
+
+          {/* 設定 */}
+          <Box 
+            display="flex"
+            style={{ 
+              marginTop: 'auto',
+              justifyContent: 'start',
+              alignItems: 'center',
+              gap: '12px',
+              border: '1px solid var(--mantine-color-gray-2)',
+              borderRadius: '9999px',
+              paddingLeft: '24px',
+              paddingRight: '16px',
+              paddingTop: '12px',
+              paddingBottom: '12px',
+              margin: '8px',
+              cursor: 'pointer',
+            }}
+            onClick={() => {
+              if (chrome?.runtime?.openOptionsPage) {
+                chrome.runtime.openOptionsPage();
+              } else if (chrome?.runtime?.getURL) {
+                window.open(chrome.runtime.getURL('options.html'), '_blank');
+              }
+            }}
+          >
+            <IconSettings size={32} />
+            <Text size="xl" fw="bold">設定</Text>
+          </Box>
+        </Stack>
+      
       </Stack>
 
       {/* CB作成モーダル */}
