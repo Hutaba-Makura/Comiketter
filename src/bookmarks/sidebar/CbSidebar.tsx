@@ -123,7 +123,7 @@ export function CbSidebar() {
         {/* ヘッダー */}
         <Group justify="space-between" align="center">
           <Title order={3} size="h4">
-            <IconBookmark size={20} style={{ marginRight: 8 }} />
+            <IconBookmark size={24}/>
             カスタムブックマーク
           </Title>
         </Group>
