@@ -160,7 +160,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
       showNotification({
         title: '成功',
         message: 'ツイートを削除しました',
-        color: 'blue',
+        color: 'rgb(29, 155, 240)',
       });
     } catch (error) {
       console.error('ツイート削除エラー:', error);
@@ -272,7 +272,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
         showNotification({
           title: '成功',
           message: `${selectedCbIds.size}個のCBに追加しました`,
-          color: 'blue',
+          color: 'rgb(29, 155, 240)',
         });
       }
     } catch (error) {
@@ -304,7 +304,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
       showNotification({
         title: '成功',
         message: 'リンクをコピーしました',
-        color: 'blue',
+        color: 'rgb(29, 155, 240)',
       });
     } catch (error) {
       console.error('リンクのコピーに失敗しました:', error);
@@ -528,7 +528,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
             alt={author.displayName}
             size="md"
             radius="xl"
-            color="blue"
+            color="rgb(29, 155, 240)"
             style={{ flexShrink: 0 }}
           >
             {!author.profileImageUrl && <IconUser size={20} />}
