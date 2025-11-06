@@ -145,7 +145,7 @@ export function TimelineView() {
         // ツイート内容で検索
         const matchesContent = tweetData.content.toLowerCase().includes(query);
         
-        return matchesDisplayName || matchesUsername || matchesContent || matchesTweetId;
+        return matchesDisplayName || matchesUsername || matchesContent;
       });
     }
 

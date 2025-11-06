@@ -560,7 +560,11 @@ export class BookmarkButton extends BaseButton {
       // ブックマーク一覧を表示
       const bookmarksList = document.createElement('div');
       
-      bookmarks.forEach(bookmark => {
+      // 現在のツイートIDを取得
+      const currentTweetId = this.currentTweetInfo?.id;
+      
+      // 各ブックマークに対して、ツイートが既に登録されているかチェック
+      for (const bookmark of bookmarks) {
         const bookmarkItem = document.createElement('div');
         bookmarkItem.className = 'comiketter-bookmark-item';
         
@@ -568,6 +572,18 @@ export class BookmarkButton extends BaseButton {
         checkbox.type = 'checkbox';
         checkbox.className = 'comiketter-bookmark-checkbox';
         checkbox.id = `bookmark-${bookmark.id}`;
+        
+        // 現在のツイートが既にこのブックマークに登録されているかチェック
+        if (currentTweetId) {
+          try {
+            const isBookmarked = await bookmarkManager.isTweetBookmarked(currentTweetId, bookmark.id);
+            if (isBookmarked) {
+              checkbox.checked = true;
+            }
+          } catch (error) {
+            console.error('Comiketter: Failed to check if tweet is bookmarked:', error);
+          }
+        }
         
         const label = document.createElement('label');
         label.htmlFor = `bookmark-${bookmark.id}`;
@@ -587,7 +603,7 @@ export class BookmarkButton extends BaseButton {
         bookmarkItem.appendChild(checkbox);
         bookmarkItem.appendChild(label);
         bookmarksList.appendChild(bookmarkItem);
-      });
+      }
       
       content.appendChild(bookmarksList);
       
