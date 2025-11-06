@@ -1174,7 +1174,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
                       <Menu.Item
                         leftSection={<IconLink size={18.75} stroke={2.0}/>}
                         onClick={handleCopyLink}
-                        style={{ fontSize: '15px', fontWeight: 'bold'}}
+                        style={{ fontSize: '15px', fontWeight: '600'}}
                       >
                         リンクをコピー
                       </Menu.Item>
