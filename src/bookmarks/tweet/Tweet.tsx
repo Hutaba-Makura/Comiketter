@@ -45,6 +45,7 @@ import { TweetEmbed } from './TweetEmbed';
 import { useCbStore } from '../state/cbStore';
 import { cbService } from '../services/cbService';
 import { Cb } from '../types/cb';
+import { showNotification } from '@mantine/notifications';
 
 /**
  * 本番用ツイート表示コンポーネント
@@ -142,7 +143,11 @@ export function Tweet({ id, onDelete }: TweetProps) {
 
   const handleConfirmDelete = async () => {
     if (!selectedCbId) {
-      alert('CBが選択されていません');
+      showNotification({
+        title: 'エラー',
+        message: 'CBが選択されていません',
+        color: 'red',
+      });
       return;
     }
 
@@ -152,9 +157,18 @@ export function Tweet({ id, onDelete }: TweetProps) {
       setIsDeleteModalOpen(false);
       // 親コンポーネントのrefetchを呼び出してタイムラインを更新
       onDelete?.();
+      showNotification({
+        title: '成功',
+        message: 'ツイートを削除しました',
+        color: 'blue',
+      });
     } catch (error) {
       console.error('ツイート削除エラー:', error);
-      alert('ツイートの削除に失敗しました');
+      showNotification({
+        title: 'エラー',
+        message: 'ツイートの削除に失敗しました',
+        color: 'red',
+      });
     } finally {
       setIsDeleting(false);
     }
@@ -218,7 +232,11 @@ export function Tweet({ id, onDelete }: TweetProps) {
   // CBに保存
   const handleSaveCbs = async () => {
     if (!author) {
-      alert('ユーザー情報が取得できませんでした');
+      showNotification({
+        title: 'エラー',
+        message: 'ユーザー情報が取得できませんでした',
+        color: 'red',
+      });
       return;
     }
 
@@ -251,11 +269,19 @@ export function Tweet({ id, onDelete }: TweetProps) {
       
       // 成功メッセージ
       if (selectedCbIds.size > 0) {
-        alert(`${selectedCbIds.size}個のCBに追加しました`);
+        showNotification({
+          title: '成功',
+          message: `${selectedCbIds.size}個のCBに追加しました`,
+          color: 'blue',
+        });
       }
     } catch (error) {
       console.error('CBへの追加エラー:', error);
-      alert('CBへの追加に失敗しました');
+      showNotification({
+        title: 'エラー',
+        message: 'CBへの追加に失敗しました',
+        color: 'red',
+      });
     } finally {
       setIsSavingCbs(false);
     }
@@ -264,17 +290,29 @@ export function Tweet({ id, onDelete }: TweetProps) {
   // リンクをコピー
   const handleCopyLink = async () => {
     if (!author) {
-      alert('ユーザー情報が取得できませんでした');
+      showNotification({
+        title: 'エラー',
+        message: 'ユーザー情報が取得できませんでした',
+        color: 'red',
+      });
       return;
     }
 
     try {
       const url = `https://x.com/${author.username}/status/${id}`;
       await navigator.clipboard.writeText(url);
-      alert('リンクをコピーしました');
+      showNotification({
+        title: '成功',
+        message: 'リンクをコピーしました',
+        color: 'blue',
+      });
     } catch (error) {
       console.error('リンクのコピーに失敗しました:', error);
-      alert('リンクのコピーに失敗しました');
+      showNotification({
+        title: 'エラー',
+        message: 'リンクのコピーに失敗しました',
+        color: 'red',
+      });
     }
   };
 
