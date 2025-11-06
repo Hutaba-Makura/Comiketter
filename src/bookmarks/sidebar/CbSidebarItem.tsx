@@ -123,7 +123,7 @@ export function CbSidebarItem({ cb }: CbSidebarItemProps) {
               <Box
                 style={{
                   color: isSelected 
-                    ? 'var(--mantine-color-blue-6)' 
+                    ? 'rgb(29, 155, 240)' 
                     : 'var(--mantine-color-gray-6)',
                   transition: 'color 0.2s ease'
                 }}
@@ -138,7 +138,7 @@ export function CbSidebarItem({ cb }: CbSidebarItemProps) {
                   truncate
                   style={{
                     color: isSelected 
-                      ? 'var(--mantine-color-blue-8)' 
+                      ? 'rgb(29, 155, 240)' 
                       : undefined
                   }}
                 >
@@ -165,7 +165,7 @@ export function CbSidebarItem({ cb }: CbSidebarItemProps) {
                 <Badge 
                   size="xs" 
                   variant={isSelected ? "filled" : "light"}
-                  color={isSelected ? "blue" : "gray"}
+                  color={isSelected ? "rgb(29, 155, 240)" : "gray"}
                 >
                   {formatCount(cb.tweetCount)}
                 </Badge>

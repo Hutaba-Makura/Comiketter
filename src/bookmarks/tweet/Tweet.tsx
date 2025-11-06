@@ -596,6 +596,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
                                           onChange={() => handleCbToggle(cb.id)}
                                           onClick={(e) => e.stopPropagation()}
                                           size="sm"
+                                          color="rgb(29, 155, 240)"
                                         />
                                         <Box style={{ flex: 1, minWidth: 0 }}>
                                           <Text size="sm" fw={500} truncate>
@@ -607,7 +608,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
                                             </Text>
                                           )}
                                         </Box>
-                                        <Badge size="xs" variant="light">
+                                        <Badge size="xs" variant="light" color="rgb(29, 155, 240)">
                                           {cb.tweetCount}
                                         </Badge>
                                       </Group>
@@ -621,6 +622,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
                               <Button
                                 size="xs"
                                 variant="subtle"
+                                color="rgb(29, 155, 240)"
                                 radius="lg"
                                 style={{ fontSize: '15px' }}
                                 onClick={(e) => {
@@ -634,6 +636,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
                               <Button
                                 size="xs"
                                 radius="lg"
+                                color="rgb(29, 155, 240)"
                                 style={{ fontSize: '15px' }}
                                 onClick={(e) => {
                                   e.stopPropagation();

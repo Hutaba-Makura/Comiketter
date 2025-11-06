@@ -471,11 +471,11 @@ export function TimelineView() {
             )}
           </Stack>
           <Group gap="xs">
-            <Badge variant="light" size="lg">
+            <Badge variant="light" color="rgb(29, 155, 240)" size="lg">
               {filteredAndSortedTweetIds.length} ツイート
             </Badge>
             <Tooltip label="更新">
-              <ActionIcon variant="subtle" size="lg" onClick={refetch} loading={loading}>
+              <ActionIcon variant="subtle" color="rgb(29, 155, 240)" size="lg" onClick={refetch} loading={loading}>
                 <IconRefresh size={20} />
               </ActionIcon>
             </Tooltip>
@@ -489,7 +489,7 @@ export function TimelineView() {
         <Group gap="lg" align="center" mb="md" wrap="nowrap">
           {/* 検索バー */}
           <TextInput
-            placeholder="ユーザー名・ユーザーID・ツイート内容で検索..."
+            placeholder="ツイートを検索..."
             leftSection={<IconSearch size={14} />}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.currentTarget.value)}

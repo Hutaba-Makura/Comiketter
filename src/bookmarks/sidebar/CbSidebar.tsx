@@ -130,10 +130,10 @@ export function CbSidebar() {
 
         {/* 統計情報 */}
         <Group gap="xs" justify="flex-start">
-          <Badge variant="light" size="sm">
+          <Badge variant="light" color="rgb(29, 155, 240)" size="sm">
             {totalCbs} CB
           </Badge>
-          <Badge variant="light" size="sm">
+          <Badge variant="light" color="rgb(29, 155, 240)" size="sm">
             {totalTweets} ツイート
           </Badge>
         </Group>
@@ -206,7 +206,7 @@ export function CbSidebar() {
               justifyContent: 'start',
               alignItems: 'center',
               gap: '12px',
-              backgroundColor: 'var(--mantine-color-blue-6)',
+              backgroundColor: 'rgb(29, 155, 240)',
               color: 'white',
               border: '1px solid var(--mantine-color-gray-2)',
               borderRadius: '9999px',
