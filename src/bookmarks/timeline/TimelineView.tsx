@@ -41,7 +41,12 @@ export function TimelineView() {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOrder, setSortOrder] = useState<'newest_posted' | 'oldest_posted' | 'newest_registered' | 'oldest_registered'>('newest_registered');
   const [useVirtualization, setUseVirtualization] = useState(false);
-  const [tweetDataMap, setTweetDataMap] = useState<Map<string, { tweetDate: string }>>(new Map());
+  const [tweetDataMap, setTweetDataMap] = useState<Map<string, { 
+    tweetDate: string;
+    authorDisplayName?: string;
+    authorUsername: string;
+    content: string;
+  }>>(new Map());
   
   // 編集モードの状態管理
   const [editingName, setEditingName] = useState(false);
@@ -81,15 +86,25 @@ export function TimelineView() {
     }
   }, [shouldEditName, selectedCb, setShouldEditName]);
 
-  // イートデータを取得
+  // ツイートデータを取得
   useEffect(() => {
     if (selectedCbId && tweetIds.length > 0) {
       const fetchTweetData = async () => {
         try {
           const tweets = await bookmarkDB.getBookmarkedTweetsByBookmarkId(selectedCbId);
-          const map = new Map<string, { tweetDate: string }>();
+          const map = new Map<string, { 
+            tweetDate: string;
+            authorDisplayName?: string;
+            authorUsername: string;
+            content: string;
+          }>();
           tweets.forEach(tweet => {
-            map.set(tweet.tweetId, { tweetDate: tweet.tweetDate });
+            map.set(tweet.tweetId, { 
+              tweetDate: tweet.tweetDate,
+              authorDisplayName: tweet.authorDisplayName,
+              authorUsername: tweet.authorUsername,
+              content: tweet.content
+            });
           });
           setTweetDataMap(map);
         } catch (err) {
@@ -106,11 +121,32 @@ export function TimelineView() {
   const filteredAndSortedTweetIds = useMemo(() => {
     let filtered = tweetIds;
     
-    // 検索フィルタリング（現在はツイートIDでの検索のみ）
+    // 検索フィルタリング（ユーザー名、ユーザーID、ツイート内容で検索）
     if (searchQuery) {
-      filtered = tweetIds.filter(id => 
-        id.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+      const query = searchQuery.toLowerCase().trim();
+      // @記号を除去してユーザーID検索用のクエリを作成
+      const queryWithoutAt = query.startsWith('@') ? query.slice(1) : query;
+      
+      filtered = tweetIds.filter(id => {
+        const tweetData = tweetDataMap.get(id);
+        if (!tweetData) {
+          // データがない場合はツイートIDで検索（従来の動作）
+          return id.toLowerCase().includes(query);
+        }
+        
+        // ユーザー名で検索
+        const matchesDisplayName = tweetData.authorDisplayName?.toLowerCase().includes(query) ?? false;
+        
+        // ユーザーIDで検索（@付き・@なし両方に対応）
+        const username = tweetData.authorUsername.toLowerCase();
+        const matchesUsername = username.includes(queryWithoutAt) || 
+                                `@${username}`.includes(query);
+        
+        // ツイート内容で検索
+        const matchesContent = tweetData.content.toLowerCase().includes(query);
+        
+        return matchesDisplayName || matchesUsername || matchesContent || matchesTweetId;
+      });
     }
 
     // ソート処理
@@ -453,12 +489,12 @@ export function TimelineView() {
         <Group gap="lg" align="center" mb="md" wrap="nowrap">
           {/* 検索バー */}
           <TextInput
-            placeholder="ツイートを検索..."
+            placeholder="ユーザー名・ユーザーID・ツイート内容で検索..."
             leftSection={<IconSearch size={14} />}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.currentTarget.value)}
             size="sm"
-            style={{ width: 250, flexShrink: 0 }}
+            style={{ width: 300, flexShrink: 0 }}
           />
           
           {/* ソート選択 */}
