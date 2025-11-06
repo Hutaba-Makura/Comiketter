@@ -12,7 +12,10 @@ import {
   Alert,
   Menu,
   Transition,
-  Button
+  Button,
+  Checkbox,
+  ScrollArea,
+  Divider
 } from '@mantine/core';
 import { 
   IconHeart, 
@@ -41,6 +44,7 @@ import { TweetEmbedFallback } from './TweetEmbedFallback';
 import { TweetEmbed } from './TweetEmbed';
 import { useCbStore } from '../state/cbStore';
 import { cbService } from '../services/cbService';
+import { Cb } from '../types/cb';
 
 /**
  * 本番用ツイート表示コンポーネント
@@ -64,6 +68,11 @@ export function Tweet({ id, onDelete }: TweetProps) {
   const [useEmbedTweet, setUseEmbedTweet] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isCbMenuOpen, setIsCbMenuOpen] = useState(false);
+  const [cbs, setCbs] = useState<Cb[]>([]);
+  const [selectedCbIds, setSelectedCbIds] = useState<Set<string>>(new Set());
+  const [isLoadingCbs, setIsLoadingCbs] = useState(false);
+  const [isSavingCbs, setIsSavingCbs] = useState(false);
 
   // BookmarkDBからツイート情報を取得
   useEffect(() => {
@@ -155,10 +164,101 @@ export function Tweet({ id, onDelete }: TweetProps) {
     setIsDeleteModalOpen(false);
   };
 
+  // CB一覧を取得して、既に登録されているCBをチェック
+  useEffect(() => {
+    if (!isCbMenuOpen) return;
+
+    const fetchCbs = async () => {
+      setIsLoadingCbs(true);
+      try {
+        const allCbs = await cbService.listCbs();
+        setCbs(allCbs);
+
+        // 各CBに対して、現在のツイートが既に登録されているかチェック
+        const selected = new Set<string>();
+        for (const cb of allCbs) {
+          try {
+            const tweetIds = await cbService.getTweetIdsByCbId(cb.id);
+            if (tweetIds.includes(id)) {
+              selected.add(cb.id);
+            }
+          } catch (error) {
+            console.error(`CB ${cb.id} のツイートID取得エラー:`, error);
+          }
+        }
+        setSelectedCbIds(selected);
+      } catch (error) {
+        console.error('CB一覧取得エラー:', error);
+      } finally {
+        setIsLoadingCbs(false);
+      }
+    };
+
+    fetchCbs();
+  }, [isCbMenuOpen, id]);
+
   // 編集処理（CBに追加）
   const handleEdit = () => {
-    // TODO: CBに追加する処理を実装
-    console.log('CBに追加:', id);
+    setIsCbMenuOpen(true);
+  };
+
+  // CB選択のトグル
+  const handleCbToggle = (cbId: string) => {
+    setSelectedCbIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(cbId)) {
+        newSet.delete(cbId);
+      } else {
+        newSet.add(cbId);
+      }
+      return newSet;
+    });
+  };
+
+  // CBに保存
+  const handleSaveCbs = async () => {
+    if (!author) {
+      alert('ユーザー情報が取得できませんでした');
+      return;
+    }
+
+    setIsSavingCbs(true);
+    try {
+      // ツイートデータを準備
+      const tweetData = {
+        authorUsername: author.username,
+        authorDisplayName: author.displayName,
+        authorId: author.id,
+        content: content,
+        mediaUrls: media.map(m => m.url),
+        mediaTypes: media.map(m => m.type),
+        tweetDate: createdAt?.toISOString() || new Date().toISOString(),
+        isRetweet: false,
+        isReply: false,
+      };
+
+      // 選択されたCBに追加
+      for (const cbId of selectedCbIds) {
+        try {
+          await cbService.addTweetToCb(cbId, id, tweetData);
+        } catch (error) {
+          console.error(`CB ${cbId} への追加エラー:`, error);
+        }
+      }
+
+      // メニューを閉じる
+      setIsCbMenuOpen(false);
+      
+      // 成功メッセージ
+      if (selectedCbIds.size > 0) {
+        alert(`${selectedCbIds.size}個のCBに追加しました`);
+      }
+    } catch (error) {
+      console.error('CBへの追加エラー:', error);
+      alert('CBへの追加に失敗しました');
+    } finally {
+      setIsSavingCbs(false);
+    }
   };
 
   // リンクをコピー
@@ -421,7 +521,13 @@ export function Tweet({ id, onDelete }: TweetProps) {
           {/* ツイートの編集ボタン */}
           <Transition mounted={true} transition="fade" duration={150}>
                 {(menuStyles) => (
-                  <Menu shadow="md" width={150} position="bottom-end" styles={{ dropdown: { borderRadius: '12px', backgroundColor: 'white' } }}>
+                  <Menu 
+                    shadow="md" 
+                    width={isCbMenuOpen ? 320 : 150} 
+                    position="bottom-end" 
+                    styles={{ dropdown: { borderRadius: '12px', backgroundColor: 'white' } }}
+                    onClose={() => setIsCbMenuOpen(false)}
+                  >
                     <Menu.Target>
                       <ActionIcon
                         variant="subtle"
@@ -437,10 +543,111 @@ export function Tweet({ id, onDelete }: TweetProps) {
                       <Menu.Item
                         leftSection={<IconEdit size={18.75} />}
                         onClick={handleEdit}
+                        closeMenuOnClick={false}
                         style={{ fontSize: '15px' }}
                       >
                         CBに追加
                       </Menu.Item>
+                      {isCbMenuOpen && (
+                        <Menu.Item
+                          component="div"
+                          style={{ padding: 0 }}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Box style={{ width: '100%', maxWidth: 300 }}>
+                            <Box p="xs" style={{ borderBottom: '1px solid #e1e8ed' }}>
+                              <Text size="sm" fw={600} style={{ padding: '8px 12px', fontSize: '15px'}}>
+                                CBを選択
+                              </Text>
+                            </Box>
+                            <ScrollArea h={200} type="scroll">
+                              {isLoadingCbs ? (
+                                <Box p="md" style={{ display: 'flex', justifyContent: 'center' }}>
+                                  <Loader size="sm" />
+                                </Box>
+                              ) : cbs.length === 0 ? (
+                                <Box p="md">
+                                  <Text size="sm" c="dimmed" ta="center" style={{ fontSize: '15px' }}>
+                                    CBがありません
+                                  </Text>
+                                </Box>
+                              ) : (
+                                <Stack gap={0} p="xs">
+                                  {cbs.map(cb => (
+                                    <Box
+                                      key={cb.id}
+                                      p="xs"
+                                      style={{
+                                        cursor: 'pointer',
+                                        borderRadius: '4px',
+                                        transition: 'background-color 0.2s',
+                                      }}
+                                      onMouseEnter={(e) => {
+                                        e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.05)';
+                                      }}
+                                      onMouseLeave={(e) => {
+                                        e.currentTarget.style.backgroundColor = 'transparent';
+                                      }}
+                                      onClick={() => handleCbToggle(cb.id)}
+                                    >
+                                      <Group gap="xs" align="center" wrap="nowrap">
+                                        <Checkbox
+                                          checked={selectedCbIds.has(cb.id)}
+                                          onChange={() => handleCbToggle(cb.id)}
+                                          onClick={(e) => e.stopPropagation()}
+                                          size="sm"
+                                        />
+                                        <Box style={{ flex: 1, minWidth: 0 }}>
+                                          <Text size="sm" fw={500} truncate>
+                                            {cb.name}
+                                          </Text>
+                                          {cb.description && (
+                                            <Text size="xs" c="dimmed" truncate>
+                                              {cb.description}
+                                            </Text>
+                                          )}
+                                        </Box>
+                                        <Badge size="xs" variant="light">
+                                          {cb.tweetCount}
+                                        </Badge>
+                                      </Group>
+                                    </Box>
+                                  ))}
+                                </Stack>
+                              )}
+                            </ScrollArea>
+                            <Divider />
+                            <Box p="xs" style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                              <Button
+                                size="xs"
+                                variant="subtle"
+                                radius="lg"
+                                style={{ fontSize: '15px' }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setIsCbMenuOpen(false);
+                                }}
+                                disabled={isSavingCbs}
+                              >
+                                キャンセル
+                              </Button>
+                              <Button
+                                size="xs"
+                                radius="lg"
+                                style={{ fontSize: '15px' }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleSaveCbs();
+                                }}
+                                loading={isSavingCbs}
+                                disabled={selectedCbIds.size === 0}
+                              >
+                                保存
+                              </Button>
+                            </Box>
+                          </Box>
+                        </Menu.Item>
+                      )}
                       <Menu.Divider />
                       <Menu.Item
                         leftSection={<IconTrash size={18.75} />}
