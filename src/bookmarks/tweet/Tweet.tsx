@@ -213,7 +213,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
 
   // 編集処理（CBに追加）
   const handleEdit = () => {
-    setIsCbMenuOpen(true);
+    setIsCbMenuOpen(prev => !prev);
   };
 
   // CB選択のトグル
@@ -582,7 +582,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
                         leftSection={<IconEdit size={18.75} />}
                         onClick={handleEdit}
                         closeMenuOnClick={false}
-                        style={{ fontSize: '15px' }}
+                        style={{ fontSize: '15px', fontWeight: '600'}}
                       >
                         CBに追加
                       </Menu.Item>
@@ -592,7 +592,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
                           style={{ padding: 0 }}
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <Box style={{ width: '100%', maxWidth: 300 }}>
+                          <Box style={{ width: '100%', maxWidth: 300 }} onClick={(e) => e.stopPropagation()}>
                             <Box p="xs" style={{ borderBottom: '1px solid #e1e8ed' }}>
                               <Text size="sm" fw={600} style={{ padding: '8px 12px', fontSize: '15px'}}>
                                 CBを選択
@@ -628,7 +628,12 @@ export function Tweet({ id, onDelete }: TweetProps) {
                                       }}
                                       onClick={() => handleCbToggle(cb.id)}
                                     >
-                                      <Group gap="xs" align="center" wrap="nowrap">
+                                      <Group gap="xs" align="center" wrap="nowrap"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleCbToggle(cb.id);
+                                        }}
+                                      >
                                         <Checkbox
                                           checked={selectedCbIds.has(cb.id)}
                                           onChange={() => handleCbToggle(cb.id)}
@@ -694,7 +699,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
                         leftSection={<IconTrash size={18.75} />}
                         color="red"
                         onClick={handleDelete}
-                        style={{ fontSize: '15px' }}
+                        style={{ fontSize: '15px', fontWeight: '600'}}
                       >
                         削除
                       </Menu.Item>
