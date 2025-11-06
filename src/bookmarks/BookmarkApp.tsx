@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { MantineProvider, ColorSchemeScript } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
+import '@mantine/notifications/styles.css';
 import { BookmarkLayout } from './layout/BookmarkLayout';
 import { cbService } from './services/cbService';
 import { useCbStore } from './state/cbStore';
@@ -39,7 +40,7 @@ export default function BookmarkApp() {
     <>
       <ColorSchemeScript />
       <MantineProvider defaultColorScheme="auto">
-        <Notifications position="top-right" zIndex={1000} />
+        <Notifications position="top-right" zIndex={10000} />
         <BookmarkLayout />
       </MantineProvider>
     </>
