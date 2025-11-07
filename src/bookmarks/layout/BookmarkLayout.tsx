@@ -42,7 +42,7 @@ export function BookmarkLayout({ timelineViewComponent: TimelineViewComponent }:
         style={{
           flex: 1,
           overflow: 'hidden',
-          backgroundColor: colorScheme === 'dark' ? theme.colors.dark[8] : theme.colors.gray[0],
+          backgroundColor: colorScheme === 'dark' ? theme.colors.dark[8] : theme.white,
         }}
       >
         <TimelineViewToUse />

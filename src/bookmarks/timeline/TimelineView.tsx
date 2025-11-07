@@ -397,7 +397,7 @@ export function TimelineView() {
   }
 
   return (
-    <Box style={{ position: 'relative', height: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <Box style={{ position: 'relative', height: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'rgba(255, 255, 255, 0.85)'}}>
       {/* CB情報ヘッダー */}
       <Box p="md" style={{ borderBottom: '1px solid #e1e8ed' }}>
         <Group justify="space-between" align="center">
@@ -481,11 +481,10 @@ export function TimelineView() {
             </Tooltip>
           </Group>
         </Group>
-        <Divider my="md" />
       </Box>
 
       {/* ツールバー */}
-      <Box style={{ flexShrink: 0 }} p="md">
+      <Box style={{ flexShrink: 0, backgroundColor: 'rgba(255, 255, 255, 0.85)' }} p="md">
         <Group gap="lg" align="center" mb="md" wrap="nowrap">
           {/* 検索バー */}
           <TextInput
