@@ -115,18 +115,27 @@ export abstract class BaseButton {
   abstract createButton(tweetInfo: Tweet): Promise<HTMLElement>;
 
   /**
-   * サンプルボタン（いいねボタン等）を取得
+   * サンプルボタン（リプライボタン）を取得
+   * TwitterMediaHarvestのgetSampleButtonを参考に実装
+   * data-testid="tweet"でツイート要素を取得してから検索することで処理を軽量化
    */
   protected getSampleButton(): HTMLElement | null {
-    const selectors = [
-      '[data-testid="like"] > div',
-    ];
+    // まずツイート要素を取得（処理を軽くするため）
+    const tweetElement = document.querySelector('[data-testid="tweet"]') as HTMLElement;
+    if (!tweetElement) {
+      return null;
+    }
 
-    for (const selector of selectors) {
-      const button = document.querySelector(selector) as HTMLElement;
-      if (button) {
-        return button;
-      }
+    // ツイート要素内からリプライボタンを検索
+    const replyButton = tweetElement.querySelector('[data-testid="reply"] > div') as HTMLElement;
+    if (!replyButton) {
+      return null;
+    }
+
+    // ボタンが実際に表示されているか確認
+    const rect = replyButton.getBoundingClientRect();
+    if (rect.width > 0 && rect.height > 0) {
+      return replyButton;
     }
 
     return null;
