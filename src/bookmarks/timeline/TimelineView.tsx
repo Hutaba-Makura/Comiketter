@@ -397,9 +397,17 @@ export function TimelineView() {
   }
 
   return (
-    <Box style={{ position: 'relative', height: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'rgba(255, 255, 255, 0.85)'}}>
+    <Box style={{ position: 'relative', height: '100vh', display: 'flex', flexDirection: 'column' }}>
       {/* CB情報ヘッダー */}
-      <Box p="md" style={{ borderBottom: '1px solid #e1e8ed' }}>
+      <Box 
+        p="md" 
+        style={{ 
+          borderBottom: '1px solid #e1e8ed',
+          backgroundColor: 'rgba(255, 255, 255, 0.85)',
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)'
+        }}
+      >
         <Group justify="space-between" align="center">
           <Stack gap={4} style={{ flex: 1, minWidth: 0 }}>
             {editingName ? (
@@ -484,7 +492,15 @@ export function TimelineView() {
       </Box>
 
       {/* ツールバー */}
-      <Box style={{ flexShrink: 0, backgroundColor: 'rgba(255, 255, 255, 0.85)' }} p="md">
+      <Box 
+        style={{ 
+          flexShrink: 0, 
+          backgroundColor: 'rgba(255, 255, 255, 0.85)',
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)'
+        }} 
+        p="md"
+      >
         <Group gap="lg" align="center" mb="md" wrap="nowrap">
           {/* 検索バー */}
           <TextInput
