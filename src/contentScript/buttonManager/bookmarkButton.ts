@@ -41,7 +41,6 @@ export enum BookmarkButtonStatus {
 export class BookmarkButton extends BaseButton {
   private bookmarkSelector: HTMLElement | null = null;
   private currentTweetInfo: Tweet | null = null;
-  private currentIconElement: HTMLElement | null = null;
 
   constructor() {
     const config: ButtonConfig = {
@@ -56,7 +55,7 @@ export class BookmarkButton extends BaseButton {
     // テーマ変更を監視
     this.observeThemeChanges();
   }
-
+  
   /**
    * テーマ変更を監視
    */
@@ -99,6 +98,19 @@ export class BookmarkButton extends BaseButton {
     }
   }
 
+
+  /**
+   * ブックマークボタンの状態を取得
+   */
+  private getBookmarkButtonStatus(button: HTMLElement): BookmarkButtonStatus {
+    for (const status of Object.values(BookmarkButtonStatus)) {
+      if (button.classList.contains(status)) {
+        return status;
+      }
+    }
+    return BookmarkButtonStatus.Idle;
+  }
+
   /**
    * アイコンを更新
    */
@@ -136,8 +148,8 @@ export class BookmarkButton extends BaseButton {
         z-index: 1;
       }
       
-      .comiketter-bookmark-button:hover {
-        opacity: 0.8;
+      .comiketter-bookmark-button:hover:not(.loading):not(.success):not(.error) svg {
+        color: rgb(29, 155, 240) !important;
       }
       
       .comiketter-bookmark-button.loading {
@@ -327,9 +339,6 @@ export class BookmarkButton extends BaseButton {
     
     // クリックイベントを設定
     this.setupBookmarkClickHandler(buttonWrapper, tweetInfo);
-    
-    // ホバーイベントを設定
-    this.setupHoverHandler(buttonWrapper);
     
     console.log('Comiketter: CBボタン作成完了');
     

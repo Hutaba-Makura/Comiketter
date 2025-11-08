@@ -44,8 +44,8 @@ export class DownloadButton extends BaseButton {
         z-index: 1;
       }
       
-      .comiketter-download-button:hover {
-        opacity: 0.8;
+      .comiketter-download-button:hover:not(.downloading):not(.success):not(.error):not(.downloaded) svg {
+        color: rgb(29, 155, 240) !important;
       }
       
       .comiketter-download-button.downloading {
@@ -108,9 +108,6 @@ export class DownloadButton extends BaseButton {
     
     // クリックイベントを設定
     this.setupClickHandler(buttonWrapper, tweetInfo);
-    
-    // ホバーイベントを設定
-    this.setupHoverHandler(buttonWrapper);
     
     // 初期状態を設定
     this.setButtonStatus(buttonWrapper, ButtonStatus.Idle);
