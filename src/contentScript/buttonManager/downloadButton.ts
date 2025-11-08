@@ -109,6 +109,9 @@ export class DownloadButton extends BaseButton {
     // クリックイベントを設定
     this.setupClickHandler(buttonWrapper, tweetInfo);
     
+    // ホバーイベントを設定
+    this.setupHoverHandler(buttonWrapper);
+    
     // 初期状態を設定
     this.setButtonStatus(buttonWrapper, ButtonStatus.Idle);
     

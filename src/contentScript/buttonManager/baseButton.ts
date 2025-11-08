@@ -254,4 +254,40 @@ export abstract class BaseButton {
       button.classList.remove(statusClass);
     });
   }
+
+  /**
+   * ホバーイベントリスナーを設定
+   */
+  protected setupHoverHandler(buttonWrapper: HTMLElement): void {
+    const iconElement = buttonWrapper.querySelector('svg') as HTMLElement;
+    if (!iconElement) {
+      return;
+    }
+
+    // ホバー時の色
+    const hoverColor = 'rgb(29, 155, 240)';
+
+    // マウスエンター時に色を変更
+    buttonWrapper.addEventListener('mouseenter', () => {
+      // ボタンの状態をチェック（success/error状態の場合は色を変更しない）
+      const buttonStatus = this.getButtonStatus(buttonWrapper);
+      if (buttonStatus === ButtonStatus.Success || buttonStatus === ButtonStatus.Error) {
+        return; // 成功/エラー状態の場合は色を変更しない
+      }
+      iconElement.style.color = hoverColor;
+    });
+
+    // マウスリーブ時に元の色に戻す
+    buttonWrapper.addEventListener('mouseleave', () => {
+      // ボタンの状態をチェック（success/error状態の場合は色を変更しない）
+      const buttonStatus = this.getButtonStatus(buttonWrapper);
+      if (buttonStatus === ButtonStatus.Success || buttonStatus === ButtonStatus.Error) {
+        return; // 成功/エラー状態の場合は色を変更しない
+      }
+      // テーマを再検出して元の色を取得
+      const theme = this.detectTheme();
+      const originalColor = this.getButtonColor(theme);
+      iconElement.style.color = originalColor;
+    });
+  }
 } 

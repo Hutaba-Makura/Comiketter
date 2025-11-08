@@ -300,24 +300,6 @@ export class BookmarkButton extends BaseButton {
   }
 
   /**
-   * サンプルボタン（ブックマークボタン等）を取得
-   */
-  protected getBookmarkButton(): HTMLElement | null {
-    const selectors = [
-      '[data-testid="bookmark"] > div',
-    ];
-
-    for (const selector of selectors) {
-      const button = document.querySelector(selector) as HTMLElement;
-      if (button) {
-        return button;
-      }
-    }
-
-    return null;
-  }
-
-  /**
    * ブックマークボタンを作成
    */
   async createButton(tweetInfo: Tweet): Promise<HTMLElement> {
@@ -345,6 +327,9 @@ export class BookmarkButton extends BaseButton {
     
     // クリックイベントを設定
     this.setupBookmarkClickHandler(buttonWrapper, tweetInfo);
+    
+    // ホバーイベントを設定
+    this.setupHoverHandler(buttonWrapper);
     
     console.log('Comiketter: CBボタン作成完了');
     
