@@ -93,13 +93,42 @@ export class CbDataService {
   }
 
   /**
+   * 重複しないCB名を生成
+   * 既存のCB名をチェックして、「元の名前(2)」「元の名前(3)」のように番号を付ける
+   */
+  private async generateUniqueCbName(baseName: string): Promise<string> {
+    const allCbs = await this.getAllCbs();
+    const existingNames = new Set(allCbs.map(cb => cb.name));
+    
+    // ベース名が既に存在しない場合はそのまま返す
+    if (!existingNames.has(baseName)) {
+      return baseName;
+    }
+    
+    // パターンにマッチする名前を探す (例: "名前(2)", "名前(3)")
+    const pattern = new RegExp(`^${baseName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\((\\d+)\\)$`);
+    const matchedNumbers: number[] = [];
+    
+    existingNames.forEach(name => {
+      const match = name.match(pattern);
+      if (match) {
+        matchedNumbers.push(parseInt(match[1], 10));
+      }
+    });
+    
+    // 最小の利用可能な番号を見つける
+    let number = 2;
+    while (matchedNumbers.includes(number)) {
+      number++;
+    }
+    
+    return `${baseName}(${number})`;
+  }
+
+  /**
    * 新しいCBを作成
    */
   async createCb(name: string, description?: string): Promise<Cb> {
-    // TODO: 型エラーを修正後に実装
-    throw new Error('CB作成機能は一時的に無効化されています');
-    
-    /*
     try {
       const result = await this.db.addBookmark({
         name,
@@ -113,7 +142,7 @@ export class CbDataService {
         throw new Error('CBの作成に失敗しました');
       }
 
-      const bookmark = result as BookmarkDB;
+      const bookmark = result;
 
       return {
         id: bookmark.id,
@@ -128,28 +157,98 @@ export class CbDataService {
       console.error('CB作成エラー:', error);
       throw new Error('CBの作成に失敗しました');
     }
-    */
+  }
+
+  /**
+   * CBをコピー
+   * 元のCBとそのツイートを全てコピーして新しいCBを作成
+   */
+  async copyCb(cbId: string): Promise<Cb> {
+    try {
+      // 元のCBを取得
+      const originalBookmark = await this.db.getBookmarkById(cbId);
+      if (!originalBookmark) {
+        throw new Error('コピー元のCBが見つかりません');
+      }
+
+      // 重複しない名前を生成
+      const newName = await this.generateUniqueCbName(originalBookmark.name);
+
+      // 新しいCBを作成
+      const newBookmark = await this.db.addBookmark({
+        name: newName,
+        description: originalBookmark.description || '',
+        color: originalBookmark.color,
+        isActive: true
+      });
+
+      // 元のCBのツイートを全て取得（新しい順で取得されている）
+      const originalTweets = await this.db.getBookmarkedTweetsByBookmarkId(cbId);
+
+      // 古い順（昇順）にソートして、新しいツイートが最後に登録されるようにする
+      const reversedTweets = [...originalTweets].reverse();
+
+      // ツイートを新しいCBにコピー
+      for (const tweet of reversedTweets) {
+        await this.db.addBookmarkedTweet({
+          bookmarkId: newBookmark.id,
+          tweetId: tweet.tweetId,
+          authorUsername: tweet.authorUsername,
+          authorDisplayName: tweet.authorDisplayName,
+          authorId: tweet.authorId,
+          authorProfileImageUrl: tweet.authorProfileImageUrl,
+          content: tweet.content,
+          mediaUrls: tweet.mediaUrls,
+          mediaTypes: tweet.mediaTypes,
+          tweetDate: tweet.tweetDate,
+          isRetweet: tweet.isRetweet,
+          isReply: tweet.isReply,
+          replyToTweetId: tweet.replyToTweetId,
+          replyToUsername: tweet.replyToUsername,
+          saveType: tweet.saveType,
+          favoriteCount: tweet.favoriteCount,
+          retweetCount: tweet.retweetCount,
+          replyCount: tweet.replyCount
+        });
+      }
+
+      // 新しいCBの情報を取得
+      const tweetCount = await this.getTweetCountByCbId(newBookmark.id);
+
+      return {
+        id: newBookmark.id,
+        name: newBookmark.name,
+        description: newBookmark.description || '',
+        groupId: undefined,
+        createdAt: new Date(newBookmark.createdAt),
+        updatedAt: new Date(newBookmark.updatedAt),
+        tweetCount
+      };
+    } catch (error) {
+      console.error('CBコピーエラー:', error);
+      throw new Error('CBのコピーに失敗しました');
+    }
   }
 
   /**
    * CBを更新
    */
   async updateCb(cbId: string, updates: { name?: string; description?: string }): Promise<Cb> {
-    // TODO: 型エラーを修正後に実装
-    throw new Error('CB更新機能は一時的に無効化されています');
-    
-    /*
     try {
       const bookmark = await this.db.getBookmarkById(cbId);
       if (!bookmark) {
         throw new Error('CBが見つかりません');
       }
 
-      const updatedBookmark = await this.db.updateBookmark(cbId, {
-        ...bookmark,
-        ...updates,
-        updatedAt: new Date().toISOString()
+      await this.db.updateBookmark(cbId, {
+        name: updates.name ?? bookmark.name,
+        description: updates.description ?? bookmark.description
       });
+
+      const updatedBookmark = await this.db.getBookmarkById(cbId);
+      if (!updatedBookmark) {
+        throw new Error('更新後のCBが見つかりません');
+      }
 
       const tweetCount = await this.getTweetCountByCbId(cbId);
 
@@ -166,7 +265,6 @@ export class CbDataService {
       console.error('CB更新エラー:', error);
       throw new Error('CBの更新に失敗しました');
     }
-    */
   }
 
   /**
@@ -184,7 +282,7 @@ export class CbDataService {
   }
 
   /**
-   * ツイートをCBに追加
+   * ツイートをCBに追加（既に存在する場合は上書き）
    */
   async addTweetToCb(cbId: string, tweetId: string, tweetData: {
     authorUsername: string;
@@ -200,15 +298,15 @@ export class CbDataService {
     replyToUsername?: string;
   }): Promise<void> {
     try {
-      // 既に存在するかチェック
+      // 既に存在するかチェック（ログ出力用）
       const existingTweets = await this.db.getBookmarkedTweetsByBookmarkId(cbId);
       const alreadyExists = existingTweets.some(tweet => tweet.tweetId === tweetId);
       
       if (alreadyExists) {
-        console.log(`ツイートは既にCBに存在します: ${tweetId}`);
-        return;
+        console.log(`ツイートは既にCBに存在します。最新情報で上書きします: ${tweetId}`);
       }
 
+      // addBookmarkedTweetは既に存在する場合は上書きするように実装されている
       await this.db.addBookmarkedTweet({
         bookmarkId: cbId,
         tweetId,
@@ -226,7 +324,11 @@ export class CbDataService {
         saveType: 'url'
       });
 
-      console.log(`ツイートをCBに追加完了: ${tweetId} -> ${cbId}`);
+      if (alreadyExists) {
+        console.log(`ツイートをCBに更新完了: ${tweetId} -> ${cbId}`);
+      } else {
+        console.log(`ツイートをCBに追加完了: ${tweetId} -> ${cbId}`);
+      }
     } catch (error) {
       console.error('ツイート追加エラー:', error);
       throw new Error('ツイートの追加に失敗しました');
@@ -238,9 +340,20 @@ export class CbDataService {
    */
   async removeTweetFromCb(cbId: string, tweetId: string): Promise<void> {
     try {
-      const tweetIdToDelete = `${cbId}_${tweetId}`;
-      await this.db.deleteBookmarkedTweet(tweetIdToDelete);
-      console.log(`ツイートをCBから削除完了: ${tweetId} <- ${cbId}`);
+      // まず、ツイートIDで該当するツイートを取得
+      const bookmarkedTweets = await this.db.getBookmarkedTweetByTweetId(tweetId);
+      
+      // 指定されたCBに属するツイートを見つける
+      const targetTweet = bookmarkedTweets.find(tweet => tweet.bookmarkId === cbId);
+      
+      if (!targetTweet) {
+        console.warn(`ツイートが見つかりませんでした: ${tweetId} in CB ${cbId}`);
+        throw new Error(`ツイートが見つかりませんでした: ${tweetId}`);
+      }
+      
+      // 見つかったツイートのIDを使って削除
+      await this.db.deleteBookmarkedTweet(targetTweet.id);
+      console.log(`ツイートをCBから削除完了: ${tweetId} <- ${cbId} (ID: ${targetTweet.id})`);
     } catch (error) {
       console.error('ツイート削除エラー:', error);
       throw new Error('ツイートの削除に失敗しました');

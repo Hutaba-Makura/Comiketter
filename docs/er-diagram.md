@@ -21,6 +21,7 @@ erDiagram
         string author_username "投稿者ユーザー名"
         string author_display_name "投稿者表示名"
         string author_id "投稿者ID"
+        string author_profile_image_url "投稿者プロフィール画像URL"
         string content "ツイート内容"
         array media_urls "メディアURL配列"
         array media_types "メディアタイプ配列"
@@ -30,6 +31,9 @@ erDiagram
         boolean is_reply "リプライフラグ"
         string reply_to_tweet_id "リプライ先ツイートID"
         string reply_to_username "リプライ先ユーザー名"
+        number favorite_count "いいね数"
+        number retweet_count "リツイート数"
+        number reply_count "リプライ数"
     }
     
     DOWNLOAD_HISTORY {
@@ -98,6 +102,11 @@ erDiagram
 **インデックス:**
 - `idx_bookmarks_name` (name)
 - `idx_bookmarks_created_at` (created_at)
+- `idx_bookmarks_updated_at` (updated_at)
+
+**注意事項:**
+- `updated_at`は、ブックマークの作成・更新時に自動的に設定されます
+- ツイートの追加・削除時にも、親ブックマークの`updated_at`が自動的に更新されます
 
 ### 2. BOOKMARKED_TWEETS（ブックマーク済みツイート）
 
@@ -109,6 +118,7 @@ erDiagram
 | author_username | string | NOT NULL | 投稿者のユーザー名 |
 | author_display_name | string | NULL | 投稿者の表示名 |
 | author_id | string | NOT NULL | 投稿者のID |
+| author_profile_image_url | string | NULL | 投稿者のプロフィール画像URL |
 | content | string | NULL | ツイートの本文 |
 | media_urls | array | NULL | メディアURLの配列 |
 | media_types | array | NULL | メディアタイプの配列（image/video） |
@@ -118,6 +128,9 @@ erDiagram
 | is_reply | boolean | NOT NULL | リプライかどうか |
 | reply_to_tweet_id | string | NULL | リプライ先のツイートID |
 | reply_to_username | string | NULL | リプライ先のユーザー名 |
+| favorite_count | number | NULL | いいね数（必須項目） |
+| retweet_count | number | NULL | リツイート数（必須項目） |
+| reply_count | number | NULL | リプライ数（必須項目） |
 
 **インデックス:**
 - `idx_bookmarked_tweets_bookmark_id` (bookmark_id)
@@ -251,6 +264,7 @@ ON DELETE SET NULL;
   "author_username": "example_user",
   "author_display_name": "Example User",
   "author_id": "123456789",
+  "author_profile_image_url": "https://pbs.twimg.com/profile_images/1234567890/example_normal.jpg",
   "content": "コミケ1日目の情報です！",
   "media_urls": ["https://example.com/image1.jpg"],
   "media_types": ["image"],
@@ -259,7 +273,10 @@ ON DELETE SET NULL;
   "is_retweet": false,
   "is_reply": false,
   "reply_to_tweet_id": null,
-  "reply_to_username": null
+  "reply_to_username": null,
+  "favorite_count": 1234,
+  "retweet_count": 567,
+  "reply_count": 89
 }
 ```
 

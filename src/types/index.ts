@@ -117,9 +117,11 @@ export interface BookmarkedTweet {
   authorUsername: string;
   authorDisplayName?: string;
   authorId?: string;
+  authorProfileImageUrl?: string;
   content: string;
   mediaUrls?: string[];
   mediaTypes?: string[];
+  mediaPreviewUrls?: string[]; // メディアのサムネイルURL（動画/GIFのプレビュー用）
   tweetDate: string;
   savedAt: string;
   isRetweet: boolean;
@@ -127,6 +129,10 @@ export interface BookmarkedTweet {
   replyToTweetId?: string;
   replyToUsername?: string;
   saveType: 'url' | 'blob' | 'mixed';
+  // 統計情報
+  favoriteCount?: number;
+  retweetCount?: number;
+  replyCount?: number;
 }
 
 // ブックマーク統計情報
