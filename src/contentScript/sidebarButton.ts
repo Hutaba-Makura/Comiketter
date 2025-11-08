@@ -58,6 +58,9 @@ export class SidebarButton {
     try {
       sendLog('サイドバーボタン初期化開始');
       
+      // スタイルを注入
+      this.injectStyles();
+      
       // ページの読み込み状態を確認
       if (document.readyState === 'loading') {
         sendLog('ページ読み込み中、DOMContentLoadedを待機');
@@ -487,6 +490,66 @@ export class SidebarButton {
   }
 
   /**
+   * CSSスタイルを注入
+   */
+  private injectStyles(): void {
+    if (document.getElementById('comiketter-sidebar-button-styles')) {
+      return; // 既に注入済み
+    }
+
+    const style = document.createElement('style');
+    style.id = 'comiketter-sidebar-button-styles';
+    style.textContent = this.getStyles();
+    
+    document.head.appendChild(style);
+  }
+
+  /**
+   * ボタン固有のスタイルを取得
+   */
+  private getStyles(): string {
+    return `
+      .comiketter-sidebar-button {
+        cursor: pointer;
+        transition: opacity 0.2s ease;
+        pointer-events: auto;
+        position: relative;
+        z-index: 1;
+      }
+      
+      /* ホバー時の円形背景エフェクト（aria-labelが定義されている要素自体に適用） */
+      .comiketter-sidebar-button:hover {
+        background: rgba(15, 20, 25, 0.1) !important;
+        border-radius: 9999px !important;
+      }
+      
+      .comiketter-sidebar-button:hover:active {
+        background: rgba(15, 20, 25, 0.2) !important;
+        border-radius: 9999px !important;
+      }
+    `;
+  }
+
+  /**
+   * アイコンの前の要素に背景クラスを追加（TwitterMediaHarvestのrichIconSiblingを参考）
+   * ホバー時に円形の背景が明るくなるエフェクトを追加
+   */
+  private addBackgroundClassToIconSibling(icon: HTMLElement): void {
+    const previousSibling = icon.previousElementSibling as HTMLElement;
+    if (previousSibling) {
+      previousSibling.classList.add('sidebarBG');
+      sendLog('背景クラス sidebarBG を追加しました', previousSibling);
+    } else {
+      // デバッグ: アイコンの親要素の構造を確認
+      sendLog('アイコンの前の要素が見つかりません', {
+        icon,
+        parent: icon.parentElement,
+        parentChildren: icon.parentElement?.children,
+      });
+    }
+  }
+
+  /**
    * ボタンラッパーを作成
    */
   private createButtonWrapper(): HTMLElement {
@@ -566,8 +629,6 @@ export class SidebarButton {
       e.preventDefault();
       this.handleButtonClick();
     }, true);
-
-    // ホバー効果はサンプル要素のスタイルを継承しているため、追加の設定は不要
 
     this.button = buttonWrapper;
 
