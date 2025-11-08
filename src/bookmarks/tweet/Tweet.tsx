@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   Paper, 
   Stack, 
@@ -1185,8 +1186,8 @@ export function Tweet({ id, onDelete }: TweetProps) {
         </Box>
       </Box>
 
-      {/* ライトボックス（背景クリックで閉じる） */}
-      {lightboxSrc && currentImageIndex !== null && (
+      {/* ライトボックス（背景クリックで閉じる） - Portalでbody直下にレンダリング */}
+      {lightboxSrc && currentImageIndex !== null && typeof document !== 'undefined' && createPortal(
         <Box
           onClick={handleCloseLightbox}
           style={{
@@ -1197,7 +1198,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            zIndex: 99999
+            zIndex: 10000
           }}
         >
           {/* クローズボタン（左上） */}
@@ -1220,7 +1221,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              zIndex: 100001,
+              zIndex: 10002,
             }}
             aria-label="閉じる"
           >
@@ -1251,7 +1252,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                zIndex: 100001
+                zIndex: 10002
               }}
               aria-label="前の画像"
             >
@@ -1283,7 +1284,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                zIndex: 100001
+                zIndex: 10002
               }}
               aria-label="次の画像"
             >
@@ -1313,7 +1314,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
                   width: 'auto',
                   maxWidth: '100vw',
                   objectFit: 'contain',
-                  zIndex: 100000
+                  zIndex: 10001
                 }}
                 onClick={(e) => e.stopPropagation()}
               />
@@ -1326,13 +1327,14 @@ export function Tweet({ id, onDelete }: TweetProps) {
                   width: 'auto',
                   maxWidth: '100vw',
                   objectFit: 'contain',
-                  zIndex: 100000
+                  zIndex: 10001
                 }}
                 onClick={(e) => e.stopPropagation()}
               />
             )}
           </Box>
-        </Box>
+        </Box>,
+        document.body as Element
       )}
 
       {/* 削除確認モーダル */}
