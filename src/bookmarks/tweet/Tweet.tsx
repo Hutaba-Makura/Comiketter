@@ -1197,7 +1197,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            zIndex: 10000
+            zIndex: 99999
           }}
         >
           {/* クローズボタン（左上） */}
@@ -1220,7 +1220,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              zIndex: 10002,
+              zIndex: 100001,
             }}
             aria-label="閉じる"
           >
@@ -1251,7 +1251,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                zIndex: 10002
+                zIndex: 100001
               }}
               aria-label="前の画像"
             >
@@ -1283,7 +1283,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                zIndex: 10002
+                zIndex: 100001
               }}
               aria-label="次の画像"
             >
@@ -1313,7 +1313,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
                   width: 'auto',
                   maxWidth: '100vw',
                   objectFit: 'contain',
-                  zIndex: 10001
+                  zIndex: 100000
                 }}
                 onClick={(e) => e.stopPropagation()}
               />
@@ -1326,7 +1326,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
                   width: 'auto',
                   maxWidth: '100vw',
                   objectFit: 'contain',
-                  zIndex: 10001
+                  zIndex: 100000
                 }}
                 onClick={(e) => e.stopPropagation()}
               />
