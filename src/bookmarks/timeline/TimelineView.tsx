@@ -398,16 +398,88 @@ export function TimelineView() {
 
   return (
     <Box style={{ position: 'relative', height: '100vh', display: 'flex', flexDirection: 'column' }}>
-      {/* CB情報ヘッダー */}
+      {/* ツイート一覧（背景レイヤー） */}
       <Box 
-        p="md" 
         style={{ 
-          borderBottom: '1px solid #e1e8ed',
-          backgroundColor: 'rgba(255, 255, 255, 0.85)',
-          backdropFilter: 'blur(10px)',
-          WebkitBackdropFilter: 'blur(10px)'
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          overflowY: 'auto',
+          zIndex: 0
         }}
       >
+        {filteredAndSortedTweetIds.length === 0 ? (
+          <Center h={300}>
+            <Stack align="center" gap="md">
+              {searchQuery ? (
+                <>
+                  <IconSearch size={48} color="var(--mantine-color-gray-4)" />
+                  <Text size="lg" c="dimmed" fw={500}>
+                    検索結果がありません
+                  </Text>
+                  <Text size="sm" c="dimmed" ta="center">
+                    「{searchQuery}」に一致するツイートが見つかりませんでした
+                  </Text>
+                  <Button 
+                    variant="light" 
+                    size="sm"
+                    onClick={() => setSearchQuery('')}
+                  >
+                    検索をクリア
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Text size="lg" c="dimmed" fw={500}>
+                    ツイートがありません
+                  </Text>
+                  <Text size="sm" c="dimmed" ta="center">
+                    このCBにはまだツイートが追加されていません
+                  </Text>
+                </>
+              )}
+            </Stack>
+          </Center>
+        ) : shouldUseVirtualization ? (
+          <Box style={{ height: '100%' }}>
+            <VirtualizedTimeline 
+              tweetIds={filteredAndSortedTweetIds}
+              height={600}
+              itemHeight={200}
+              onDelete={refetch}
+            />
+          </Box>
+        ) : (
+          <Stack gap={0} p="md">
+            {filteredAndSortedTweetIds.map((id, index) => (
+              <Box key={id}>
+                <Tweet id={id} onDelete={refetch} />
+              </Box>
+            ))}
+          </Stack>
+        )}
+      </Box>
+
+      {/* ヘッダーとツールバーのコンテナ（sticky） */}
+      <Box
+        style={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 10,
+          backgroundColor: 'rgba(255, 255, 255, 0.85)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)'
+        }}
+      >
+        {/* CB情報ヘッダー */}
+        <Box 
+          p="md" 
+          style={{ 
+            borderBottom: '1px solid #e1e8ed'
+          }}
+        >
         <Group justify="space-between" align="center">
           <Stack gap={4} style={{ flex: 1, minWidth: 0 }}>
             {editingName ? (
@@ -489,18 +561,15 @@ export function TimelineView() {
             </Tooltip>
           </Group>
         </Group>
-      </Box>
+        </Box>
 
-      {/* ツールバー */}
-      <Box 
-        style={{ 
-          flexShrink: 0, 
-          backgroundColor: 'rgba(255, 255, 255, 0.85)',
-          backdropFilter: 'blur(10px)',
-          WebkitBackdropFilter: 'blur(10px)'
-        }} 
-        p="md"
-      >
+        {/* ツールバー */}
+        <Box 
+          style={{ 
+            flexShrink: 0
+          }} 
+          p="md"
+        >
         <Group gap="lg" align="center" mb="md" wrap="nowrap">
           {/* 検索バー */}
           <TextInput
@@ -552,60 +621,7 @@ export function TimelineView() {
             {filteredAndSortedTweetIds.length}件の結果
           </Text>
         )}
-      </Box>
-
-      {/* ツイート一覧（スクロール可能） */}
-      <Box style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
-        {filteredAndSortedTweetIds.length === 0 ? (
-          <Center h={300}>
-            <Stack align="center" gap="md">
-              {searchQuery ? (
-                <>
-                  <IconSearch size={48} color="var(--mantine-color-gray-4)" />
-                  <Text size="lg" c="dimmed" fw={500}>
-                    検索結果がありません
-                  </Text>
-                  <Text size="sm" c="dimmed" ta="center">
-                    「{searchQuery}」に一致するツイートが見つかりませんでした
-                  </Text>
-                  <Button 
-                    variant="light" 
-                    size="sm"
-                    onClick={() => setSearchQuery('')}
-                  >
-                    検索をクリア
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Text size="lg" c="dimmed" fw={500}>
-                    ツイートがありません
-                  </Text>
-                  <Text size="sm" c="dimmed" ta="center">
-                    このCBにはまだツイートが追加されていません
-                  </Text>
-                </>
-              )}
-            </Stack>
-          </Center>
-        ) : shouldUseVirtualization ? (
-          <Box style={{ height: '100%' }}>
-            <VirtualizedTimeline 
-              tweetIds={filteredAndSortedTweetIds}
-              height={600}
-              itemHeight={200}
-              onDelete={refetch}
-            />
-          </Box>
-        ) : (
-          <Stack gap={0} p="md">
-            {filteredAndSortedTweetIds.map((id, index) => (
-              <Box key={id}>
-                <Tweet id={id} onDelete={refetch} />
-              </Box>
-            ))}
-          </Stack>
-        )}
+        </Box>
       </Box>
     </Box>
   );
