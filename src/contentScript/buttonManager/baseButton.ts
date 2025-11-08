@@ -165,24 +165,20 @@ export abstract class BaseButton {
   }
 
   /**
-   * ボタン要素を作成
+   * ボタン要素を作成（TwitterMediaHarvestのbleachButtonを参考）
    */
   protected createButtonElement(sampleButton: HTMLElement): HTMLElement {
-    // サンプルボタンをクローンして不要な要素を削除
+    // サンプルボタンをクローン（TwitterMediaHarvestのbleachButtonと同様）
     const button = sampleButton.cloneNode(true) as HTMLElement;
     
-    // 既存のSVGアイコンをすべて削除
-    const existingSvgs = button.querySelectorAll('svg');
-    if (existingSvgs.length > 0) {
-      console.log(`Comiketter: ${existingSvgs.length}個の既存SVGアイコンを削除`);
-      existingSvgs.forEach(svg => svg.remove());
-    }
-    
-    // テキスト要素を削除
+    // テキスト要素を削除（TwitterMediaHarvestのremoveButtonStatsTextと同様）
     const textContainer = button.querySelector('[data-testid="app-text-transition-container"] > span > span');
     if (textContainer) {
       textContainer.remove();
     }
+    
+    // アイコンは削除せず、後で置き換える（TwitterMediaHarvestのswapIconと同様）
+    // これにより、アイコンの位置とpreviousElementSiblingが保持される
     
     return button;
   }
@@ -220,6 +216,25 @@ export abstract class BaseButton {
     console.log(`Comiketter: アイコン作成完了 - ${iconName}`);
     
     return icon;
+  }
+
+  /**
+   * アイコンの前の要素に背景クラスを追加（TwitterMediaHarvestのrichIconSiblingを参考）
+   * ホバー時に円形の背景が明るくなるエフェクトを追加
+   */
+  protected addBackgroundClassToIconSibling(icon: HTMLElement, mode: 'status' | 'stream' | 'photo' = 'stream'): void {
+    const previousSibling = icon.previousElementSibling as HTMLElement;
+    if (previousSibling) {
+      previousSibling.classList.add(`${mode}BG`);
+      console.log(`Comiketter: 背景クラス ${mode}BG を追加しました`, previousSibling);
+    } else {
+      // デバッグ: アイコンの親要素の構造を確認
+      console.warn('Comiketter: アイコンの前の要素が見つかりません', {
+        icon,
+        parent: icon.parentElement,
+        parentChildren: icon.parentElement?.children,
+      });
+    }
   }
 
   /**

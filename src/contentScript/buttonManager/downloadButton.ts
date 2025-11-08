@@ -79,6 +79,25 @@ export class DownloadButton extends BaseButton {
         color: rgb(29, 155, 240) !important;
       }
       
+      /* ホバー時の円形背景エフェクト（TwitterMediaHarvestを参考） */
+      .comiketter-download-button:hover .photoBG {
+        background: rgba(255, 255, 255, 0.1);
+      }
+      
+      .comiketter-download-button:hover .statusBG,
+      .comiketter-download-button:hover .streamBG {
+        background: rgba(241, 185, 26, 0.1);
+      }
+      
+      .comiketter-download-button:hover:active .photoBG {
+        background: rgba(255, 255, 255, 0.2);
+      }
+      
+      .comiketter-download-button:hover:active .statusBG,
+      .comiketter-download-button:hover:active .streamBG {
+        background: rgba(241, 185, 26, 0.2);
+      }
+      
       .comiketter-download-button.downloading {
         pointer-events: none;
       }
@@ -118,15 +137,28 @@ export class DownloadButton extends BaseButton {
     const buttonWrapper = this.createButtonWrapper();
     const buttonElement = this.createButtonElement(sampleButton);
     
-    // アイコンを設定
-    this.currentIconElement = await this.createIconElement('download', sampleButton);
-    buttonElement.appendChild(this.currentIconElement);
-    
-    // ボタン要素をラッパーに追加
+    // ボタン要素をラッパーに追加（先に追加してからアイコンを置き換える）
     const innerWrapper = buttonWrapper.querySelector('.comiketter-download-button > div');
     if (innerWrapper) {
       innerWrapper.appendChild(buttonElement);
     }
+    
+    // 既存のアイコンを取得して置き換える（TwitterMediaHarvestのswapIconと同様）
+    const existingIcon = buttonElement.querySelector('svg') as HTMLElement;
+    if (existingIcon) {
+      // アイコンを作成
+      this.currentIconElement = await this.createIconElement('download', sampleButton);
+      // 既存のアイコンを置き換え（これにより、アイコンの位置とpreviousElementSiblingが保持される）
+      existingIcon.replaceWith(this.currentIconElement);
+    } else {
+      // 既存のアイコンがない場合は追加
+      this.currentIconElement = await this.createIconElement('download', sampleButton);
+      buttonElement.appendChild(this.currentIconElement);
+    }
+    
+    // アイコンの前の要素に背景クラスを追加（ホバー時の円形背景エフェクト）
+    // TwitterMediaHarvestと同様に、ボタンがDOMに追加された後に呼ぶ
+    this.addBackgroundClassToIconSibling(this.currentIconElement, 'stream');
     
     // クリックイベントを設定
     this.setupClickHandler(buttonWrapper, tweetInfo);
