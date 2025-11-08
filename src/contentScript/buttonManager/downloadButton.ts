@@ -19,6 +19,42 @@ export class DownloadButton extends BaseButton {
       position: 'right',
     };
     super(config);
+    
+    // テーマ変更を監視
+    this.observeThemeChanges();
+  }
+  
+  /**
+   * テーマ変更を監視
+   */
+  private observeThemeChanges(): void {
+    // MutationObserverでhtml要素の属性変更を監視
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+          // テーマが変更された可能性があるため、UIを更新
+          this.updateThemeIfNeeded();
+        }
+      });
+    });
+    
+    // html要素の属性変更を監視開始
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['style']
+    });
+  }
+  
+  /**
+   * 必要に応じてテーマを更新
+   */
+  private updateThemeIfNeeded(): void {
+    // アイコンの色も更新
+    if (this.currentIconElement) {
+      const theme = this.detectTheme();
+      const iconColor = this.getButtonColor(theme);
+      this.currentIconElement.style.color = iconColor;
+    }
   }
 
   /**
@@ -31,14 +67,9 @@ export class DownloadButton extends BaseButton {
         100% { transform: rotate(360deg); }
       }
       
-      .comiketter-download-button.downloading svg {
-        animation: comiketter-spin 1s linear infinite;
-      }
-      
       .comiketter-download-button {
         cursor: pointer;
         transition: opacity 0.2s ease;
-        /* 既存のボタンとの干渉を防ぐ */
         pointer-events: auto;
         position: relative;
         z-index: 1;
@@ -52,6 +83,10 @@ export class DownloadButton extends BaseButton {
         pointer-events: none;
       }
       
+      .comiketter-download-button.downloading svg {
+        animation: comiketter-spin 1s linear infinite;
+      }
+      
       .comiketter-download-button.success svg {
         color: #00ba7c !important;
       }
@@ -63,19 +98,6 @@ export class DownloadButton extends BaseButton {
       .comiketter-download-button.downloaded svg {
         color: #00ba7c !important;
         opacity: 0.7;
-      }
-
-      /* 既存のボタンとの干渉を防ぐ */
-      .comiketter-download-button * {
-        pointer-events: auto;
-      }
-
-      /* 他のボタンへの影響を防ぐ */
-      [data-testid="like"],
-      [data-testid="reply"],
-      [data-testid="retweet"],
-      [data-testid="share"] {
-        pointer-events: auto !important;
       }
     `;
   }
@@ -97,8 +119,8 @@ export class DownloadButton extends BaseButton {
     const buttonElement = this.createButtonElement(sampleButton);
     
     // アイコンを設定
-    const iconElement = await this.createIconElement('download', sampleButton);
-    buttonElement.appendChild(iconElement);
+    this.currentIconElement = await this.createIconElement('download', sampleButton);
+    buttonElement.appendChild(this.currentIconElement);
     
     // ボタン要素をラッパーに追加
     const innerWrapper = buttonWrapper.querySelector('.comiketter-download-button > div');
@@ -108,9 +130,6 @@ export class DownloadButton extends BaseButton {
     
     // クリックイベントを設定
     this.setupClickHandler(buttonWrapper, tweetInfo);
-    
-    // 初期状態を設定
-    this.setButtonStatus(buttonWrapper, ButtonStatus.Idle);
     
     console.log('Comiketter: DLボタン作成完了');
     
