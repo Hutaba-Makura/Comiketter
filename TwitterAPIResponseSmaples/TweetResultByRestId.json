@@ -1,0 +1,338 @@
+{
+    "data": {
+        "tweetResult": {
+            "result": {
+                "__typename": "Tweet",
+                "rest_id": "1987002586499850533",
+                "post_image_description": "Character with orange feather-like head accessory on white hair tied with black band stands frontally hands positioned over crotch covering it partially body nude with visible breasts nipples and skin tones in pixel style motion blur effects on hips and arms Japanese text overlays include Lv18 stats like attack defense and special categories",
+                "has_birdwatch_notes": false,
+                "core": {
+                    "user_results": {
+                        "result": {
+                            "__typename": "User",
+                            "id": "VXNlcjoxMTYyMTk2MTMzODc3MTc4MzY4",
+                            "rest_id": "1162196133877178368",
+                            "affiliates_highlighted_label": {},
+                            "avatar": {
+                                "image_url": "https://pbs.twimg.com/profile_images/1858141149644673024/WZcorvv7_normal.jpg"
+                            },
+                            "core": {
+                                "created_at": "Fri Aug 16 02:55:32 +0000 2019",
+                                "name": "絵んび",
+                                "screen_name": "enbitonbi"
+                            },
+                            "dm_permissions": {
+                                "can_dm": false
+                            },
+                            "follow_request_sent": false,
+                            "has_graduated_access": true,
+                            "is_blue_verified": false,
+                            "legacy": {
+                                "default_profile": true,
+                                "default_profile_image": false,
+                                "description": "エッッッッッッッッッッどい絵しか挙げないアカウントになりました。 未成年及び苦手な方はフォロー外すなりしてね！",
+                                "entities": {
+                                    "description": {
+                                        "urls": []
+                                    },
+                                    "url": {
+                                        "urls": [
+                                            {
+                                                "display_url": "odaibako.net/u/tonbikunbikun",
+                                                "expanded_url": "https://odaibako.net/u/tonbikunbikun",
+                                                "url": "https://t.co/sHUdeYAZmz",
+                                                "indices": [
+                                                    0,
+                                                    23
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                },
+                                "fast_followers_count": 0,
+                                "favourites_count": 1728,
+                                "followers_count": 9076,
+                                "friends_count": 62,
+                                "has_custom_timelines": false,
+                                "is_translator": false,
+                                "listed_count": 53,
+                                "media_count": 622,
+                                "normal_followers_count": 9076,
+                                "pinned_tweet_ids_str": [
+                                    "1839483310495715514"
+                                ],
+                                "possibly_sensitive": true,
+                                "profile_interstitial_type": "",
+                                "statuses_count": 2088,
+                                "translator_type": "none",
+                                "url": "https://t.co/sHUdeYAZmz",
+                                "want_retweets": true,
+                                "withheld_in_countries": []
+                            },
+                            "location": {
+                                "location": ""
+                            },
+                            "media_permissions": {
+                                "can_media_tag": false
+                            },
+                            "parody_commentary_fan_label": "None",
+                            "profile_image_shape": "Circle",
+                            "profile_bio": {
+                                "description": "エッッッッッッッッッッどい絵しか挙げないアカウントになりました。 未成年及び苦手な方はフォロー外すなりしてね！"
+                            },
+                            "privacy": {
+                                "protected": false
+                            },
+                            "relationship_perspectives": {
+                                "following": true
+                            },
+                            "tipjar_settings": {},
+                            "verification": {
+                                "verified": false
+                            },
+                            "profile_description_language": "ja"
+                        }
+                    }
+                },
+                "unmention_data": {},
+                "edit_control": {
+                    "edit_tweet_ids": [
+                        "1987002586499850533"
+                    ],
+                    "editable_until_msecs": "1762576908000",
+                    "is_edit_eligible": true,
+                    "edits_remaining": "5"
+                },
+                "is_translatable": false,
+                "views": {
+                    "count": "2305",
+                    "state": "EnabledWithCount"
+                },
+                "source": "<a href=\"http://twitter.com/#!/download/ipad\" rel=\"nofollow\">Twitter for iPad</a>",
+                "grok_analysis_button": true,
+                "legacy": {
+                    "bookmark_count": 29,
+                    "bookmarked": false,
+                    "created_at": "Sat Nov 08 03:41:48 +0000 2025",
+                    "conversation_id_str": "1987002586499850533",
+                    "display_text_range": [
+                        0,
+                        13
+                    ],
+                    "entities": {
+                        "hashtags": [],
+                        "media": [
+                            {
+                                "display_url": "pic.x.com/vNS8VujU6J",
+                                "expanded_url": "https://x.com/enbitonbi/status/1987002586499850533/photo/1",
+                                "id_str": "1987002582586564610",
+                                "indices": [
+                                    14,
+                                    37
+                                ],
+                                "media_key": "3_1987002582586564610",
+                                "media_url_https": "https://pbs.twimg.com/media/G5NAUj7bIAIiXxQ.jpg",
+                                "type": "photo",
+                                "url": "https://t.co/vNS8VujU6J",
+                                "ext_media_availability": {
+                                    "status": "Available"
+                                },
+                                "features": {
+                                    "large": {
+                                        "faces": []
+                                    },
+                                    "medium": {
+                                        "faces": []
+                                    },
+                                    "small": {
+                                        "faces": []
+                                    },
+                                    "orig": {
+                                        "faces": []
+                                    }
+                                },
+                                "sizes": {
+                                    "large": {
+                                        "h": 370,
+                                        "w": 320,
+                                        "resize": "fit"
+                                    },
+                                    "medium": {
+                                        "h": 370,
+                                        "w": 320,
+                                        "resize": "fit"
+                                    },
+                                    "small": {
+                                        "h": 370,
+                                        "w": 320,
+                                        "resize": "fit"
+                                    },
+                                    "thumb": {
+                                        "h": 150,
+                                        "w": 150,
+                                        "resize": "crop"
+                                    }
+                                },
+                                "original_info": {
+                                    "height": 370,
+                                    "width": 320,
+                                    "focus_rects": [
+                                        {
+                                            "x": 0,
+                                            "y": 0,
+                                            "w": 320,
+                                            "h": 179
+                                        },
+                                        {
+                                            "x": 0,
+                                            "y": 0,
+                                            "w": 320,
+                                            "h": 320
+                                        },
+                                        {
+                                            "x": 0,
+                                            "y": 0,
+                                            "w": 320,
+                                            "h": 365
+                                        },
+                                        {
+                                            "x": 0,
+                                            "y": 0,
+                                            "w": 185,
+                                            "h": 370
+                                        },
+                                        {
+                                            "x": 0,
+                                            "y": 0,
+                                            "w": 320,
+                                            "h": 370
+                                        }
+                                    ]
+                                },
+                                "media_results": {
+                                    "result": {
+                                        "media_key": "3_1987002582586564610"
+                                    }
+                                }
+                            }
+                        ],
+                        "symbols": [],
+                        "timestamps": [],
+                        "urls": [],
+                        "user_mentions": []
+                    },
+                    "extended_entities": {
+                        "media": [
+                            {
+                                "display_url": "pic.x.com/vNS8VujU6J",
+                                "expanded_url": "https://x.com/enbitonbi/status/1987002586499850533/photo/1",
+                                "id_str": "1987002582586564610",
+                                "indices": [
+                                    14,
+                                    37
+                                ],
+                                "media_key": "3_1987002582586564610",
+                                "media_url_https": "https://pbs.twimg.com/media/G5NAUj7bIAIiXxQ.jpg",
+                                "type": "photo",
+                                "url": "https://t.co/vNS8VujU6J",
+                                "ext_media_availability": {
+                                    "status": "Available"
+                                },
+                                "features": {
+                                    "large": {
+                                        "faces": []
+                                    },
+                                    "medium": {
+                                        "faces": []
+                                    },
+                                    "small": {
+                                        "faces": []
+                                    },
+                                    "orig": {
+                                        "faces": []
+                                    }
+                                },
+                                "sizes": {
+                                    "large": {
+                                        "h": 370,
+                                        "w": 320,
+                                        "resize": "fit"
+                                    },
+                                    "medium": {
+                                        "h": 370,
+                                        "w": 320,
+                                        "resize": "fit"
+                                    },
+                                    "small": {
+                                        "h": 370,
+                                        "w": 320,
+                                        "resize": "fit"
+                                    },
+                                    "thumb": {
+                                        "h": 150,
+                                        "w": 150,
+                                        "resize": "crop"
+                                    }
+                                },
+                                "original_info": {
+                                    "height": 370,
+                                    "width": 320,
+                                    "focus_rects": [
+                                        {
+                                            "x": 0,
+                                            "y": 0,
+                                            "w": 320,
+                                            "h": 179
+                                        },
+                                        {
+                                            "x": 0,
+                                            "y": 0,
+                                            "w": 320,
+                                            "h": 320
+                                        },
+                                        {
+                                            "x": 0,
+                                            "y": 0,
+                                            "w": 320,
+                                            "h": 365
+                                        },
+                                        {
+                                            "x": 0,
+                                            "y": 0,
+                                            "w": 185,
+                                            "h": 370
+                                        },
+                                        {
+                                            "x": 0,
+                                            "y": 0,
+                                            "w": 320,
+                                            "h": 370
+                                        }
+                                    ]
+                                },
+                                "media_results": {
+                                    "result": {
+                                        "media_key": "3_1987002582586564610"
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    "favorite_count": 124,
+                    "favorited": true,
+                    "full_text": "ドット絵で遊ぶなどしている https://t.co/vNS8VujU6J",
+                    "is_quote_status": false,
+                    "lang": "ja",
+                    "possibly_sensitive": true,
+                    "possibly_sensitive_editable": true,
+                    "quote_count": 0,
+                    "reply_count": 3,
+                    "retweet_count": 16,
+                    "retweeted": true,
+                    "user_id_str": "1162196133877178368",
+                    "id_str": "1987002586499850533"
+                }
+            }
+        }
+    }
+}

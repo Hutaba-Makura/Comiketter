@@ -1,0 +1,374 @@
+{
+    "data": {
+        "tweetResult": {
+            "result": {
+                "__typename": "Tweet",
+                "rest_id": "1987456943074803933",
+                "post_image_description": "Blonde female character with large breasts and exposed genitals in bondage gear suspended by chains kneels over a bucket while a muscular male figure in uniform grips and milks her with gloved hands and a phallic device producing white fluids. Background includes hearts and abstract elements. Watermarks from Fanbox and Patreon visible at bottom.",
+                "has_birdwatch_notes": false,
+                "core": {
+                    "user_results": {
+                        "result": {
+                            "__typename": "User",
+                            "id": "VXNlcjoxODkyNDE4OTM2NTQyNzczMjQ4",
+                            "rest_id": "1892418936542773248",
+                            "affiliates_highlighted_label": {},
+                            "avatar": {
+                                "image_url": "https://pbs.twimg.com/profile_images/1933679319118905344/D8xs-zj7_normal.jpg"
+                            },
+                            "core": {
+                                "created_at": "Thu Feb 20 03:40:24 +0000 2025",
+                                "name": "OnaHoly\uD83D\uDD1EFANBOX",
+                                "screen_name": "OnaHoly69"
+                            },
+                            "dm_permissions": {
+                                "can_dm": false
+                            },
+                            "follow_request_sent": false,
+                            "has_graduated_access": true,
+                            "is_blue_verified": true,
+                            "legacy": {
+                                "default_profile": true,
+                                "default_profile_image": false,
+                                "description": "Pixiv           :  https://t.co/KqzetXhmtf\nFan Box     :  https://t.co/O0cxVNKUY3\nPatreon     :  https://t.co/kfbsdirdkE",
+                                "entities": {
+                                    "description": {
+                                        "urls": [
+                                            {
+                                                "display_url": "Pixiv.net/users/110804653",
+                                                "expanded_url": "http://Pixiv.net/users/110804653",
+                                                "url": "https://t.co/KqzetXhmtf",
+                                                "indices": [
+                                                    19,
+                                                    42
+                                                ]
+                                            },
+                                            {
+                                                "display_url": "Onaholy.fanbox.cc",
+                                                "expanded_url": "http://Onaholy.fanbox.cc",
+                                                "url": "https://t.co/O0cxVNKUY3",
+                                                "indices": [
+                                                    58,
+                                                    81
+                                                ]
+                                            },
+                                            {
+                                                "display_url": "Patreon.com/OnaHoly",
+                                                "expanded_url": "http://Patreon.com/OnaHoly",
+                                                "url": "https://t.co/kfbsdirdkE",
+                                                "indices": [
+                                                    97,
+                                                    120
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    "url": {
+                                        "urls": [
+                                            {
+                                                "display_url": "Pixiv.net/users/110804653",
+                                                "expanded_url": "http://Pixiv.net/users/110804653",
+                                                "url": "https://t.co/KqzetXhmtf",
+                                                "indices": [
+                                                    0,
+                                                    23
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                },
+                                "fast_followers_count": 0,
+                                "favourites_count": 3683,
+                                "followers_count": 42511,
+                                "friends_count": 1403,
+                                "has_custom_timelines": false,
+                                "is_translator": false,
+                                "listed_count": 147,
+                                "media_count": 146,
+                                "normal_followers_count": 42511,
+                                "pinned_tweet_ids_str": [
+                                    "1971160816755044450"
+                                ],
+                                "possibly_sensitive": true,
+                                "profile_interstitial_type": "sensitive_media",
+                                "statuses_count": 3375,
+                                "translator_type": "none",
+                                "url": "https://t.co/KqzetXhmtf",
+                                "want_retweets": false,
+                                "withheld_in_countries": []
+                            },
+                            "location": {
+                                "location": ""
+                            },
+                            "media_permissions": {
+                                "can_media_tag": true
+                            },
+                            "parody_commentary_fan_label": "None",
+                            "profile_image_shape": "Circle",
+                            "profile_bio": {
+                                "description": "Pixiv           :  https://t.co/KqzetXhmtf\nFan Box     :  https://t.co/O0cxVNKUY3\nPatreon     :  https://t.co/kfbsdirdkE"
+                            },
+                            "privacy": {
+                                "protected": false
+                            },
+                            "relationship_perspectives": {
+                                "following": false
+                            },
+                            "tipjar_settings": {
+                                "is_enabled": true,
+                                "patreon_handle": "onaholy"
+                            },
+                            "verification": {
+                                "verified": false
+                            }
+                        }
+                    }
+                },
+                "unmention_data": {},
+                "edit_control": {
+                    "edit_tweet_ids": [
+                        "1987456943074803933"
+                    ],
+                    "editable_until_msecs": "1762685235000",
+                    "is_edit_eligible": true,
+                    "edits_remaining": "5"
+                },
+                "is_translatable": true,
+                "views": {
+                    "count": "15360",
+                    "state": "EnabledWithCount"
+                },
+                "source": "<a href=\"https://mobile.twitter.com\" rel=\"nofollow\">Twitter Web App</a>",
+                "grok_analysis_button": true,
+                "legacy": {
+                    "bookmark_count": 414,
+                    "bookmarked": false,
+                    "created_at": "Sun Nov 09 09:47:15 +0000 2025",
+                    "conversation_id_str": "1987456943074803933",
+                    "display_text_range": [
+                        0,
+                        86
+                    ],
+                    "entities": {
+                        "hashtags": [],
+                        "media": [
+                            {
+                                "display_url": "pic.x.com/7w8Cykazd1",
+                                "expanded_url": "https://x.com/OnaHoly69/status/1987456943074803933/photo/1",
+                                "id_str": "1987456910451412992",
+                                "indices": [
+                                    87,
+                                    110
+                                ],
+                                "media_key": "3_1987456910451412992",
+                                "media_url_https": "https://pbs.twimg.com/media/G5Tdh7HaEAA5rGG.jpg",
+                                "type": "photo",
+                                "url": "https://t.co/7w8Cykazd1",
+                                "ext_media_availability": {
+                                    "status": "Available"
+                                },
+                                "features": {
+                                    "large": {
+                                        "faces": []
+                                    },
+                                    "medium": {
+                                        "faces": []
+                                    },
+                                    "small": {
+                                        "faces": []
+                                    },
+                                    "orig": {
+                                        "faces": []
+                                    }
+                                },
+                                "sizes": {
+                                    "large": {
+                                        "h": 2048,
+                                        "w": 2041,
+                                        "resize": "fit"
+                                    },
+                                    "medium": {
+                                        "h": 1200,
+                                        "w": 1196,
+                                        "resize": "fit"
+                                    },
+                                    "small": {
+                                        "h": 680,
+                                        "w": 678,
+                                        "resize": "fit"
+                                    },
+                                    "thumb": {
+                                        "h": 150,
+                                        "w": 150,
+                                        "resize": "crop"
+                                    }
+                                },
+                                "original_info": {
+                                    "height": 4096,
+                                    "width": 4081,
+                                    "focus_rects": [
+                                        {
+                                            "x": 0,
+                                            "y": 0,
+                                            "w": 4081,
+                                            "h": 2285
+                                        },
+                                        {
+                                            "x": 0,
+                                            "y": 0,
+                                            "w": 4081,
+                                            "h": 4081
+                                        },
+                                        {
+                                            "x": 0,
+                                            "y": 0,
+                                            "w": 3593,
+                                            "h": 4096
+                                        },
+                                        {
+                                            "x": 306,
+                                            "y": 0,
+                                            "w": 2048,
+                                            "h": 4096
+                                        },
+                                        {
+                                            "x": 0,
+                                            "y": 0,
+                                            "w": 4081,
+                                            "h": 4096
+                                        }
+                                    ]
+                                },
+                                "allow_download_status": {
+                                    "allow_download": true
+                                },
+                                "media_results": {
+                                    "result": {
+                                        "media_key": "3_1987456910451412992"
+                                    }
+                                }
+                            }
+                        ],
+                        "symbols": [],
+                        "timestamps": [],
+                        "urls": [],
+                        "user_mentions": []
+                    },
+                    "extended_entities": {
+                        "media": [
+                            {
+                                "display_url": "pic.x.com/7w8Cykazd1",
+                                "expanded_url": "https://x.com/OnaHoly69/status/1987456943074803933/photo/1",
+                                "id_str": "1987456910451412992",
+                                "indices": [
+                                    87,
+                                    110
+                                ],
+                                "media_key": "3_1987456910451412992",
+                                "media_url_https": "https://pbs.twimg.com/media/G5Tdh7HaEAA5rGG.jpg",
+                                "type": "photo",
+                                "url": "https://t.co/7w8Cykazd1",
+                                "ext_media_availability": {
+                                    "status": "Available"
+                                },
+                                "features": {
+                                    "large": {
+                                        "faces": []
+                                    },
+                                    "medium": {
+                                        "faces": []
+                                    },
+                                    "small": {
+                                        "faces": []
+                                    },
+                                    "orig": {
+                                        "faces": []
+                                    }
+                                },
+                                "sizes": {
+                                    "large": {
+                                        "h": 2048,
+                                        "w": 2041,
+                                        "resize": "fit"
+                                    },
+                                    "medium": {
+                                        "h": 1200,
+                                        "w": 1196,
+                                        "resize": "fit"
+                                    },
+                                    "small": {
+                                        "h": 680,
+                                        "w": 678,
+                                        "resize": "fit"
+                                    },
+                                    "thumb": {
+                                        "h": 150,
+                                        "w": 150,
+                                        "resize": "crop"
+                                    }
+                                },
+                                "original_info": {
+                                    "height": 4096,
+                                    "width": 4081,
+                                    "focus_rects": [
+                                        {
+                                            "x": 0,
+                                            "y": 0,
+                                            "w": 4081,
+                                            "h": 2285
+                                        },
+                                        {
+                                            "x": 0,
+                                            "y": 0,
+                                            "w": 4081,
+                                            "h": 4081
+                                        },
+                                        {
+                                            "x": 0,
+                                            "y": 0,
+                                            "w": 3593,
+                                            "h": 4096
+                                        },
+                                        {
+                                            "x": 306,
+                                            "y": 0,
+                                            "w": 2048,
+                                            "h": 4096
+                                        },
+                                        {
+                                            "x": 0,
+                                            "y": 0,
+                                            "w": 4081,
+                                            "h": 4096
+                                        }
+                                    ]
+                                },
+                                "allow_download_status": {
+                                    "allow_download": true
+                                },
+                                "media_results": {
+                                    "result": {
+                                        "media_key": "3_1987456910451412992"
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    "favorite_count": 1688,
+                    "favorited": true,
+                    "full_text": "Cynthia BDSM Cartoon 2   \n\n WIP    \n\nFor the fullversion please check my profile link! https://t.co/7w8Cykazd1",
+                    "is_quote_status": false,
+                    "lang": "en",
+                    "possibly_sensitive": true,
+                    "possibly_sensitive_editable": false,
+                    "quote_count": 0,
+                    "reply_count": 1,
+                    "retweet_count": 153,
+                    "retweeted": true,
+                    "user_id_str": "1892418936542773248",
+                    "id_str": "1987456943074803933"
+                }
+            }
+        }
+    }
+}
