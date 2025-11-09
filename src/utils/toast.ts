@@ -29,7 +29,7 @@ export function showToast(message: string, options: ToastOptions = {}): void {
     type = 'info',
     duration = 4000,
     withCloseButton = true,
-    position = 'top-right',
+    position = 'bottom-center',
   } = options;
 
   // トーストコンテナを取得または作成
