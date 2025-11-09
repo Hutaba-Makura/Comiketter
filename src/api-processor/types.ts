@@ -80,6 +80,7 @@ export type ApiType =
   | 'HomeTimeline'
   | 'HomeLatestTimeline'
   | 'TweetDetail'
+  | 'TweetResultByRestId'
   | 'ListLatestTweetsTimeline'
   | 'SearchTimeline'
   | 'CommunityTweetsTimeline'

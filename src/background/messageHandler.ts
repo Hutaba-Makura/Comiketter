@@ -707,6 +707,7 @@ export class MessageHandler {
       // GraphQLエンドポイントの場合は操作名を抽出
       if (path.includes('HomeLatestTimeline')) return 'HomeLatestTimeline';
       if (path.includes('HomeTimeline')) return 'HomeTimeline';
+      if (path.includes('TweetResultByRestId')) return 'TweetResultByRestId';
       if (path.includes('TweetDetail')) return 'TweetDetail';
       if (path.includes('ListLatestTweetsTimeline')) return 'ListLatestTweetsTimeline';
       if (path.includes('SearchTimeline')) return 'SearchTimeline';

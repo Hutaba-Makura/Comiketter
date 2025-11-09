@@ -46,7 +46,7 @@ function cleanupOldFetchRequests(): void {
 
 const Pattern = Object.freeze({
   tweetRelated:
-    /^(?:\/i\/api)?\/graphql\/(?<queryId>.+)?\/(?<queryName>TweetDetail|HomeTimeline|HomeLatestTimeline|ListLatestTweetsTimeline|SearchTimeline|CommunityTweetsTimeline|CommunityTweetSearchModuleQuery|Bookmarks|BookmarkSearchTimeline|UserTweets|UserTweetsAndReplies|Likes|UserHighlightsTweets|CreateBookmarks|DeleteBookmark|FavoriteTweet|UnfavoriteTweet|CreateRetweet|DeleteRetweet|CreateTweet|UserMedia|NotificationsTimeline|useUpsellTrackingMutation)$/,
+    /^(?:\/i\/api)?\/graphql\/(?<queryId>.+)?\/(?<queryName>TweetDetail|TweetResultByRestId|HomeTimeline|HomeLatestTimeline|ListLatestTweetsTimeline|SearchTimeline|CommunityTweetsTimeline|CommunityTweetSearchModuleQuery|Bookmarks|BookmarkSearchTimeline|UserTweets|UserTweetsAndReplies|Likes|UserHighlightsTweets|CreateBookmarks|DeleteBookmark|FavoriteTweet|UnfavoriteTweet|CreateRetweet|DeleteRetweet|CreateTweet|UserMedia|NotificationsTimeline|useUpsellTrackingMutation)$/,
 });
 
 // API種類の定義
@@ -54,6 +54,7 @@ const ApiTypes = {
   HomeTimeline: 'HomeTimeline',
   HomeLatestTimeline: 'HomeLatestTimeline',
   TweetDetail: 'TweetDetail',
+  TweetResultByRestId: 'TweetResultByRestId',
   ListLatestTweetsTimeline: 'ListLatestTweetsTimeline',
   SearchTimeline: 'SearchTimeline',
   CommunityTweetsTimeline: 'CommunityTweetsTimeline',
@@ -81,6 +82,7 @@ const ApiTypeLabels: Record<string, string> = {
   [ApiTypes.HomeTimeline]: 'ホームタイムライン',
   [ApiTypes.HomeLatestTimeline]: 'ホーム最新タイムライン',
   [ApiTypes.TweetDetail]: 'ツイート詳細',
+  [ApiTypes.TweetResultByRestId]: 'ツイート結果（ID指定）',
   [ApiTypes.ListLatestTweetsTimeline]: 'リスト最新ツイートタイムライン',
   [ApiTypes.SearchTimeline]: '検索タイムライン',
   [ApiTypes.CommunityTweetsTimeline]: 'コミュニティタイムライン',

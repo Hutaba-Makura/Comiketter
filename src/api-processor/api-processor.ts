@@ -84,6 +84,25 @@ export class ApiProcessor {
           console.log(`Comiketter: 処理完了 - 新規: ${cacheResult.new_tweets.length}件, キャッシュ済み: ${cacheResult.cached_tweets.length}件`);
           break;
 
+        case 'TweetResultByRestId':
+          // TweetResultByRestId専用の処理
+          const restIdTweets = this.processTweetResultByRestId(message.data);
+          
+          // キャッシュ機能を使用して処理（既存のツイートを更新）
+          const restIdCacheResult = await ApiCacheManager.processWithCache(
+            apiType,
+            message.path,
+            restIdTweets,
+            message.timestamp
+          );
+
+          // 結果を統合
+          result.tweets = [...restIdCacheResult.cached_tweets, ...restIdCacheResult.new_tweets];
+          result.errors = restIdCacheResult.errors;
+
+          console.log(`Comiketter: TweetResultByRestId処理完了 - 新規: ${restIdCacheResult.new_tweets.length}件, キャッシュ済み: ${restIdCacheResult.cached_tweets.length}件`);
+          break;
+
         default:
           console.log(`Comiketter: 未対応のAPIタイプ: ${apiType}`);
           break;
@@ -137,6 +156,11 @@ export class ApiProcessor {
           const processedTweets = this.processTweetRelatedApi(tweetData);
           result.tweets = processedTweets;
           break;
+        case 'TweetResultByRestId':
+          console.log(`Comiketter: TweetResultByRestId処理開始 - ${apiType}`);
+          const restIdTweets = this.processTweetResultByRestId(message.data);
+          result.tweets = restIdTweets;
+          break;
         default:
           console.log(`Comiketter: 未対応のAPIタイプ: ${apiType}`);
           break;
@@ -168,6 +192,7 @@ export class ApiProcessor {
       if (path.includes('SearchTimeline')) return 'SearchTimeline';
       if (path.includes('HomeLatestTimeline')) return 'HomeLatestTimeline';
       if (path.includes('HomeTimeline')) return 'HomeTimeline';
+      if (path.includes('TweetResultByRestId')) return 'TweetResultByRestId';
       if (path.includes('TweetDetail')) return 'TweetDetail';
       if (path.includes('Likes')) return 'Likes';
       if (path.includes('UserHighlightsTweets')) return 'UserHighlightsTweets';
@@ -440,6 +465,42 @@ export class ApiProcessor {
    */
   static async findTweetsByUsername(username: string): Promise<CachedTweet[]> {
     return await ApiCacheManager.findTweetsByUsername(username);
+  }
+
+  /**
+   * TweetResultByRestId専用の処理
+   * data.tweetResult.resultから直接ツイートを抽出
+   * @param data APIレスポンスデータ
+   * @returns 抽出されたツイートの配列
+   */
+  private processTweetResultByRestId(data: unknown): ProcessedTweet[] {
+    const tweets: ProcessedTweet[] = [];
+    const response = data as any;
+
+    try {
+      console.log('Comiketter: TweetResultByRestId処理開始');
+
+      // data.tweetResult.resultからツイートを抽出
+      const tweetResult = response?.data?.tweetResult?.result;
+      if (!tweetResult) {
+        console.warn('Comiketter: TweetResultByRestId - tweetResultが見つかりませんでした');
+        return [];
+      }
+
+      // ツイートを抽出
+      const extractedTweet = this.extractTweetWithRetweet(tweetResult);
+      if (extractedTweet) {
+        tweets.push(extractedTweet);
+        console.log(`Comiketter: TweetResultByRestId - ツイート抽出成功: ${extractedTweet.id_str}`);
+      } else {
+        console.warn('Comiketter: TweetResultByRestId - ツイート抽出に失敗しました');
+      }
+
+      return tweets;
+    } catch (error) {
+      console.error('Comiketter: TweetResultByRestId処理エラー:', error);
+      return [];
+    }
   }
 
   /**
