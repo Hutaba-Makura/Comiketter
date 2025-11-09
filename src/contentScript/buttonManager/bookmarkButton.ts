@@ -471,16 +471,41 @@ export class BookmarkButton extends BaseButton {
       hasArticle: !!finalArticle
     });
     
+    // ツイートがブックマークされているかチェック
+    const bookmarkManager = BookmarkApiClient.getInstance();
+    let isBookmarked = false;
+    try {
+      isBookmarked = await bookmarkManager.isTweetBookmarked(tweetInfo.id);
+      console.log('Comiketter: CBボタン作成 - ブックマーク状態チェック', {
+        tweetId: tweetInfo.id,
+        isBookmarked
+      });
+    } catch (error) {
+      console.error('Comiketter: Failed to check if tweet is bookmarked:', error);
+    }
+    
+    // アイコン名と色を決定
+    const iconName = isBookmarked ? 'bookmarked' : 'bookmarks';
+    const iconColor = isBookmarked ? '#35a6f1' : undefined; // undefinedの場合はテーマに応じた色を使用
+    
     // 既存のアイコンを取得して置き換える（TwitterMediaHarvestのswapIconと同様）
     const existingIcon = buttonElement.querySelector('svg') as HTMLElement;
     if (existingIcon) {
       // アイコンを作成（finalArticleを渡してモードに応じたサイズを設定）
-      this.currentIconElement = await this.createIconElement('bookmarks', sampleButton, finalArticle || undefined);
+      this.currentIconElement = await this.createIconElement(iconName, sampleButton, finalArticle || undefined);
+      // 色を設定（ブックマークされている場合）
+      if (iconColor) {
+        this.currentIconElement.style.color = iconColor;
+      }
       // 既存のアイコンを置き換え（これにより、アイコンの位置とpreviousElementSiblingが保持される）
       existingIcon.replaceWith(this.currentIconElement);
     } else {
       // 既存のアイコンがない場合は追加
-      this.currentIconElement = await this.createIconElement('bookmarks', sampleButton, finalArticle || undefined);
+      this.currentIconElement = await this.createIconElement(iconName, sampleButton, finalArticle || undefined);
+      // 色を設定（ブックマークされている場合）
+      if (iconColor) {
+        this.currentIconElement.style.color = iconColor;
+      }
       buttonElement.appendChild(this.currentIconElement);
     }
     this.addBackgroundClassToIconSibling(this.currentIconElement, mode);
