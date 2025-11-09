@@ -624,7 +624,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
             onMouseEnter={(e) => {
               const overlay = e.currentTarget.querySelector('[data-avatar-overlay]') as HTMLElement;
               if (overlay) {
-                overlay.style.backgroundColor = 'rgba(26, 26, 26, 0.03)';
+                overlay.style.backgroundColor = 'rgba(26, 26, 26, 0.08)';
               }
             }}
             onMouseLeave={(e) => {
@@ -663,7 +663,22 @@ export function Tweet({ id, onDelete }: TweetProps) {
           <Box style={{ display: 'flex', flexDirection: 'column', gap: '2px', flex: 1, minWidth: 0 }}>
             {/* ユーザー名、認証マーク、ユーザーID、時刻を横並び */}
             <Box style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
-              <Text size="15px" fw={600} style={{ whiteSpace: 'nowrap' }} onClick={handleAuthorClick}>
+              <Text 
+                size="15px" 
+                fw={600} 
+                style={{ 
+                  whiteSpace: 'nowrap',
+                  cursor: 'pointer',
+                  transition: 'text-decoration 0.2s ease'
+                }} 
+                onClick={handleAuthorClick}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.textDecorationLine = 'underline';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.textDecorationLine = 'none';
+                }}
+              >
                 {author.displayName}
               </Text>
               
