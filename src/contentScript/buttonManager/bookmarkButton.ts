@@ -42,6 +42,7 @@ export class BookmarkButton extends BaseButton {
   private bookmarkSelector: HTMLElement | null = null;
   private currentTweetInfo: Tweet | null = null;
   private currentButton: HTMLElement | null = null;
+  private initialCheckedBookmarks: Set<string> = new Set(); // 初期チェック状態を保存
 
   constructor() {
     const config: ButtonConfig = {
@@ -682,6 +683,9 @@ export class BookmarkButton extends BaseButton {
     // 既存のコンテンツをクリア
     content.innerHTML = '';
     
+    // 初期チェック状態をリセット
+    this.initialCheckedBookmarks.clear();
+    
     // BookmarkApiClientからブックマーク一覧を取得
     const bookmarkManager = BookmarkApiClient.getInstance();
     const bookmarks = await bookmarkManager.getBookmarks();
@@ -731,6 +735,8 @@ export class BookmarkButton extends BaseButton {
             const isBookmarked = await bookmarkManager.isTweetBookmarked(currentTweetId, bookmark.id);
             if (isBookmarked) {
               checkbox.checked = true;
+              // 初期チェック状態を保存
+              this.initialCheckedBookmarks.add(bookmark.id);
             }
           } catch (error) {
             console.error('Comiketter: Failed to check if tweet is bookmarked:', error);
@@ -922,34 +928,82 @@ export class BookmarkButton extends BaseButton {
     }
 
     const bookmarkManager = BookmarkApiClient.getInstance();
-    const selectedBookmarks = this.getSelectedBookmarks();
+    const currentSelectedBookmarks = new Set(this.getSelectedBookmarks());
+    const initialSelectedBookmarks = this.initialCheckedBookmarks;
     
-    if (selectedBookmarks.length === 0) {
-      alert('ブックマークを選択してください');
+    // 初期状態と現在の状態を比較
+    // チェックが外されたブックマーク（削除対象）
+    const bookmarksToRemove = Array.from(initialSelectedBookmarks).filter(
+      bookmarkId => !currentSelectedBookmarks.has(bookmarkId)
+    );
+    
+    // チェックが入ったブックマーク（追加対象）
+    const bookmarksToAdd = Array.from(currentSelectedBookmarks).filter(
+      bookmarkId => !initialSelectedBookmarks.has(bookmarkId)
+    );
+    
+    console.log('Comiketter: Bookmark changes detected', {
+      toRemove: bookmarksToRemove,
+      toAdd: bookmarksToAdd,
+      initial: Array.from(initialSelectedBookmarks),
+      current: Array.from(currentSelectedBookmarks)
+    });
+    
+    // 変更がない場合は何もしない
+    if (bookmarksToRemove.length === 0 && bookmarksToAdd.length === 0) {
+      this.hideBookmarkSelector();
       return;
     }
 
-    let successCount = 0;
+    let addSuccessCount = 0;
+    let removeSuccessCount = 0;
     let hasError = false;
 
-    // 各ブックマークにツイートを追加
-    for (const bookmarkId of selectedBookmarks) {
+    // チェックが外されたブックマークからツイートを削除
+    for (const bookmarkId of bookmarksToRemove) {
+      try {
+        await bookmarkManager.removeTweetFromBookmark(bookmarkId, this.currentTweetInfo.id);
+        removeSuccessCount++;
+        console.log('Comiketter: Removed tweet from bookmark:', bookmarkId);
+      } catch (error) {
+        console.error('Comiketter: Failed to remove tweet from bookmark:', bookmarkId, error);
+        hasError = true;
+      }
+    }
+
+    // チェックが入ったブックマークにツイートを追加
+    for (const bookmarkId of bookmarksToAdd) {
       try {
         await bookmarkManager.addTweetToBookmark(bookmarkId, this.currentTweetInfo.id, this.currentTweetInfo);
-        successCount++;
+        addSuccessCount++;
+        console.log('Comiketter: Added tweet to bookmark:', bookmarkId);
       } catch (error) {
         console.error('Comiketter: Failed to add tweet to bookmark:', bookmarkId, error);
         hasError = true;
       }
     }
     
-    console.log('Comiketter: Saved tweet to bookmarks:', { selectedBookmarks, successCount, hasError });
+    console.log('Comiketter: Saved bookmark changes:', { 
+      removed: removeSuccessCount, 
+      added: addSuccessCount, 
+      hasError 
+    });
     
-    // 少なくとも1つのブックマークに追加できた場合はアイコンを更新
-    if (successCount > 0 && this.currentButton) {
+    // 少なくとも1つのブックマークに追加できた場合、または削除が成功した場合はアイコンを更新
+    const hasAnyBookmark = currentSelectedBookmarks.size > 0;
+    if (hasAnyBookmark && this.currentButton) {
       try {
         // ブックマーク登録後のアイコン変更（bookmarked.svgに変更し、色を#35a6f1に設定）
         await this.updateIcon('bookmarked', '#35a6f1', this.currentButton);
+      } catch (error) {
+        console.error('Comiketter: Failed to update icon:', error);
+      }
+    } else if (!hasAnyBookmark && this.currentButton) {
+      // すべてのブックマークから削除された場合は、元のアイコンに戻す
+      try {
+        const theme = this.detectTheme();
+        const iconColor = this.getButtonColor(theme);
+        await this.updateIcon('bookmarks', iconColor, this.currentButton);
       } catch (error) {
         console.error('Comiketter: Failed to update icon:', error);
       }
@@ -958,12 +1012,20 @@ export class BookmarkButton extends BaseButton {
     this.hideBookmarkSelector();
     
     // メッセージを表示
-    if (hasError && successCount === 0) {
+    const messages: string[] = [];
+    if (removeSuccessCount > 0) {
+      messages.push(`${removeSuccessCount}個のブックマークから削除`);
+    }
+    if (addSuccessCount > 0) {
+      messages.push(`${addSuccessCount}個のブックマークに追加`);
+    }
+    
+    if (hasError && removeSuccessCount === 0 && addSuccessCount === 0) {
       alert('ブックマークの保存に失敗しました');
     } else if (hasError) {
-      alert(`${successCount}個のブックマークに保存しました（一部失敗しました）`);
-    } else {
-      alert(`${successCount}個のブックマークに保存しました`);
+      alert(`${messages.join('、')}しました（一部失敗しました）`);
+    } else if (messages.length > 0) {
+      alert(`${messages.join('、')}しました`);
     }
   }
 
