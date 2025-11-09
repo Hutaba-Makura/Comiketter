@@ -75,7 +75,7 @@ export class MediaDownloader {
             error: `ツイートが見つかりません: ${request.tweetId}`
           };
         }
-
+        console.log('📱 Comiketter: DOMからツイートを取得:', domTweet);
         // DOMから取得したツイートを使用
         cachedTweet = domTweet;
       }

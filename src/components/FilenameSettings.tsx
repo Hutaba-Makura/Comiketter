@@ -15,6 +15,7 @@ import {
   Alert,
 } from '@mantine/core';
 
+import { IconEye, IconEyeOff } from '@tabler/icons-react';
 import type { FilenameSettingProps, PatternToken } from '@/types';
 import { FilenameGenerator } from '@/utils/filenameGenerator';
 
@@ -140,7 +141,7 @@ export function FilenameSettings({
                   onClick={() => setPreviewVisible(!previewVisible)}
                   disabled={disabled}
                 >
-                  {previewVisible ? '👁️' : '👁️‍🗨️'}
+                  {previewVisible ? <IconEye size={24} /> : <IconEyeOff size={24} />}
                 </ActionIcon>
               </Tooltip>
             </Group>

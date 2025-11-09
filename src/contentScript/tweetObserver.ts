@@ -47,6 +47,7 @@ export class TweetObserver {
   private processedElements = new WeakSet<HTMLElement>();
   private processingTimeout: number | null = null;
   private pendingNodes: HTMLElement[] = [];
+  private lastPathname: string = window.location.pathname;
 
   constructor() {
     this.buttonFactory = new ButtonFactory();
@@ -63,7 +64,51 @@ export class TweetObserver {
     // 動的コンテンツの監視を開始
     this.startObserving();
     
+    // ページ遷移を監視（TwitterMediaHarvestを参考）
+    this.observePageNavigation();
+    
     this.isInitialized = true;
+  }
+
+  /**
+   * ページ遷移を監視（TwitterMediaHarvestのobserveHeadを参考）
+   */
+  private observePageNavigation(): void {
+    // ページ遷移イベントをリッスン
+    window.addEventListener('comiketter:page-navigation', () => {
+      console.log('Comiketter: ページ遷移イベントを受信、ボタンを再作成');
+      // 処理済み要素をクリア
+      this.processedElements = new WeakSet<HTMLElement>();
+      // 既存のツイートを再処理（遅延を長くしてDOMが完全に更新されるのを待つ）
+      setTimeout(() => {
+        this.initializeExistingTweets();
+      }, 1000); // 1000ms後に再処理（DOMが完全に更新されるのを待つ）
+    });
+
+    // head要素の変更も監視（フォールバック）
+    const headElement = document.querySelector('head');
+    if (headElement) {
+      const headObserver = new MutationObserver(() => {
+        const currentPathname = window.location.pathname;
+        if (currentPathname !== this.lastPathname) {
+          console.log('Comiketter: head要素の変更でページ遷移を検知', {
+            from: this.lastPathname,
+            to: currentPathname
+          });
+          this.lastPathname = currentPathname;
+          // 処理済み要素をクリア
+          this.processedElements = new WeakSet<HTMLElement>();
+          // 既存のツイートを再処理（遅延を長くしてDOMが完全に更新されるのを待つ）
+          setTimeout(() => {
+            this.initializeExistingTweets();
+          }, 1000); // 1000ms後に再処理（DOMが完全に更新されるのを待つ）
+        }
+      });
+      headObserver.observe(headElement, {
+        childList: true,
+        subtree: false,
+      });
+    }
   }
 
   /**
@@ -282,8 +327,8 @@ export class TweetObserver {
         return;
       }
 
-      // ボタンを作成
-      const buttons = await this.buttonFactory.createButtonsForTweet(tweetInfo);
+      // ボタンを作成（article要素を渡す）
+      const buttons = await this.buttonFactory.createButtonsForTweet(tweetInfo, article);
 
       // 最終チェック：ボタン作成後に再度チェック
       if (!this.shouldAddButtons(article)) {

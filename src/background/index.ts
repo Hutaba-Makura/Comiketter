@@ -7,6 +7,7 @@
  */
 
 import { MessageHandler } from './messageHandler';
+import { ApiCacheManager } from '../utils/api-cache';
 
 class BackgroundScript {
   private messageHandler: MessageHandler;
@@ -15,14 +16,64 @@ class BackgroundScript {
     this.messageHandler = new MessageHandler();
     
     this.initialize();
+    this.setupPeriodicCleanup();
   }
 
   private async initialize(): Promise<void> {
     try {
       // Service Worker環境ではAPI傍受は不要
       // API傍受はコンテンツスクリプトで実行される
+      
+      // 初期化時に期限切れキャッシュを削除
+      await ApiCacheManager.cleanupExpiredCache();
+      console.log('Comiketter: Background script initialized, expired cache cleaned up');
     } catch (error) {
       console.error('Comiketter: Failed to initialize background script:', error);
+    }
+  }
+
+  /**
+   * 定期的なキャッシュクリーンアップを設定
+   */
+  private setupPeriodicCleanup(): void {
+    // chrome.alarmsが利用可能かチェック
+    if (!chrome.alarms) {
+      console.warn('Comiketter: chrome.alarms API is not available. Periodic cleanup will not be set up.');
+      return;
+    }
+
+    try {
+      // アラームが既に設定されているかチェック
+      chrome.alarms.get('cacheCleanup', (alarm) => {
+        if (chrome.runtime.lastError) {
+          console.error('Comiketter: Error checking alarm:', chrome.runtime.lastError);
+          return;
+        }
+
+        if (!alarm) {
+          // アラームが設定されていない場合、6時間ごとにクリーンアップを実行
+          chrome.alarms.create('cacheCleanup', {
+            periodInMinutes: 6 * 60 // 6時間ごと
+          }, () => {
+            if (chrome.runtime.lastError) {
+              console.error('Comiketter: Error creating alarm:', chrome.runtime.lastError);
+            } else {
+              console.log('Comiketter: Periodic cache cleanup alarm created (every 6 hours)');
+            }
+          });
+        }
+      });
+
+      // アラームイベントリスナーを設定
+      chrome.alarms.onAlarm.addListener((alarm) => {
+        if (alarm.name === 'cacheCleanup') {
+          ApiCacheManager.cleanupExpiredCache().catch((error) => {
+            console.error('Comiketter: Periodic cache cleanup failed:', error);
+          });
+        }
+      });
+    } catch (error) {
+      console.error('Comiketter: Failed to setup periodic cleanup:', error);
     }
   }
 }
@@ -31,11 +82,17 @@ class BackgroundScript {
 new BackgroundScript();
 
 // Handle extension installation
-chrome.runtime.onInstalled.addListener((details) => {
+chrome.runtime.onInstalled.addListener(async (details) => {
   if (details.reason === 'install') {
     // First time installation
+    console.log('Comiketter: Extension installed');
+    // 初回インストール時にも期限切れキャッシュを削除（念のため）
+    await ApiCacheManager.cleanupExpiredCache();
   } else if (details.reason === 'update') {
     // Extension updated
+    console.log('Comiketter: Extension updated');
+    // アップデート時にも期限切れキャッシュを削除
+    await ApiCacheManager.cleanupExpiredCache();
   }
 });
 

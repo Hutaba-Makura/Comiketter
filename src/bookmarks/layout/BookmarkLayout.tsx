@@ -3,12 +3,18 @@ import { Box, useMantineTheme, useMantineColorScheme } from '@mantine/core';
 import { CbSidebar } from '../sidebar/CbSidebar';
 import { TimelineView } from '../timeline/TimelineView';
 
+interface BookmarkLayoutProps {
+  /** カスタムタイムラインビューコンポーネント（Storybook用） */
+  timelineViewComponent?: React.ComponentType;
+}
+
 /**
  * ブックマークページのレイアウト
  */
-export function BookmarkLayout() {
+export function BookmarkLayout({ timelineViewComponent: TimelineViewComponent }: BookmarkLayoutProps) {
   const theme = useMantineTheme();
   const { colorScheme } = useMantineColorScheme();
+  const TimelineViewToUse = TimelineViewComponent || TimelineView;
 
   return (
     <Box
@@ -36,10 +42,10 @@ export function BookmarkLayout() {
         style={{
           flex: 1,
           overflow: 'hidden',
-          backgroundColor: colorScheme === 'dark' ? theme.colors.dark[8] : theme.colors.gray[0],
+          backgroundColor: colorScheme === 'dark' ? theme.colors.dark[8] : theme.white,
         }}
       >
-        <TimelineView />
+        <TimelineViewToUse />
       </Box>
     </Box>
   );

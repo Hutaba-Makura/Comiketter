@@ -13,6 +13,7 @@ import { PatternToken, AggregationToken } from '../types';
 import { ApiCacheManager } from '../utils/api-cache';
 import { FilenameGenerator } from '../utils/filenameGenerator';
 import { StorageManager } from '../utils/storage';
+import { MediaExtractor } from '../api-processor/media-extractor';
 
 /**
  * 動画バリアント情報
@@ -256,34 +257,31 @@ export class VideoDownloader {
 
   /**
    * 最高ビットレートの動画URLを取得
-   * response-processing-rule.mdに基づいて実装
+   * MediaExtractorを使用して統一されたロジックで動画URLを取得
    */
   private getBestVideoUrl(media: ProcessedMedia): string | null {
-    if (!media.video_info?.variants || media.video_info.variants.length === 0) {
-      console.warn('🎬 Comiketter: 動画バリアントが見つかりません');
-      return null;
+    const mediaExtractor = new MediaExtractor();
+    const videoUrl = mediaExtractor.getBestVideoUrl(media);
+    
+    if (videoUrl) {
+      // ビットレート情報を取得してログ出力
+      const variants = media.video_info?.variants;
+      if (variants) {
+        const mp4Variants = variants.filter(v => v.content_type === 'video/mp4');
+        if (mp4Variants.length > 0) {
+          const bestVariant = mp4Variants.reduce((best, current) => {
+            const bestBitrate = best.bitrate || 0;
+            const currentBitrate = current.bitrate || 0;
+            return currentBitrate > bestBitrate ? current : best;
+          });
+          console.log(`🎬 Comiketter: 最高ビットレート動画を選択 - ${bestVariant?.bitrate || 0}bps`);
+        }
+      }
+    } else {
+      console.warn('🎬 Comiketter: 動画URLを取得できませんでした');
     }
-
-    // MP4形式のバリアントのみをフィルタリング
-    const mp4Variants = media.video_info.variants.filter(
-      variant => variant.content_type === 'video/mp4'
-    );
-
-    if (mp4Variants.length === 0) {
-      console.warn('🎬 Comiketter: MP4形式の動画バリアントが見つかりません');
-      return null;
-    }
-
-    // 最高ビットレートのバリアントを選択
-    // response-processing-rule.md: "...video_info.variants[].bitrate を取得し、その中で最も数値が大きいもののURLを ...video_info.variants[].url で取得"
-    const bestVariant = mp4Variants.reduce((best, current) => {
-      const bestBitrate = best.bitrate || 0;
-      const currentBitrate = current.bitrate || 0;
-      return currentBitrate > bestBitrate ? current : best;
-    });
-
-    console.log(`🎬 Comiketter: 最高ビットレート動画を選択 - ${bestVariant.bitrate || 0}bps`);
-    return bestVariant.url;
+    
+    return videoUrl;
   }
 
   /**

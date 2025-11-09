@@ -1,10 +1,11 @@
 // Options App component for Comiketter
 import React, { useState, useEffect } from 'react';
-import { Container, Title, Text, Switch, Select, Button, Stack, Group, Divider } from '@mantine/core';
+import { Container, Title, Text, Switch, Select, Button, Stack, Group, Divider, ActionIcon, Tooltip, Box } from '@mantine/core';
 import { StorageManager } from '@/utils/storage';
 import { FilenameSettings } from '@/components/FilenameSettings';
 import { BookmarkManager } from '@/components/BookmarkManager';
 import type { Settings } from '@/types';
+import { IconSettings, IconBookmark } from '@tabler/icons-react';
 
 export const OptionsApp: React.FC = () => {
   const [settings, setSettings] = useState<Settings | null>(null);
@@ -49,6 +50,11 @@ export const OptionsApp: React.FC = () => {
     setSettings({ ...settings, filenameSettings });
   };
 
+  const openBookmarks = () => {
+    const url = chrome.runtime.getURL('bookmarks.html');
+    chrome.tabs.update({ url, active: true });
+  };
+
   if (loading) {
     return (
       <Container size="md" py="xl">
@@ -66,21 +72,50 @@ export const OptionsApp: React.FC = () => {
   }
 
   return (
-    <Container size="md" py="xl">
-      <Stack gap="lg">
-        <Title order={1}>Comiketter 設定</Title>
+    <>
+      {/* Stickyなカスタムブックマーク遷移ボタン */}
+      <Box
+        style={{
+          position: 'fixed',
+          top: '16px',
+          right: '16px',
+          zIndex: 1000,
+        }}
+      >
+        <Tooltip label="カスタムブックマークを開く" position="left">
+          <ActionIcon
+            variant="light"
+            radius="md"
+            onClick={openBookmarks}
+            style={{
+              width: '44px',
+              height: '44px',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+            }}
+          >
+            <IconBookmark size={36} />
+          </ActionIcon>
+        </Tooltip>
+      </Box>
+
+      <Container size="md" py="xl">
+        <Stack gap="lg">
+          <Title order={1}><IconSettings size={32} />&nbsp;Comiketter 設定</Title>
         
+        {/*
         <Stack gap="md">
           <Title order={3} size="h4">基本設定</Title>
           <Switch
-            label="タイムライン自動更新を無効化"
+            label="タイムライン自動更新を無効化（未実装、更新をお待ちください）"
             checked={settings.tlAutoUpdateDisabled}
             onChange={(event) => updateSettings({ tlAutoUpdateDisabled: event.currentTarget.checked })}
           />
         </Stack>
         
         <Divider />
+        */}
         
+        {/*
         <Stack gap="md">
           <Title order={3} size="h4">保存設定</Title>
           <Select
@@ -89,8 +124,8 @@ export const OptionsApp: React.FC = () => {
             onChange={(value) => updateSettings({ saveFormat: value as 'url' | 'blob' | 'mixed' })}
             data={[
               { value: 'url', label: '画像URL' },
-              { value: 'blob', label: '画像本体' },
-              { value: 'mixed', label: '混合' },
+              { value: 'blob', label: '画像本体（未実装、更新をお待ちください）' },
+              { value: 'mixed', label: '混合（未実装、更新をお待ちください）' },
             ]}
           />
           <Select
@@ -105,11 +140,12 @@ export const OptionsApp: React.FC = () => {
         </Stack>
         
         <Divider />
+        */}
         
         <Stack gap="md">
           <Title order={3} size="h4">ファイル名・パス設定</Title>
           <Text size="sm" c="dimmed">
-            TwitterMediaHarvest準拠のファイル名・パス設定機能です。ダウンロードするファイルの命名規則をカスタマイズできます。
+            ファイル名・パス設定機能です。ダウンロードするファイルの命名規則をカスタマイズできます。
           </Text>
           <FilenameSettings
             settings={settings.filenameSettings}
@@ -121,7 +157,7 @@ export const OptionsApp: React.FC = () => {
         <Divider />
         
         <Stack gap="md">
-          <Title order={3} size="h4">自動ダウンロード条件</Title>
+          <Title order={3} size="h4">自動ダウンロード条件（未実装、更新をお待ちください）</Title>
           <Switch
             label="リツイート時に自動ダウンロード"
             checked={settings.autoDownloadConditions.retweet}
@@ -157,9 +193,9 @@ export const OptionsApp: React.FC = () => {
         <Divider />
         
         <Stack gap="md">
-          <Title order={3} size="h4">メディアダウンロード設定</Title>
+          <Title order={3} size="h4">メディアダウンロード設定（未実装、更新をお待ちください）</Title>
           <Text size="sm" c="dimmed">
-            TwitterMediaHarvest準拠のメディアダウンロード設定です。動画サムネイルやプロフィール画像の除外設定ができます。
+            動画サムネイルやプロフィール画像の除外設定ができます。現在は動画のみがダウンロードされます。
           </Text>
           <Switch
             label="動画サムネイルを含める"
@@ -192,23 +228,8 @@ export const OptionsApp: React.FC = () => {
             })}
           />
         </Stack>
-        
-        <Divider />
-        
-        <Stack gap="md">
-          <Title order={3} size="h4">カスタムブックマーク管理</Title>
-          <Text size="sm" c="dimmed">
-            ツイートを保存するカスタムブックマークを作成・管理できます。
-          </Text>
-          <BookmarkManager />
-        </Stack>
-        
-        <Group justify="flex-end">
-          <Button onClick={saveSettings} loading={saving}>
-            設定を保存
-          </Button>
-        </Group>
       </Stack>
     </Container>
+    </>
   );
 }; 

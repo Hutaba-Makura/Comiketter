@@ -9,6 +9,7 @@ interface CbStoreState {
   selectedCbId: string | null;
   loading: boolean;
   error: string | null;
+  shouldEditName: boolean; // 名前編集モードのフラグ
 }
 
 /**
@@ -23,6 +24,8 @@ interface CbStoreActions {
   addCb: (cb: Cb) => void;
   updateCb: (id: string, updates: Partial<Cb>) => void;
   removeCb: (id: string) => void;
+  setShouldEditName: (shouldEdit: boolean) => void;
+  selectCbAndEditName: (id: string) => void; // CBを選択して名前編集モードに入る
 }
 
 /**
@@ -41,6 +44,7 @@ export const useCbStore = create<CbStore>((set, get) => ({
   selectedCbId: null,
   loading: false,
   error: null,
+  shouldEditName: false,
 
   // Computed properties
   get selectedCb() {
@@ -51,9 +55,9 @@ export const useCbStore = create<CbStore>((set, get) => ({
   // アクション
   setCbs: (cbs) => set({ cbs }),
   
-  selectCb: (id) => set({ selectedCbId: id }),
+  selectCb: (id) => set({ selectedCbId: id, shouldEditName: false }),
   
-  clearSelection: () => set({ selectedCbId: null }),
+  clearSelection: () => set({ selectedCbId: null, shouldEditName: false }),
   
   setLoading: (loading) => set({ loading }),
   
@@ -72,7 +76,11 @@ export const useCbStore = create<CbStore>((set, get) => ({
   removeCb: (id) => set((state) => ({
     cbs: state.cbs.filter(cb => cb.id !== id),
     selectedCbId: state.selectedCbId === id ? null : state.selectedCbId
-  }))
+  })),
+
+  setShouldEditName: (shouldEdit) => set({ shouldEditName: shouldEdit }),
+
+  selectCbAndEditName: (id) => set({ selectedCbId: id, shouldEditName: true })
 }));
 
 /**
