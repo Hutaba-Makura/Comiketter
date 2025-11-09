@@ -10,6 +10,7 @@
 
 import { BaseButton, ButtonConfig } from './baseButton';
 import { BookmarkApiClient } from '../../utils/bookmarkApiClient';
+import { showErrorToast, showSuccessToast } from '../../utils/toast';
 import type { Tweet } from '../../types';
 
 // ログ送信関数
@@ -920,7 +921,7 @@ export class BookmarkButton extends BaseButton {
    */
   private async createBookmark(name: string, description: string): Promise<void> {
     if (!name.trim()) {
-      alert('ブックマーク名を入力してください');
+      showErrorToast('ブックマーク名を入力してください');
       return;
     }
     
@@ -937,9 +938,10 @@ export class BookmarkButton extends BaseButton {
       }
       
       console.log('Comiketter: Created new bookmark:', newBookmark);
+      showSuccessToast('ブックマークを作成しました');
     } catch (error) {
       console.error('Comiketter: Failed to create bookmark:', error);
-      alert('ブックマークの作成に失敗しました');
+      showErrorToast('ブックマークの作成に失敗しました');
     }
   }
 
@@ -1046,11 +1048,11 @@ export class BookmarkButton extends BaseButton {
     }
     
     if (hasError && removeSuccessCount === 0 && addSuccessCount === 0) {
-      alert('ブックマークの保存に失敗しました');
+      showErrorToast('ブックマークの保存に失敗しました');
     } else if (hasError) {
-      alert(`${messages.join('、')}しました（一部失敗しました）`);
+      showErrorToast(`${messages.join('、')}しました（一部失敗しました）`);
     } else if (messages.length > 0) {
-      alert(`${messages.join('、')}しました`);
+      showSuccessToast(`${messages.join('、')}しました`);
     }
   }
 
