@@ -70,6 +70,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
   const [useEmbedTweet, setUseEmbedTweet] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isCbMenuOpen, setIsCbMenuOpen] = useState(false);
   const [cbs, setCbs] = useState<Cb[]>([]);
   const [selectedCbIds, setSelectedCbIds] = useState<Set<string>>(new Set());
@@ -301,6 +302,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
 
       // メニューを閉じる
       setIsCbMenuOpen(false);
+      setIsMenuOpen(false);
       
       // 成功メッセージ
       const actionMessages: string[] = [];
@@ -607,7 +609,9 @@ export function Tweet({ id, onDelete }: TweetProps) {
                     width={isCbMenuOpen ? 320 : 150} 
                     position="bottom-end" 
                     styles={{ dropdown: { borderRadius: '12px', backgroundColor: 'white' } }}
+                    opened={isMenuOpen}
                     onClose={() => {
+                      setIsMenuOpen(false);
                       setIsCbMenuOpen(false);
                       // メニューを閉じた時に選択状態を初期状態にリセット
                       setSelectedCbIds(new Set(initialCbIds));
@@ -619,6 +623,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
                         size="lg"
                         radius="xl"
                         style={menuStyles}
+                        onClick={() => setIsMenuOpen(true)}
                       >
                         <IconDots size={18.75} color="var(--mantine-color-gray-6)" />
                       </ActionIcon>
