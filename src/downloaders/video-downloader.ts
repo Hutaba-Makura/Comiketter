@@ -359,7 +359,7 @@ export class VideoDownloader {
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error('🎬 Comiketter: 単一动画ダウンロードエラー:', error);
+      console.error('🎬 Comiketter: 単一動画ダウンロードエラー:', error);
       return {
         success: false,
         error: errorMessage
