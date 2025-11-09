@@ -6,6 +6,8 @@
  * Comiketter: サイドバーにCustomBookmarksボタンを追加
  */
 
+import { showErrorToast } from '../utils/toast';
+
 // ログ送信関数
 const sendLog = (message: string, data?: any) => {
   const logMessage = `[Comiketter Sidebar] ${message}`;
@@ -791,8 +793,8 @@ export class SidebarButton {
       sendLog('フォールバック処理でブックマークページを開きました');
     } catch (fallbackError) {
       sendLog('フォールバック処理も失敗しました:', fallbackError);
-      // 最後の手段: アラートでユーザーに通知
-      alert('ブックマークページを開けませんでした。手動でブックマークページにアクセスしてください。');
+      // 最後の手段: トースト通知でユーザーに通知
+      showErrorToast('ブックマークページを開けませんでした。手動でブックマークページにアクセスしてください。');
     }
   }
 
