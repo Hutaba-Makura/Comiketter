@@ -381,6 +381,8 @@ export abstract class BaseButton {
     wrapper.setAttribute('aria-label', this.config.ariaLabel);
     wrapper.setAttribute('role', 'button');
     wrapper.setAttribute('tabindex', '0');
+    // Replyから取得したサンプル要素の親要素（wrapper）にdisplay: flexとalign-items: centerを設定
+    wrapper.style.cssText = 'display: flex; align-items: center;';
     
     const innerDiv = document.createElement('div');
     innerDiv.setAttribute('aria-haspopup', 'true');
