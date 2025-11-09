@@ -361,6 +361,50 @@ export function Tweet({ id, onDelete }: TweetProps) {
     }
   };
 
+  // ツイートのURLを新しいタブで開く
+  const handleTweetClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // ライトボックスが開いている場合は処理しない
+    if (lightboxSrc !== null) {
+      return;
+    }
+
+    // インタラクティブな要素（ボタン、リンク、メニュー、画像など）をクリックした場合は処理しない
+    const target = e.target as HTMLElement;
+    if (
+      target.closest('button') ||
+      target.closest('a') ||
+      target.closest('[role="menu"]') ||
+      target.closest('[role="menuitem"]') ||
+      target.closest('[data-mantine-menu-item]') ||
+      target.closest('input') ||
+      target.closest('textarea') ||
+      target.closest('select') ||
+      target.closest('img') ||
+      target.closest('video')
+    ) {
+      return;
+    }
+
+    if (!author) {
+      return;
+    }
+
+    const url = `https://x.com/${author.username}/status/${id}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  // 投稿者のプロフィールページを新しいタブで開く
+  const handleAuthorClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.stopPropagation(); // 親要素のクリックイベントを防ぐ
+    
+    if (!author) {
+      return;
+    }
+
+    const url = `https://x.com/${author.username}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
   // 画像ライトボックス用の状態
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState<number | null>(null);
@@ -555,8 +599,10 @@ export function Tweet({ id, onDelete }: TweetProps) {
         maxWidth: '598px',
         margin: '0 auto',
         backgroundColor: '#ffffff',
-        transition: 'background-color 0.2s ease'
+        transition: 'background-color 0.2s ease',
+        cursor: 'pointer'
       }}
+      onClick={handleTweetClick}
       onMouseEnter={(e) => {
         e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.03)';
       }}
@@ -575,6 +621,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
             radius="xl"
             color="rgb(29, 155, 240)"
             style={{ flexShrink: 0 }}
+            onClick={handleAuthorClick}
           >
             {!author.profileImageUrl && <IconUser size={20} />}
           </Avatar>
@@ -583,7 +630,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
           <Box style={{ display: 'flex', flexDirection: 'column', gap: '2px', flex: 1, minWidth: 0 }}>
             {/* ユーザー名、認証マーク、ユーザーID、時刻を横並び */}
             <Box style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
-              <Text size="15px" fw={600} style={{ whiteSpace: 'nowrap' }}>
+              <Text size="15px" fw={600} style={{ whiteSpace: 'nowrap' }} onClick={handleAuthorClick}>
                 {author.displayName}
               </Text>
               
@@ -802,7 +849,8 @@ export function Tweet({ id, onDelete }: TweetProps) {
                           minHeight: '300px', 
                           maxHeight: '417.33px', 
                           objectFit: 'cover',
-                          display: 'block'
+                          display: 'block',
+                          cursor: 'pointer'
                         }}
                         onClick={(e) => handleImageClick(e, media[0].url, 0)}
                       />
@@ -870,7 +918,8 @@ export function Tweet({ id, onDelete }: TweetProps) {
                               width: '100%', 
                               height: '100%',
                               objectFit: 'cover',
-                              display: 'block'
+                              display: 'block',
+                              cursor: 'pointer'
                             }}
                             onClick={(e) => handleImageClick(e, item.url, index)}
                           />
@@ -949,7 +998,8 @@ export function Tweet({ id, onDelete }: TweetProps) {
                             height: '100%',
                             objectFit: 'cover',
                             objectPosition: 'center',
-                            display: 'block'
+                            display: 'block',
+                            cursor: 'pointer'
                           }}
                           onClick={(e) => handleImageClick(e, media[0].url, 0)}
                         />
@@ -998,7 +1048,8 @@ export function Tweet({ id, onDelete }: TweetProps) {
                             width: '100%', 
                             height: '100%',
                             objectFit: 'cover',
-                            display: 'block'
+                            display: 'block',
+                            cursor: 'pointer'
                           }}
                           onClick={(e) => handleImageClick(e, media[1].url, 1)}
                         />
@@ -1047,7 +1098,8 @@ export function Tweet({ id, onDelete }: TweetProps) {
                             width: '100%', 
                             height: '100%',
                             objectFit: 'cover',
-                            display: 'block'
+                            display: 'block',
+                            cursor: 'pointer'
                           }}
                           onClick={(e) => handleImageClick(e, media[2].url, 2)}
                         />
@@ -1125,7 +1177,8 @@ export function Tweet({ id, onDelete }: TweetProps) {
                               width: '100%', 
                               height: '100%',
                               objectFit: 'cover',
-                              display: 'block'
+                              display: 'block',
+                              cursor: 'pointer'
                             }}
                             onClick={(e) => handleImageClick(e, item.url, index)}
                           />
