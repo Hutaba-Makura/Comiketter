@@ -475,7 +475,7 @@ export class BookmarkButton extends BaseButton {
       // 3秒後に通常状態に戻す
       setTimeout(() => {
         this.setBookmarkButtonStatus(button, BookmarkButtonStatus.Idle);
-      }, 3000);
+      }, 2000);
     } catch (error) {
       sendLog('ブックマークボタンクリック処理でエラー発生:', error);
       this.setBookmarkButtonStatus(button, BookmarkButtonStatus.Error);
@@ -483,7 +483,7 @@ export class BookmarkButton extends BaseButton {
       // 3秒後に通常状態に戻す
       setTimeout(() => {
         this.setBookmarkButtonStatus(button, BookmarkButtonStatus.Idle);
-      }, 3000);
+      }, 2000);
     }
   }
 
