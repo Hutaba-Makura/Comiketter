@@ -31,10 +31,18 @@ export type TweetMode = 'photo' | 'status' | 'stream';
 export abstract class BaseButton {
   protected config: ButtonConfig;
   protected currentIconElement: HTMLElement | null = null;
+  
+  // サンプルボタンをキャッシュ（TwitterMediaHarvestを参考）
+  private static cachedSampleButton: HTMLElement | null = null;
+  private static headObserver: MutationObserver | null = null;
+  private static isObserving = false;
+  private static lastPathname: string = window.location.pathname;
+  private static updateTimeout: number | null = null;
 
   constructor(config: ButtonConfig) {
     this.config = config;
     this.injectStyles();
+    this.observePageNavigation();
   }
 
   /**
@@ -113,15 +121,196 @@ export abstract class BaseButton {
   /**
    * ボタンを作成
    */
-  abstract createButton(tweetInfo: Tweet): Promise<HTMLElement>;
+  abstract createButton(tweetInfo: Tweet, article?: HTMLElement): Promise<HTMLElement>;
 
   /**
-   * サンプルボタン（リプライボタン）を取得
-   * TwitterMediaHarvestのgetSampleButtonを参考に実装
-   * data-testid="tweet"でツイート要素を取得してから検索することで処理を軽量化
+   * ページ遷移を監視（TwitterMediaHarvestのobserveHeadを参考）
    */
-  protected getSampleButton(): HTMLElement | null {
-    // まずツイート要素を取得（処理を軽くするため）
+  private observePageNavigation(): void {
+    // 既に監視中の場合はスキップ
+    if (BaseButton.isObserving) {
+      return;
+    }
+
+    BaseButton.isObserving = true;
+
+    const options: MutationObserverInit = {
+      childList: true,
+      subtree: false,
+    };
+
+    const titleMutationCallback: MutationCallback = () => {
+      // URLが実際に変更された場合のみ更新（SPAのため）
+      const currentPathname = window.location.pathname;
+      if (currentPathname === BaseButton.lastPathname) {
+        return; // URLが変わっていない場合はスキップ
+      }
+      
+      console.log('Comiketter: ページ遷移を検知、サンプルボタンを再取得', {
+        from: BaseButton.lastPathname,
+        to: currentPathname
+      });
+      
+      BaseButton.lastPathname = currentPathname;
+      
+      // キャッシュをクリア
+      BaseButton.cachedSampleButton = null;
+      
+      // 既存の更新処理をキャンセル
+      if (BaseButton.updateTimeout !== null) {
+        clearTimeout(BaseButton.updateTimeout);
+      }
+      
+      // ページ遷移イベントを発火（TweetObserverが検知してボタンを再作成）
+      window.dispatchEvent(new CustomEvent('comiketter:page-navigation', {
+        detail: { pathname: currentPathname }
+      }));
+      
+      // 遅延して更新（ボタンが完全に作成された後に更新）
+      // 注意: 更新処理はボタンを削除する可能性があるため、無効化
+      // BaseButton.updateTimeout = window.setTimeout(() => {
+      //   BaseButton.updateAllButtons();
+      //   BaseButton.updateTimeout = null;
+      // }, 1000); // 1000ms後に更新（ボタンが再作成されるのを待つ）
+    };
+
+    const headElement = document.querySelector('head');
+    if (headElement) {
+      BaseButton.headObserver = new MutationObserver(titleMutationCallback);
+      BaseButton.headObserver.observe(headElement, options);
+      console.log('Comiketter: ページ遷移監視を開始');
+    }
+  }
+
+  /**
+   * 全てのComiketterボタンの構造を更新（静的メソッド）
+   * 注意: 現在は無効化されています。ボタンが削除される問題を回避するため
+   */
+  private static updateAllButtons(): void {
+    // 更新処理は無効化（ボタンが削除される問題を回避）
+    console.log('Comiketter: ボタン更新処理は無効化されています');
+    return;
+    
+    // 以下のコードは将来の実装用に保持
+    /*
+    // 全てのComiketterボタンを取得（downloadとbookmarkの両方）
+    const downloadButtons = document.querySelectorAll(
+      '.comiketter-download-button'
+    ) as NodeListOf<HTMLElement>;
+    const bookmarkButtons = document.querySelectorAll(
+      '.comiketter-bookmark-button'
+    ) as NodeListOf<HTMLElement>;
+
+    if (downloadButtons.length === 0 && bookmarkButtons.length === 0) {
+      console.log('Comiketter: 更新するボタンがありません');
+      return;
+    }
+
+    // 新しいサンプルボタンを取得
+    const newSampleButton = BaseButton.getSampleButtonFromDOMStatic(null);
+    if (!newSampleButton) {
+      console.warn('Comiketter: 新しいサンプルボタンを取得できませんでした');
+      return;
+    }
+
+    console.log('Comiketter: ボタンを更新します', {
+      downloadButtons: downloadButtons.length,
+      bookmarkButtons: bookmarkButtons.length
+    });
+
+    // 各ボタンを更新
+    downloadButtons.forEach((buttonWrapper) => {
+      // ボタンがまだDOMに存在することを確認
+      if (buttonWrapper.isConnected) {
+        BaseButton.updateButtonStructureStatic(buttonWrapper, newSampleButton);
+      }
+    });
+    bookmarkButtons.forEach((buttonWrapper) => {
+      // ボタンがまだDOMに存在することを確認
+      if (buttonWrapper.isConnected) {
+        BaseButton.updateButtonStructureStatic(buttonWrapper, newSampleButton);
+      }
+    });
+    */
+  }
+
+  /**
+   * ボタンの構造を更新（静的メソッド）
+   * 注意: 現在はアイコンサイズのみ更新（ボタンが削除される問題を回避）
+   */
+  private static updateButtonStructureStatic(
+    buttonWrapper: HTMLElement,
+    newSampleButton: HTMLElement
+  ): void {
+    // ボタンがまだDOMに存在することを確認
+    if (!buttonWrapper.isConnected) {
+      console.warn('Comiketter: ボタンがDOMから削除されています', buttonWrapper);
+      return;
+    }
+
+    // ボタン要素を取得
+    const buttonElement = buttonWrapper.querySelector('div > div') as HTMLElement;
+    if (!buttonElement) {
+      console.warn('Comiketter: ボタン要素が見つかりません', buttonWrapper);
+      return;
+    }
+
+    // 既存のアイコンを取得し、サイズのみ更新（構造は変更しない）
+    const existingIcon = buttonElement.querySelector('svg') as HTMLElement;
+    if (existingIcon) {
+      // モードを判定してアイコンサイズを更新
+      const article = buttonWrapper.closest('article[role="article"]') as HTMLElement ||
+                      buttonWrapper.closest('[data-testid="tweet"]')?.closest('article[role="article"]') as HTMLElement ||
+                      null;
+      if (article) {
+        // モードを判定
+        let mode: TweetMode = 'stream';
+        if (article instanceof HTMLDivElement) {
+          mode = 'photo';
+        } else {
+          const articleClassLength = article.classList.length;
+          const isMagicLength = articleClassLength === 3 || articleClassLength === 7 || articleClassLength === 6;
+          const isInStatus = /\/.*\/status\/\d+/.test(window.location.pathname);
+          if (isInStatus && isMagicLength) {
+            mode = 'status';
+          }
+        }
+        
+        const iconSize = mode === 'status' ? '22.5' : '18.75';
+        
+        // アイコンサイズのみ更新（構造は変更しない）
+        existingIcon.setAttribute('width', iconSize);
+        existingIcon.setAttribute('height', iconSize);
+        existingIcon.style.width = `${iconSize}px`;
+        existingIcon.style.height = `${iconSize}px`;
+        
+        console.log('Comiketter: アイコンサイズを更新しました', {
+          buttonWrapper,
+          mode,
+          iconSize
+        });
+      }
+    }
+  }
+
+  /**
+   * DOMからサンプルボタンを取得（キャッシュを使用しない、静的メソッド）
+   * TwitterMediaHarvestのgetSampleButtonを参考に、article要素から取得
+   */
+  private static getSampleButtonFromDOMStatic(article: HTMLElement | null): HTMLElement | null {
+    // article要素が指定されている場合は、そのarticle内から取得
+    if (article) {
+      const replyButton = article.querySelector('[data-testid="reply"] > div') as HTMLElement;
+      if (replyButton) {
+        // ボタンが実際に表示されているか確認
+        const rect = replyButton.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) {
+          return replyButton;
+        }
+      }
+    }
+
+    // フォールバック: グローバルに検索（articleが指定されていない場合）
     const tweetElement = document.querySelector('[data-testid="tweet"]') as HTMLElement;
     if (!tweetElement) {
       return null;
@@ -140,6 +329,46 @@ export abstract class BaseButton {
     }
 
     return null;
+  }
+
+  /**
+   * サンプルボタン（リプライボタン）を取得
+   * TwitterMediaHarvestのgetSampleButtonを参考に実装
+   * article要素を引数として受け取り、そのarticle内から取得
+   */
+  protected getSampleButton(article: HTMLElement | null = null): HTMLElement | null {
+    // article要素が指定されている場合は、そのarticle内から取得（キャッシュを使用しない）
+    if (article) {
+      const sampleButton = BaseButton.getSampleButtonFromDOMStatic(article);
+      return sampleButton;
+    }
+
+    // article要素が指定されていない場合は、キャッシュを使用
+    if (BaseButton.cachedSampleButton) {
+      // キャッシュされたボタンがまだ有効か確認
+      const rect = BaseButton.cachedSampleButton.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        return BaseButton.cachedSampleButton;
+      }
+      // 無効な場合はキャッシュをクリア
+      BaseButton.cachedSampleButton = null;
+    }
+
+    // DOMから取得
+    const sampleButton = BaseButton.getSampleButtonFromDOMStatic(null);
+    if (sampleButton) {
+      // キャッシュに保存
+      BaseButton.cachedSampleButton = sampleButton;
+    }
+
+    return sampleButton;
+  }
+
+  /**
+   * DOMからサンプルボタンを取得（キャッシュを使用しない、インスタンスメソッド）
+   */
+  private getSampleButtonFromDOM(): HTMLElement | null {
+    return BaseButton.getSampleButtonFromDOMStatic(null);
   }
 
   /**
@@ -187,11 +416,20 @@ export abstract class BaseButton {
   /**
    * アイコン要素を作成
    */
-  protected async createIconElement(iconName: string, sampleButton: HTMLElement): Promise<HTMLElement> {
+  protected async createIconElement(iconName: string, sampleButton: HTMLElement, article?: HTMLElement): Promise<HTMLElement> {
     const theme = this.detectTheme();
     const iconColor = this.getButtonColor(theme);
     
-    console.log(`Comiketter: アイコン作成開始 - ${iconName} (テーマ: ${theme}, 色: ${iconColor})`);
+    // モードを判定してアイコンサイズを決定
+    let iconSize = '18.75'; // デフォルト（stream/photoモード）
+    if (article) {
+      const mode = this.selectArticleMode(article);
+      if (mode === 'status') {
+        iconSize = '22.5'; // statusモードは22.5
+      }
+    }
+    
+    console.log(`Comiketter: アイコン作成開始 - ${iconName} (テーマ: ${theme}, 色: ${iconColor}, サイズ: ${iconSize})`);
     
     // アイコンファイルを読み込み
     const iconSVG = await this.loadIcon(iconName);
@@ -205,12 +443,12 @@ export abstract class BaseButton {
       icon.setAttribute('class', sampleIcon.className || 'r-4qtqp9 r-yyyyoo r-1xvli5t r-dnmrzs r-bnwqim r-1plcrui r-lrvibr r-1hdv0qi');
     }
     
-    // アイコンサイズを明示的に18.75×18.75に設定
-    icon.setAttribute('width', '18.75');
-    icon.setAttribute('height', '18.75');
-    icon.style.width = '18.75px';
-    icon.style.height = '18.75px';
-    
+    // アイコンサイズをモードに応じて設定
+    icon.setAttribute('width', iconSize);
+    icon.setAttribute('height', iconSize);
+    icon.style.width = `${iconSize}px`;
+    icon.style.height = `${iconSize}px`;
+
     // 色を設定
     icon.style.color = iconColor;
     
@@ -263,9 +501,34 @@ export abstract class BaseButton {
    * ツイートのモードを判定（TwitterMediaHarvestのselectArtcleModeを参考）
    */
   protected selectArticleMode(article: HTMLElement): TweetMode {
-    if (this.isArticlePhotoMode(article)) return 'photo';
-    if (this.isArticleInStatus(article)) return 'status';
-    return 'stream';
+    const isPhoto = this.isArticlePhotoMode(article);
+    const isStatus = this.isArticleInStatus(article);
+    const isStream = !isPhoto && !isStatus;
+    
+    let mode: TweetMode;
+    if (isPhoto) {
+      mode = 'photo';
+    } else if (isStatus) {
+      mode = 'status';
+    } else {
+      mode = 'stream';
+    }
+    
+    // モード判定の結果をログに出力
+    const pathname = window.location.pathname;
+    const isInStatusPage = /\/.*\/status\/\d+/.test(pathname);
+    console.log('Comiketter: モード判定', {
+      mode,
+      pathname,
+      isInStatusPage,
+      articleTagName: article.tagName,
+      articleClassLength: article.classList.length,
+      isPhoto,
+      isStatus,
+      isStream
+    });
+    
+    return mode;
   }
 
   /**

@@ -135,17 +135,43 @@ export class DownloadButton extends BaseButton {
   /**
    * DLボタンを作成
    */
-  async createButton(tweetInfo: Tweet): Promise<HTMLElement> {
+  async createButton(tweetInfo: Tweet, article?: HTMLElement): Promise<HTMLElement> {
     console.log('Comiketter: DLボタン作成開始');
     
-    // サンプルボタン（いいねボタン等）を取得してスタイルをコピー
-    const sampleButton = this.getSampleButton();
+    // article要素が渡されていない場合は取得を試みる
+    let finalArticle: HTMLElement | undefined = article;
+    if (!finalArticle) {
+      // ボタンのベースを作成（一時的にDOMに追加してarticle要素を取得）
+      const tempButtonWrapper = this.createButtonWrapper();
+      const tempButtonElement = document.createElement('div');
+      const tempInnerWrapper = tempButtonWrapper.querySelector('.comiketter-download-button > div');
+      if (tempInnerWrapper) {
+        tempInnerWrapper.appendChild(tempButtonElement);
+      }
+      
+      // article要素を取得
+      const tempArticle = this.getArticleElement(tempButtonElement);
+      if (tempArticle) {
+        finalArticle = tempArticle;
+      }
+      
+      // 一時的な要素を削除
+      if (tempButtonElement.parentElement) {
+        tempButtonElement.parentElement.removeChild(tempButtonElement);
+      }
+    }
+    
+    // ボタンのベースを作成
+    const buttonWrapper = this.createButtonWrapper();
+    
+    // サンプルボタン（リプライボタン）を取得（article要素から取得）
+    // TwitterMediaHarvestと同様に、article要素内から取得
+    const sampleButton = this.getSampleButton(finalArticle);
     if (!sampleButton) {
       throw new Error('Failed to get sample button');
     }
 
-    // ボタンのベースを作成
-    const buttonWrapper = this.createButtonWrapper();
+    // ボタン要素を作成
     const buttonElement = this.createButtonElement(sampleButton);
     
     // ボタン要素をラッパーに追加（先に追加してからアイコンを置き換える）
@@ -154,23 +180,34 @@ export class DownloadButton extends BaseButton {
       innerWrapper.appendChild(buttonElement);
     }
     
+    console.log('Comiketter: DLボタン作成 - article要素の確認', {
+      hasArticle: !!finalArticle,
+      articleTagName: finalArticle?.tagName,
+      articleClassLength: finalArticle?.classList.length,
+      pathname: window.location.pathname,
+      tempArticle: !!article,
+      finalArticle: !!finalArticle
+    });
+    
+    const mode = finalArticle ? this.selectArticleMode(finalArticle) : 'stream';
+    
+    console.log('Comiketter: DLボタン作成 - モード判定結果', {
+      mode,
+      hasArticle: !!finalArticle
+    });
+    
     // 既存のアイコンを取得して置き換える（TwitterMediaHarvestのswapIconと同様）
     const existingIcon = buttonElement.querySelector('svg') as HTMLElement;
     if (existingIcon) {
-      // アイコンを作成
-      this.currentIconElement = await this.createIconElement('download', sampleButton);
+      // アイコンを作成（finalArticleを渡してモードに応じたサイズを設定）
+      this.currentIconElement = await this.createIconElement('download', sampleButton, finalArticle || undefined);
       // 既存のアイコンを置き換え（これにより、アイコンの位置とpreviousElementSiblingが保持される）
       existingIcon.replaceWith(this.currentIconElement);
     } else {
       // 既存のアイコンがない場合は追加
-      this.currentIconElement = await this.createIconElement('download', sampleButton);
+      this.currentIconElement = await this.createIconElement('download', sampleButton, finalArticle || undefined);
       buttonElement.appendChild(this.currentIconElement);
     }
-    
-    // モードを判定して適切な背景クラスと色クラスを追加
-    // TwitterMediaHarvestと同様に、ボタンがDOMに追加された後に呼ぶ
-    const article = this.getArticleElement(buttonElement);
-    const mode = article ? this.selectArticleMode(article) : 'stream';
     this.addBackgroundClassToIconSibling(this.currentIconElement, mode);
     
     // モードに応じた色クラスを追加（TwitterMediaHarvestを参考）
