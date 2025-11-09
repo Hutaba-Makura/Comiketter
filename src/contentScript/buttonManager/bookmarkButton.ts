@@ -476,13 +476,24 @@ export class BookmarkButton extends BaseButton {
     const bookmarkManager = BookmarkApiClient.getInstance();
     let isBookmarked = false;
     try {
-      isBookmarked = await bookmarkManager.isTweetBookmarked(tweetInfo.id);
-      console.log('Comiketter: CBボタン作成 - ブックマーク状態チェック', {
-        tweetId: tweetInfo.id,
-        isBookmarked
-      });
+      // 拡張機能コンテキストが有効かチェック
+      if (chrome?.runtime?.id) {
+        isBookmarked = await bookmarkManager.isTweetBookmarked(tweetInfo.id);
+        console.log('Comiketter: CBボタン作成 - ブックマーク状態チェック', {
+          tweetId: tweetInfo.id,
+          isBookmarked
+        });
+      } else {
+        // コンテキストが無効な場合は、デフォルト値（false）を使用
+        console.debug('Comiketter: Extension context invalidated, using default bookmark state');
+      }
     } catch (error) {
-      console.error('Comiketter: Failed to check if tweet is bookmarked:', error);
+      // Extension context invalidatedエラーの場合は、エラーログを抑制
+      if (error instanceof Error && error.message === 'Extension context invalidated') {
+        console.debug('Comiketter: Extension context invalidated, bookmark check skipped');
+      } else {
+        console.error('Comiketter: Failed to check if tweet is bookmarked:', error);
+      }
     }
     
     // アイコン名と色を決定

@@ -370,7 +370,7 @@ export interface ImageDownloadResult {
       }
 
       // ダウンロード履歴を保存（Chrome APIのダウンロードIDを使用）
-      const downloadHistory: DownloadHistory = {
+      const downloadHistory: Omit<DownloadHistory, 'id'> & { id: string } = {
         id: downloadId.toString(), // Chrome APIのダウンロードIDを文字列として保存
         tweetId: tweet.id_str,
         authorUsername: tweet.user.screen_name,

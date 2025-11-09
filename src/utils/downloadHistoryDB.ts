@@ -83,15 +83,16 @@ export class DownloadHistoryDatabase {
 
   /**
    * ダウンロード履歴を追加
+   * @param history ダウンロード履歴（IDはオプショナル、指定されていない場合は自動生成）
    */
-  async addDownloadHistory(history: Omit<DownloadHistoryDB, 'id'>): Promise<DownloadHistoryDB> {
+  async addDownloadHistory(history: Omit<DownloadHistoryDB, 'id'> & { id?: string }): Promise<DownloadHistoryDB> {
     const db = await this.init();
     const transaction = db.transaction([this.storeName], 'readwrite');
     const store = transaction.objectStore(this.storeName);
 
     const newHistory: DownloadHistoryDB = {
       ...history,
-      id: this.generateId(),
+      id: history.id || this.generateId(), // IDが指定されている場合はそれを使用、なければ自動生成
     };
 
     return new Promise((resolve, reject) => {
@@ -170,7 +171,9 @@ export class DownloadHistoryDatabase {
       getRequest.onsuccess = () => {
         const existingHistory = getRequest.result;
         if (!existingHistory) {
-          reject(new Error(`Download history with id ${id} not found`));
+          // 存在しないIDの場合は警告を出すだけで、エラーを投げない
+          console.warn(`Comiketter: Download history with id ${id} not found, update skipped`);
+          resolve();
           return;
         }
 

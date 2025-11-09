@@ -162,13 +162,21 @@ export class DownloadManager {
       const downloadItem = await chrome.downloads.search({ id: downloadId });
       if (downloadItem.length > 0) {
         const historyId = downloadId.toString();
-        await StorageManager.updateDownloadHistory(historyId, { 
-          status: status,
-          ...(status === 'success' && { 
-            fileSize: downloadItem[0].fileSize 
-          })
-        });
-        console.log('Comiketter: Download status updated:', { downloadId, status });
+        try {
+          await StorageManager.updateDownloadHistory(historyId, { 
+            status: status,
+            ...(status === 'success' && { 
+              fileSize: downloadItem[0].fileSize 
+            })
+          });
+          console.log('Comiketter: Download status updated:', { downloadId, status });
+        } catch (error) {
+          // 存在しないIDの場合は警告のみ（updateDownloadHistory内で処理済み）
+          // その他のエラーのみログ出力
+          if (error instanceof Error && !error.message.includes('not found')) {
+            console.error('Comiketter: Failed to update download status:', error);
+          }
+        }
       }
     } catch (error) {
       console.error('Comiketter: Failed to update download status:', error);

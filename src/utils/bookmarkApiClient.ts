@@ -32,6 +32,11 @@ export class BookmarkApiClient {
    */
   private async sendMessage(action: string, data?: any): Promise<any> {
     try {
+      // 拡張機能コンテキストが有効かチェック
+      if (!chrome?.runtime?.id) {
+        throw new Error('Extension context invalidated');
+      }
+
       const response = await chrome.runtime.sendMessage({
         type: 'BOOKMARK_ACTION',
         payload: { action, data }
@@ -43,6 +48,13 @@ export class BookmarkApiClient {
       
       return response.data || response;
     } catch (error) {
+      // Extension context invalidatedエラーの場合は、エラーログを抑制
+      if (error instanceof Error && error.message === 'Extension context invalidated') {
+        // 開発者向けのログのみ出力（ユーザーには表示しない）
+        console.debug('BookmarkApiClient: Extension context invalidated, message ignored');
+        // デフォルト値を返す（呼び出し側で適切に処理される）
+        return null;
+      }
       console.error('BookmarkApiClient: Failed to send message:', error);
       throw error;
     }
@@ -53,6 +65,11 @@ export class BookmarkApiClient {
    */
   private async sendCacheMessage(action: string, data?: any): Promise<any> {
     try {
+      // 拡張機能コンテキストが有効かチェック
+      if (!chrome?.runtime?.id) {
+        throw new Error('Extension context invalidated');
+      }
+
       const response = await chrome.runtime.sendMessage({
         type: 'CACHE_ACTION',
         payload: { action, data }
@@ -64,6 +81,13 @@ export class BookmarkApiClient {
       
       return response.data || response;
     } catch (error) {
+      // Extension context invalidatedエラーの場合は、エラーログを抑制
+      if (error instanceof Error && error.message === 'Extension context invalidated') {
+        // 開発者向けのログのみ出力（ユーザーには表示しない）
+        console.debug('BookmarkApiClient: Extension context invalidated, cache message ignored');
+        // デフォルト値を返す（呼び出し側で適切に処理される）
+        return null;
+      }
       console.error('BookmarkApiClient: Failed to send cache message:', error);
       throw error;
     }

@@ -73,13 +73,23 @@ export abstract class BaseButton {
    */
   protected async loadIcon(iconName: string): Promise<string> {
     try {
+      // 拡張機能コンテキストが有効かチェック
+      if (!chrome?.runtime?.id) {
+        throw new Error('Extension context invalidated');
+      }
+
       const response = await fetch(chrome.runtime.getURL(`icons/${iconName}.svg`));
       if (!response.ok) {
         throw new Error(`Failed to load icon: ${iconName}`);
       }
       return await response.text();
     } catch (error) {
-      console.error(`Comiketter: Failed to load icon ${iconName}:`, error);
+      // Extension context invalidatedエラーの場合は、エラーログを抑制
+      if (error instanceof Error && error.message === 'Extension context invalidated') {
+        console.debug(`Comiketter: Extension context invalidated, using default icon for ${iconName}`);
+      } else {
+        console.error(`Comiketter: Failed to load icon ${iconName}:`, error);
+      }
       // フォールバック用のデフォルトアイコン
       return this.getDefaultIcon(iconName);
     }

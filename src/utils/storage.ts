@@ -314,8 +314,9 @@ export class StorageManager {
 
   /**
    * ダウンロード履歴を追加
+   * @param history ダウンロード履歴（IDはオプショナル、指定されていない場合は自動生成）
    */
-  static async addDownloadHistory(history: Omit<DownloadHistory, 'id'>): Promise<DownloadHistory> {
+  static async addDownloadHistory(history: Omit<DownloadHistory, 'id'> & { id?: string }): Promise<DownloadHistory> {
     try {
       const savedHistory = await downloadHistoryDB.addDownloadHistory(history);
       return savedHistory;
@@ -332,8 +333,13 @@ export class StorageManager {
     try {
       await downloadHistoryDB.updateDownloadHistory(id, updates);
     } catch (error) {
-      console.error('Failed to update download history:', error);
-      throw error;
+      // 存在しないIDの場合は警告のみ（updateDownloadHistory内で処理済み）
+      // その他のエラーのみログ出力
+      if (error instanceof Error && !error.message.includes('not found')) {
+        console.error('Failed to update download history:', error);
+        throw error;
+      }
+      // not foundエラーは既に警告が出力されているので、エラーを投げない
     }
   }
 
