@@ -278,9 +278,55 @@ function extractCreatedAt(article: HTMLElement): string | null {
 }
 
 /**
+ * 引用ツイートのメディアコンテナ（G要素）を取得
+ * @param article - ツイート全体の <article data-testid="tweet">
+ * @returns 引用ツイートのメディアコンテナ要素の配列
+ */
+function getQuotedTweetContainers(article: HTMLElement): HTMLElement[] {
+  const containers: HTMLElement[] = [];
+  
+  // "引用"というテキストを持つspan要素をすべて検索
+  const allSpans = article.querySelectorAll('span');
+  allSpans.forEach(span => {
+    const text = (span.textContent || '').trim();
+    if (text === '引用') {
+      // 親要素（P）を取得
+      const parentP = span.parentElement;
+      if (parentP) {
+        // Pがdir="ltr"を持たない場合は間違った要素なのでスキップ
+        if (parentP.getAttribute('dir') !== 'ltr') {
+          return;
+        }
+        
+        // Pの親要素（G）を取得
+        const grandparentG = parentP.parentElement;
+        if (grandparentG) {
+          containers.push(grandparentG);
+        }
+      }
+    }
+  });
+  
+  return containers;
+}
+
+/**
+ * 要素が引用ツイート内にあるかを判定
+ * @param element - 判定したい要素
+ * @param quotedContainers - 引用ツイートのメディアコンテナ要素の配列
+ * @returns 引用ツイート内にある場合はtrue
+ */
+function isInQuotedTweet(element: HTMLElement, quotedContainers: HTMLElement[]): boolean {
+  return quotedContainers.some(container => container.contains(element));
+}
+
+/**
  * 画像の存在をチェック（引用リツイート内の画像は除外）
  */
 function checkHasImage(article: HTMLElement): boolean {
+  // 引用ツイートのメディアコンテナを取得
+  const quotedContainers = getQuotedTweetContainers(article);
+  
   // 画像の存在チェック（プロフィール画像とバナー画像を除外）
   // より具体的なセレクターを使用してツイート内の画像を検出
   const images = article.querySelectorAll('img[src*="pbs.twimg.com/media/"]');
@@ -291,8 +337,9 @@ function checkHasImage(article: HTMLElement): boolean {
     if (src) {
       // プロフィール画像とバナー画像を除外
       if (!isProfileOrBannerImage(src) && !isVideoThumbnail(src)) {
-        if (!isQuoteTweet(article, img as HTMLImageElement)) {
-          hasValidImage = true; // TODO: 画像付き引用RTの場合はfalseにする
+        // 引用ツイート内の画像は除外
+        if (!isInQuotedTweet(img as HTMLElement, quotedContainers)) {
+          hasValidImage = true;
         }
       }
     }
@@ -304,28 +351,35 @@ function checkHasImage(article: HTMLElement): boolean {
     allImages.forEach(img => {
       const src = img.getAttribute('src');
       if (src && src.includes('/media/') && !isProfileOrBannerImage(src) && !isVideoThumbnail(src)) {
-        // 引用リツイート内の画像も除外
-        if (!isQuoteTweet(article, img as HTMLImageElement)) {
+        // 引用ツイート内の画像は除外
+        if (!isInQuotedTweet(img as HTMLElement, quotedContainers)) {
           hasValidImage = true;
         }
       }
     });
   }
   
-  // 動画の存在チェック
-  const hasVideo = article.querySelector('[data-testid="videoPlayer"]') !== null ||
-                  article.querySelector('[data-testid="playButton"]') !== null;
+  // 動画の存在チェック（引用ツイート内の動画は除外）
+  const videoElements = article.querySelectorAll('[data-testid="videoPlayer"], [data-testid="playButton"]');
+  let hasVideo = false;
+  videoElements.forEach(video => {
+    if (!isInQuotedTweet(video as HTMLElement, quotedContainers)) {
+      hasVideo = true;
+    }
+  });
   
-  // GIFの存在チェック
-  const hasGif = article.querySelector('[data-testid="videoPlayer"] video[src*=".mp4"]') !== null ||
-                 article.querySelector('video[src*=".mp4"]') !== null;
-  
-  // 引用ツイート内のメディアは除外
-  const isInQuotedTweet = article.closest('[role="link"]') !== null;
+  // GIFの存在チェック（引用ツイート内のGIFは除外）
+  const gifElements = article.querySelectorAll('[data-testid="videoPlayer"] video[src*=".mp4"], video[src*=".mp4"]');
+  let hasGif = false;
+  gifElements.forEach(gif => {
+    if (!isInQuotedTweet(gif as HTMLElement, quotedContainers)) {
+      hasGif = true;
+    }
+  });
   
   const hasMedia = hasValidImage || hasVideo || hasGif;
   
-  return hasMedia && !isInQuotedTweet;
+  return hasMedia;
 }
 
 /**
@@ -333,6 +387,9 @@ function checkHasImage(article: HTMLElement): boolean {
  */
 function extractMediaUrls(article: HTMLElement): string[] {
   const mediaUrls: string[] = [];
+  
+  // 引用ツイートのメディアコンテナを取得
+  const quotedContainers = getQuotedTweetContainers(article);
 
   // 画像URLを抽出（プロフィール画像とバナー画像を除外）
   const images = article.querySelectorAll('img[src*="pbs.twimg.com/media/"]');
@@ -349,6 +406,11 @@ function extractMediaUrls(article: HTMLElement): string[] {
         return;
       }
       
+      // 引用ツイート内の画像は除外
+      if (isInQuotedTweet(img as HTMLElement, quotedContainers)) {
+        return;
+      }
+      
       // 高解像度版のURLに変換
       const highResUrl = src.replace(/&name=\w+/, '&name=orig');
       mediaUrls.push(highResUrl);
@@ -358,34 +420,57 @@ function extractMediaUrls(article: HTMLElement): string[] {
   // 動画URLはAPI傍受で取得されるため、ここでは追加しない
   // 実際の動画URLは background/downloadManager.ts の extractMediaFromTweet で取得される
   const videos = article.querySelectorAll('[data-testid="videoPlayer"], [data-testid="playButton"]');
-  if (videos.length > 0) {
-    // 動画の場合はプレースホルダーを追加
-    mediaUrls.push('video://placeholder');
-  }
+  videos.forEach(video => {
+    // 引用ツイート内の動画は除外
+    if (!isInQuotedTweet(video as HTMLElement, quotedContainers)) {
+      // 動画の場合はプレースホルダーを追加（重複チェック）
+      if (!mediaUrls.includes('video://placeholder')) {
+        mediaUrls.push('video://placeholder');
+      }
+    }
+  });
 
   return mediaUrls;
 }
 
 /**
- * 動画の存在をチェック
+ * 動画の存在をチェック（引用ツイート内の動画は除外）
  */
 function checkHasVideo(article: HTMLElement): boolean {
-  // 動画プレイヤーや再生ボタンの存在をチェック
-  const hasVideo = article.querySelector('[data-testid="videoPlayer"]') !== null ||
-                  article.querySelector('[data-testid="playButton"]') !== null;
+  // 引用ツイートのメディアコンテナを取得
+  const quotedContainers = getQuotedTweetContainers(article);
   
-  return hasVideo;
+  // 動画プレイヤーや再生ボタンの存在をチェック
+  const videoElements = article.querySelectorAll('[data-testid="videoPlayer"], [data-testid="playButton"]');
+  for (let i = 0; i < videoElements.length; i++) {
+    const video = videoElements[i] as HTMLElement;
+    // 引用ツイート内の動画は除外
+    if (!isInQuotedTweet(video, quotedContainers)) {
+      return true;
+    }
+  }
+  
+  return false;
 }
 
 /**
- * GIFの存在をチェック
+ * GIFの存在をチェック（引用ツイート内のGIFは除外）
  */
 function checkHasGif(article: HTMLElement): boolean {
-  // GIF動画の存在をチェック
-  const hasGif = article.querySelector('[data-testid="videoPlayer"] video[src*=".mp4"]') !== null ||
-                 article.querySelector('video[src*=".mp4"]') !== null;
+  // 引用ツイートのメディアコンテナを取得
+  const quotedContainers = getQuotedTweetContainers(article);
   
-  return hasGif;
+  // GIF動画の存在をチェック
+  const gifElements = article.querySelectorAll('[data-testid="videoPlayer"] video[src*=".mp4"], video[src*=".mp4"]');
+  for (let i = 0; i < gifElements.length; i++) {
+    const gif = gifElements[i] as HTMLElement;
+    // 引用ツイート内のGIFは除外
+    if (!isInQuotedTweet(gif, quotedContainers)) {
+      return true;
+    }
+  }
+  
+  return false;
 }
 
 /**
@@ -462,98 +547,3 @@ export function getMediaType(article: HTMLElement): 'image' | 'video' | 'animate
   return null;
 }
 
-/**
- * 画像要素が「引用RT 側カード」に属しているなら true を返す
- * @param article - ツイート全体の <article data-testid="tweet">
- * @param img - 判定したい画像要素
- */
-export function isQuoteTweet(article: HTMLElement, img: HTMLImageElement): boolean {
-  console.log('Comiketter: isQuoteTweet - 開始', { article: !!article, img: !!img });
-  
-  if (!article || !img) {
-    console.log('Comiketter: isQuoteTweet - 引数チェック失敗', { article: !!article, img: !!img });
-    return false;
-  }
-
-  // 画像のカード要素を取得
-  const card = img.closest('[data-testid="tweetPhoto"]')?.closest('[role="link"]') as HTMLElement | null;
-  console.log('Comiketter: isQuoteTweet - カード要素取得', { card: !!card });
-  
-  if (!card) {
-    console.log('Comiketter: isQuoteTweet - カード要素が見つからない');
-    return false;
-  }
-
-  // 引用ラベルを検索する関数
-  const hasQuoteLabel = (element: Element): boolean => {
-    const text = (element.textContent || '').trim();
-    // 引用の後にユーザー名や時間情報が続く場合も検出
-    const isQuote = /^(引用|Quoted(?:\s+(?:post|tweet))?)/i.test(text);
-    if (text) {
-      console.log('Comiketter: isQuoteTweet - ラベルチェック', { text, isQuote });
-    }
-    return isQuote;
-  };  
-
-  // 1. aria-labelledby による引用セクション判定
-  const section = card.closest('[aria-labelledby]') as HTMLElement | null;
-  console.log('Comiketter: isQuoteTweet - aria-labelledbyセクション', { section: !!section });
-  
-  if (section) {
-    const cssEscape = (window as any).CSS?.escape ?? ((s: string) => s.replace(/[^a-zA-Z0-9_\-]/g, '\\$&'));
-    const labelledBy = section.getAttribute('aria-labelledby') ?? '';
-    console.log('Comiketter: isQuoteTweet - aria-labelledby値', { labelledBy });
-    
-    const hasLabel = labelledBy.split(/\s+/).filter(Boolean)
-      .some(id => {
-        const labelEl = section.querySelector('#' + cssEscape(id)) as HTMLElement | null;
-        const result = labelEl && hasQuoteLabel(labelEl);
-        console.log('Comiketter: isQuoteTweet - ラベル要素チェック', { id, labelEl: !!labelEl, result });
-        return result;
-      });
-    
-    if (hasLabel) {
-      console.log('Comiketter: isQuoteTweet - aria-labelledby判定で引用と判定');
-      return true;
-    }
-  }
-
-  // 2. フォールバック: 近傍要素の引用ラベル判定
-  const checkNearbyElements = (start: Element): boolean => {
-    console.log('Comiketter: isQuoteTweet - 近傍要素チェック開始');
-    
-    // 直前の兄弟要素をチェック
-    for (let el = start.previousElementSibling; el; el = el.previousElementSibling) {
-      const text = (el.textContent || '').trim();
-      if (text) {
-        console.log('Comiketter: isQuoteTweet - 兄弟要素チェック', { text });
-      }
-      if (hasQuoteLabel(el)) {
-        console.log('Comiketter: isQuoteTweet - 兄弟要素で引用ラベル発見');
-        return true;
-      }
-    }
-    
-    // 親の兄弟要素もチェック
-    const parent = start.parentElement;
-    if (parent) {
-      for (let el = parent.previousElementSibling; el; el = el.previousElementSibling) {
-        const text = (el.textContent || '').trim();
-        if (text) {
-          console.log('Comiketter: isQuoteTweet - 親の兄弟要素チェック', { text });
-        }
-        if (hasQuoteLabel(el)) {
-          console.log('Comiketter: isQuoteTweet - 親の兄弟要素で引用ラベル発見');
-          return true;
-        }
-      }
-    }
-    
-    console.log('Comiketter: isQuoteTweet - 近傍要素で引用ラベルなし');
-    return false;
-  };
-
-  const result = checkNearbyElements(card);
-  console.log('Comiketter: isQuoteTweet - 最終結果', { result });
-  return result;
-}
