@@ -1,11 +1,11 @@
 // Options App component for Comiketter
 import React, { useState, useEffect } from 'react';
-import { Container, Title, Text, Switch, Select, Button, Stack, Group, Divider } from '@mantine/core';
+import { Container, Title, Text, Switch, Select, Button, Stack, Group, Divider, ActionIcon, Tooltip, Box } from '@mantine/core';
 import { StorageManager } from '@/utils/storage';
 import { FilenameSettings } from '@/components/FilenameSettings';
 import { BookmarkManager } from '@/components/BookmarkManager';
 import type { Settings } from '@/types';
-import { IconSettings } from '@tabler/icons-react';
+import { IconSettings, IconBookmark } from '@tabler/icons-react';
 
 export const OptionsApp: React.FC = () => {
   const [settings, setSettings] = useState<Settings | null>(null);
@@ -50,6 +50,11 @@ export const OptionsApp: React.FC = () => {
     setSettings({ ...settings, filenameSettings });
   };
 
+  const openBookmarks = () => {
+    const url = chrome.runtime.getURL('bookmarks.html');
+    chrome.tabs.update({ url, active: true });
+  };
+
   if (loading) {
     return (
       <Container size="md" py="xl">
@@ -67,9 +72,35 @@ export const OptionsApp: React.FC = () => {
   }
 
   return (
-    <Container size="md" py="xl">
-      <Stack gap="lg">
-        <Title order={1}><IconSettings size={32} />&nbsp;Comiketter 設定</Title>
+    <>
+      {/* Stickyなカスタムブックマーク遷移ボタン */}
+      <Box
+        style={{
+          position: 'fixed',
+          top: '16px',
+          right: '16px',
+          zIndex: 1000,
+        }}
+      >
+        <Tooltip label="カスタムブックマークを開く" position="left">
+          <ActionIcon
+            variant="light"
+            radius="md"
+            onClick={openBookmarks}
+            style={{
+              width: '44px',
+              height: '44px',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+            }}
+          >
+            <IconBookmark size={36} />
+          </ActionIcon>
+        </Tooltip>
+      </Box>
+
+      <Container size="md" py="xl">
+        <Stack gap="lg">
+          <Title order={1}><IconSettings size={32} />&nbsp;Comiketter 設定</Title>
         
         {/*
         <Stack gap="md">
@@ -199,5 +230,6 @@ export const OptionsApp: React.FC = () => {
         </Stack>
       </Stack>
     </Container>
+    </>
   );
 }; 
