@@ -41,6 +41,7 @@ export enum BookmarkButtonStatus {
 export class BookmarkButton extends BaseButton {
   private bookmarkSelector: HTMLElement | null = null;
   private currentTweetInfo: Tweet | null = null;
+  private currentButton: HTMLElement | null = null;
 
   constructor() {
     const config: ButtonConfig = {
@@ -114,25 +115,89 @@ export class BookmarkButton extends BaseButton {
   /**
    * アイコンを更新
    */
-  private async updateIcon(iconName: string): Promise<void> {
-    if (!this.currentIconElement) return;
+  private async updateIcon(iconName: string, color?: string, button?: HTMLElement): Promise<void> {
+    // ボタンが指定されていない場合は、保存されたボタンまたは現在のアイコン要素を使用
+    const targetButton = button || this.currentButton;
+    const iconElement = targetButton 
+      ? (targetButton.querySelector('svg') as HTMLElement)
+      : this.currentIconElement;
     
-    const theme = this.detectTheme();
-    const iconColor = this.getButtonColor(theme);
+    console.log('Comiketter: updateIcon called', { 
+      iconName, 
+      color, 
+      hasCurrentIcon: !!this.currentIconElement,
+      hasTargetButton: !!targetButton,
+      hasIconElement: !!iconElement
+    });
     
-    // アイコンファイルを読み込み
-    const iconSVG = await this.loadIcon(iconName);
+    if (!iconElement) {
+      console.warn('Comiketter: iconElement is null, cannot update icon', {
+        hasTargetButton: !!targetButton,
+        hasCurrentIcon: !!this.currentIconElement
+      });
+      return;
+    }
     
-    // 新しいSVG要素を作成
-    const newIcon = this.createElementFromHTML(iconSVG);
-    
-    // 既存のクラスとスタイルをコピー
-    newIcon.setAttribute('class', this.currentIconElement.className);
-    newIcon.style.color = iconColor;
-    
-    // 既存のアイコンを置き換え
-    this.currentIconElement.replaceWith(newIcon);
-    this.currentIconElement = newIcon;
+    try {
+      // 既存のアイコンのサイズとクラスを取得
+      const existingWidth = iconElement.getAttribute('width') || 
+                            iconElement.style.width || 
+                            '18.75';
+      const existingHeight = iconElement.getAttribute('height') || 
+                             iconElement.style.height || 
+                             '18.75';
+      const existingClass = iconElement.className;
+      
+      console.log('Comiketter: Existing icon properties', { 
+        existingWidth, 
+        existingHeight, 
+        existingClass,
+        iconElement 
+      });
+      
+      // テーマを検出して色を決定
+      const theme = this.detectTheme();
+      const iconColor = color || this.getButtonColor(theme);
+      
+      // アイコンファイルを読み込み
+      console.log('Comiketter: Loading icon:', iconName);
+      const iconSVG = await this.loadIcon(iconName);
+      
+      // 新しいSVG要素を作成
+      const newIcon = this.createElementFromHTML(iconSVG);
+      
+      // 既存のクラスとスタイルをコピー
+      newIcon.setAttribute('class', existingClass);
+      
+      // アイコンサイズを保持
+      newIcon.setAttribute('width', existingWidth);
+      newIcon.setAttribute('height', existingHeight);
+      newIcon.style.width = existingWidth.includes('px') ? existingWidth : `${existingWidth}px`;
+      newIcon.style.height = existingHeight.includes('px') ? existingHeight : `${existingHeight}px`;
+      
+      // 色を設定
+      newIcon.style.color = iconColor;
+      
+      console.log('Comiketter: New icon created', { 
+        newIcon, 
+        iconColor, 
+        width: newIcon.getAttribute('width'),
+        height: newIcon.getAttribute('height')
+      });
+      
+      // 既存のアイコンを置き換え
+      iconElement.replaceWith(newIcon);
+      
+      // 現在のアイコン要素も更新（存在する場合）
+      if (this.currentIconElement === iconElement) {
+        this.currentIconElement = newIcon;
+      }
+      
+      console.log('Comiketter: Icon updated successfully', { iconName, iconColor });
+    } catch (error) {
+      console.error('Comiketter: Failed to update icon:', error);
+      throw error;
+    }
   }
 
   /**
@@ -456,6 +521,8 @@ export class BookmarkButton extends BaseButton {
       // ボタンをローディング状態に変更
       this.setBookmarkButtonStatus(button, BookmarkButtonStatus.Loading);
       
+      // 現在のボタンとツイート情報を保存
+      this.currentButton = button;
       this.currentTweetInfo = tweetInfo;
       
       // BookmarkApiClientを初期化
@@ -854,35 +921,49 @@ export class BookmarkButton extends BaseButton {
       return;
     }
 
-    try {
-      const bookmarkManager = BookmarkApiClient.getInstance();
-      const selectedBookmarks = this.getSelectedBookmarks();
-      
-      if (selectedBookmarks.length === 0) {
-        alert('ブックマークを選択してください');
-        return;
-      }
+    const bookmarkManager = BookmarkApiClient.getInstance();
+    const selectedBookmarks = this.getSelectedBookmarks();
+    
+    if (selectedBookmarks.length === 0) {
+      alert('ブックマークを選択してください');
+      return;
+    }
 
-      // 各ブックマークにツイートを追加
-      for (const bookmarkId of selectedBookmarks) {
+    let successCount = 0;
+    let hasError = false;
+
+    // 各ブックマークにツイートを追加
+    for (const bookmarkId of selectedBookmarks) {
+      try {
         await bookmarkManager.addTweetToBookmark(bookmarkId, this.currentTweetInfo.id, this.currentTweetInfo);
+        successCount++;
+      } catch (error) {
+        console.error('Comiketter: Failed to add tweet to bookmark:', bookmarkId, error);
+        hasError = true;
       }
-      
-      console.log('Comiketter: Saved tweet to bookmarks:', selectedBookmarks);
-      
-      // ブックマーク登録後のアイコン変更
-      await this.updateIcon('bookmarked');
-      if (this.currentIconElement) {
-        this.currentIconElement.style.color = '#35a6f1';
+    }
+    
+    console.log('Comiketter: Saved tweet to bookmarks:', { selectedBookmarks, successCount, hasError });
+    
+    // 少なくとも1つのブックマークに追加できた場合はアイコンを更新
+    if (successCount > 0 && this.currentButton) {
+      try {
+        // ブックマーク登録後のアイコン変更（bookmarked.svgに変更し、色を#35a6f1に設定）
+        await this.updateIcon('bookmarked', '#35a6f1', this.currentButton);
+      } catch (error) {
+        console.error('Comiketter: Failed to update icon:', error);
       }
-      
-      this.hideBookmarkSelector();
-      
-      // 成功メッセージを表示
-      alert(`${selectedBookmarks.length}個のブックマークに保存しました`);
-    } catch (error) {
-      console.error('Comiketter: Failed to save bookmarks:', error);
+    }
+    
+    this.hideBookmarkSelector();
+    
+    // メッセージを表示
+    if (hasError && successCount === 0) {
       alert('ブックマークの保存に失敗しました');
+    } else if (hasError) {
+      alert(`${successCount}個のブックマークに保存しました（一部失敗しました）`);
+    } else {
+      alert(`${successCount}個のブックマークに保存しました`);
     }
   }
 
