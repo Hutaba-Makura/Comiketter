@@ -289,12 +289,6 @@ export class TweetObserver {
     
     // どちらかのボタンが既に存在する場合は追加しない
     if (hasBookmarkButton || hasDownloadButton) {
-      console.log('Comiketter: 既にボタンが存在するためスキップ', {
-        hasBookmarkButton,
-        hasDownloadButton,
-        article: article.tagName,
-        tweetId: article.getAttribute('data-testid')
-      });
       return false;
     }
     
@@ -332,10 +326,6 @@ export class TweetObserver {
 
       // 最終チェック：ボタン作成後に再度チェック
       if (!this.shouldAddButtons(article)) {
-        console.log('Comiketter: ボタン作成後の最終チェックで中止', {
-          article: article.tagName,
-          tweetId: article.getAttribute('data-testid')
-        });
         return;
       }
 
