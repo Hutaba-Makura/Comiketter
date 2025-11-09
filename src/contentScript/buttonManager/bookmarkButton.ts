@@ -412,8 +412,6 @@ export class BookmarkButton extends BaseButton {
    * ブックマークボタンを作成
    */
   async createButton(tweetInfo: Tweet, article?: HTMLElement): Promise<HTMLElement> {
-    console.log('Comiketter: CBボタン作成開始');
-    
     // article要素が渡されていない場合は取得を試みる
     let finalArticle: HTMLElement | undefined = article;
     if (!finalArticle) {
@@ -456,21 +454,21 @@ export class BookmarkButton extends BaseButton {
       innerWrapper.appendChild(buttonElement);
     }
     
-    console.log('Comiketter: CBボタン作成 - article要素の確認', {
-      hasArticle: !!finalArticle,
-      articleTagName: finalArticle?.tagName,
-      articleClassLength: finalArticle?.classList.length,
-      pathname: window.location.pathname,
-      tempArticle: !!article,
-      finalArticle: !!finalArticle
-    });
+    // console.log('Comiketter: CBボタン作成 - article要素の確認', {
+    //   hasArticle: !!finalArticle,
+    //   articleTagName: finalArticle?.tagName,
+    //   articleClassLength: finalArticle?.classList.length,
+    //   pathname: window.location.pathname,
+    //   tempArticle: !!article,
+    //   finalArticle: !!finalArticle
+    // });
     
     const mode = finalArticle ? this.selectArticleMode(finalArticle) : 'stream';
     
-    console.log('Comiketter: CBボタン作成 - モード判定結果', {
-      mode,
-      hasArticle: !!finalArticle
-    });
+    // console.log('Comiketter: CBボタン作成 - モード判定結果', {
+    //   mode,
+    //   hasArticle: !!finalArticle
+    // });
     
     // ツイートがブックマークされているかチェック
     const bookmarkManager = BookmarkApiClient.getInstance();
@@ -479,10 +477,6 @@ export class BookmarkButton extends BaseButton {
       // 拡張機能コンテキストが有効かチェック
       if (chrome?.runtime?.id) {
         isBookmarked = await bookmarkManager.isTweetBookmarked(tweetInfo.id);
-        console.log('Comiketter: CBボタン作成 - ブックマーク状態チェック', {
-          tweetId: tweetInfo.id,
-          isBookmarked
-        });
       } else {
         // コンテキストが無効な場合は、デフォルト値（false）を使用
         console.debug('Comiketter: Extension context invalidated, using default bookmark state');
@@ -533,8 +527,6 @@ export class BookmarkButton extends BaseButton {
     
     // クリックイベントを設定
     this.setupBookmarkClickHandler(buttonWrapper, tweetInfo);
-    
-    console.log('Comiketter: CBボタン作成完了');
     
     return buttonWrapper;
   }

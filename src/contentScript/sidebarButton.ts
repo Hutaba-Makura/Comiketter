@@ -58,14 +58,11 @@ export class SidebarButton {
     }
 
     try {
-      sendLog('サイドバーボタン初期化開始');
-      
       // スタイルを注入
       this.injectStyles();
       
       // ページの読み込み状態を確認
       if (document.readyState === 'loading') {
-        sendLog('ページ読み込み中、DOMContentLoadedを待機');
         await new Promise<void>((resolve) => {
           document.addEventListener('DOMContentLoaded', () => resolve());
         });
@@ -81,7 +78,6 @@ export class SidebarButton {
       this.startObserving();
       
       this.isInitialized = true;
-      sendLog('サイドバーボタン初期化完了');
     } catch (error) {
       sendLog('サイドバーボタン初期化エラー:', error);
     }
@@ -91,13 +87,9 @@ export class SidebarButton {
    * 既存のサイドバーにボタンを追加
    */
   private async initializeExistingSidebar(): Promise<void> {
-    sendLog('既存ナビゲーションの初期化開始');
-    
     const sidebar = this.findSidebar();
     if (sidebar) {
-      sendLog('ナビゲーション要素を発見、ボタン追加を試行');
       if (this.shouldAddButton(sidebar)) {
-        sendLog('ボタン追加条件を満たしたため、createSidebarButtonを実行');
         await this.createSidebarButton();
       } else {
         sendLog('ボタン追加条件を満たさないため、スキップ');
@@ -145,7 +137,6 @@ export class SidebarButton {
       const element = document.querySelector(target.selector);
       if (element) {
         this.observer.observe(element, options);
-        sendLog(`監視開始: ${target.name}`);
         break;
       }
     }
@@ -237,28 +228,13 @@ export class SidebarButton {
   private shouldAddButton(sidebar: HTMLElement): boolean {
     // 既にボタンが追加されている場合はスキップ
     const existingButton = sidebar.querySelector('[data-testid="comiketter-sidebar-button"]');
-    const shouldAdd = !existingButton;
-    
-    sendLog('shouldAddButton判定:', {
-      sidebarTagName: sidebar.tagName,
-      sidebarRole: sidebar.getAttribute('role'),
-      existingButton: !!existingButton,
-      shouldAdd: shouldAdd
-    });
-    
-    return shouldAdd;
+    return !existingButton;
   }
 
   /**
    * サイドバー要素を検索
    */
   private findSidebar(): HTMLElement | null {
-    sendLog('サイドバー要素の検索開始');
-    
-    // 現在のページのURLを確認
-    const currentUrl = window.location.href;
-    sendLog('現在のURL:', currentUrl);
-    
     // 直接ナビゲーション要素を検索
     const selectors = [
       'nav[role="navigation"]',
@@ -268,20 +244,12 @@ export class SidebarButton {
 
     for (const selector of selectors) {
       const elements = document.querySelectorAll(selector);
-      sendLog(`セレクター "${selector}" で ${elements.length} 個の要素を発見`);
       
       for (let i = 0; i < elements.length; i++) {
         const element = elements[i] as HTMLElement;
-        sendLog(`要素 ${i + 1}:`, {
-          tagName: element.tagName,
-          role: element.getAttribute('role'),
-          className: element.className,
-          childrenCount: element.children.length
-        });
         
         // ナビゲーション要素として適切かチェック
         if (this.isValidNavigation(element)) {
-          sendLog(`有効なナビゲーション要素を発見: ${selector} (${i + 1}番目)`);
           return element;
         }
       }
@@ -336,7 +304,6 @@ export class SidebarButton {
       for (const selector of selectors) {
         const element = nav.querySelector(selector) as HTMLElement;
         if (element) {
-          sendLog(`サンプル要素を発見（nav内）: ${selector}`);
           return element;
         }
       }
@@ -353,7 +320,6 @@ export class SidebarButton {
     for (const selector of selectors) {
       const element = document.querySelector(selector) as HTMLElement;
       if (element) {
-        sendLog(`サンプル要素を発見: ${selector}`);
         return element;
       }
     }
@@ -372,7 +338,6 @@ export class SidebarButton {
     // 既存のSVGアイコンをすべて削除
     const existingSvgs = button.querySelectorAll('svg');
     if (existingSvgs.length > 0) {
-      sendLog(`${existingSvgs.length}個の既存SVGアイコンを削除`);
       existingSvgs.forEach(svg => svg.remove());
     }
     
@@ -414,8 +379,6 @@ export class SidebarButton {
    * アイコン要素を作成
    */
   private async createIconElement(sampleElement: HTMLElement): Promise<HTMLElement> {
-    sendLog('アイコン要素作成開始');
-    
     // アイコンファイルを読み込み
     const iconSVG = await this.loadIcon('twitterBookmark');
     
@@ -450,7 +413,6 @@ export class SidebarButton {
       icon.style.flexShrink = '0';
     }
     
-    sendLog('アイコン要素作成完了');
     return icon;
   }
 
@@ -540,7 +502,6 @@ export class SidebarButton {
     const previousSibling = icon.previousElementSibling as HTMLElement;
     if (previousSibling) {
       previousSibling.classList.add('sidebarBG');
-      sendLog('背景クラス sidebarBG を追加しました', previousSibling);
     } else {
       // デバッグ: アイコンの親要素の構造を確認
       sendLog('アイコンの前の要素が見つかりません', {
@@ -569,15 +530,11 @@ export class SidebarButton {
    * サイドバーボタンを作成
    */
   private async createSidebarButton(): Promise<void> {
-    sendLog('createSidebarButton開始');
-    
     const sidebar = this.findSidebar();
     if (!sidebar) {
       sendLog('ナビゲーション要素が見つかりません');
       return;
     }
-
-    sendLog('ナビゲーション要素を発見、ボタン作成を開始');
 
     // 既存のボタンを削除
     this.removeSidebarButton();
@@ -636,8 +593,6 @@ export class SidebarButton {
 
     // サイドバーに挿入
     this.insertIntoSidebar(sidebar);
-    
-    sendLog('サイドバーボタン作成完了');
   }
 
 
@@ -645,14 +600,6 @@ export class SidebarButton {
    * サイドバーにボタンを挿入
    */
   private insertIntoSidebar(sidebar: HTMLElement): void {
-    sendLog('insertIntoSidebar開始');
-    
-    sendLog('ナビゲーション要素への挿入開始', { 
-      sidebarTagName: sidebar.tagName, 
-      sidebarRole: sidebar.getAttribute('role'),
-      sidebarChildrenCount: sidebar.children.length
-    });
-    
     // ブックマークリンクを探して、その直後に挿入
     const bookmarkLink = sidebar.querySelector('a[href="/i/bookmarks"]');
     if (bookmarkLink && bookmarkLink.parentElement) {
@@ -662,11 +609,9 @@ export class SidebarButton {
       if (nextSibling) {
         // ブックマークの次の要素の前に挿入
         parent.insertBefore(this.button!, nextSibling);
-        sendLog('ブックマークの直後に挿入完了');
       } else {
         // ブックマークの後に挿入
         parent.appendChild(this.button!);
-        sendLog('ブックマークの後に挿入完了');
       }
     } else {
       // 挿入先を決定
@@ -678,28 +623,6 @@ export class SidebarButton {
       
       // ボタンを挿入
       insertTarget.appendChild(this.button!);
-      sendLog('ボタンの挿入完了', { 
-        targetTagName: insertTarget.tagName,
-        targetRole: insertTarget.getAttribute('role')
-      });
-    }
-    
-    // 挿入後の確認
-    const insertedButton = document.querySelector('[data-testid="comiketter-sidebar-button"]');
-    if (insertedButton) {
-      sendLog('ボタンの挿入を確認');
-      
-      // ボタンの位置を確認
-      const buttonRect = insertedButton.getBoundingClientRect();
-      sendLog('ボタンの位置:', {
-        top: buttonRect.top,
-        left: buttonRect.left,
-        width: buttonRect.width,
-        height: buttonRect.height,
-        visible: buttonRect.width > 0 && buttonRect.height > 0
-      });
-    } else {
-      sendLog('ボタンの挿入に失敗');
     }
   }
 
@@ -707,12 +630,9 @@ export class SidebarButton {
    * 挿入先を決定
    */
   private findInsertTarget(sidebar: HTMLElement): HTMLElement | null {
-    sendLog('findInsertTarget開始');
-    
     // 1. ブックマークリンクを探して、その直後に挿入
     const bookmarkLink = sidebar.querySelector('a[href="/i/bookmarks"]');
     if (bookmarkLink) {
-      sendLog('ブックマークリンクを発見、その直後に挿入');
       return sidebar; // 親要素を返して、後で挿入位置を調整
     }
     
@@ -758,8 +678,6 @@ export class SidebarButton {
    */
   private handleButtonClick(): void {
     try {
-      sendLog('サイドバーボタンクリック');
-      
       // 拡張機能のコンテキストが有効かチェック
       if (!chrome?.runtime?.id) {
         sendLog('拡張機能コンテキストが無効です。フォールバック処理を実行');
@@ -827,8 +745,6 @@ export class SidebarButton {
     }
     this.pendingNodes = [];
     this.processedElements = new WeakSet<HTMLElement>();
-    
-    sendLog('サイドバーボタン削除完了');
   }
 
   /**

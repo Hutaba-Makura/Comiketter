@@ -136,8 +136,6 @@ export class DownloadButton extends BaseButton {
    * DLボタンを作成
    */
   async createButton(tweetInfo: Tweet, article?: HTMLElement): Promise<HTMLElement> {
-    console.log('Comiketter: DLボタン作成開始');
-    
     // article要素が渡されていない場合は取得を試みる
     let finalArticle: HTMLElement | undefined = article;
     if (!finalArticle) {
@@ -180,21 +178,12 @@ export class DownloadButton extends BaseButton {
       innerWrapper.appendChild(buttonElement);
     }
     
-    console.log('Comiketter: DLボタン作成 - article要素の確認', {
-      hasArticle: !!finalArticle,
-      articleTagName: finalArticle?.tagName,
-      articleClassLength: finalArticle?.classList.length,
-      pathname: window.location.pathname,
-      tempArticle: !!article,
-      finalArticle: !!finalArticle
-    });
-    
     const mode = finalArticle ? this.selectArticleMode(finalArticle) : 'stream';
     
-    console.log('Comiketter: DLボタン作成 - モード判定結果', {
-      mode,
-      hasArticle: !!finalArticle
-    });
+    // console.log('Comiketter: DLボタン作成 - モード判定結果', {
+    //   mode,
+    //   hasArticle: !!finalArticle
+    // });
     
     // 既存のアイコンを取得して置き換える（TwitterMediaHarvestのswapIconと同様）
     const existingIcon = buttonElement.querySelector('svg') as HTMLElement;
@@ -221,8 +210,6 @@ export class DownloadButton extends BaseButton {
     
     // クリックイベントを設定
     this.setupClickHandler(buttonWrapper, tweetInfo);
-    
-    console.log('Comiketter: DLボタン作成完了');
     
     return buttonWrapper;
   }
