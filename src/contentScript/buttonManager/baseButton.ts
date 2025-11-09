@@ -26,6 +26,7 @@ export interface ButtonConfig {
 }
 
 export type Theme = 'light' | 'dark';
+export type TweetMode = 'photo' | 'status' | 'stream';
 
 export abstract class BaseButton {
   protected config: ButtonConfig;
@@ -219,10 +220,83 @@ export abstract class BaseButton {
   }
 
   /**
+   * 現在のページがツイート詳細ページかどうかを判定（TwitterMediaHarvestのisInTweetStatusを参考）
+   */
+  protected isInTweetStatus(): boolean {
+    const tweetStatusRegEx = /\/.*\/status\/\d+/;
+    return Boolean(window.location.pathname.match(tweetStatusRegEx));
+  }
+
+  /**
+   * ツイートが写真モードかどうかを判定（TwitterMediaHarvestのisArticlePhotoModeを参考）
+   */
+  protected isArticlePhotoMode(article: HTMLElement): boolean {
+    return article instanceof HTMLDivElement;
+  }
+
+  /**
+   * ツイートがステータスモードかどうかを判定（TwitterMediaHarvestのisArticleInStatusを参考）
+   */
+  protected isArticleInStatus(article: HTMLElement): boolean {
+    if (article instanceof HTMLDivElement) return false;
+    const articleClassLength = article.classList.length;
+    const isMagicLength =
+      articleClassLength === 3 ||
+      articleClassLength === 7 ||
+      articleClassLength === 6;
+    return this.isInTweetStatus() && isMagicLength;
+  }
+
+  /**
+   * ツイートがストリームモードかどうかを判定（TwitterMediaHarvestのisArticleInStreamを参考）
+   */
+  protected isArticleInStream(article: HTMLElement): boolean {
+    const articleClassLength = article.classList.length;
+    return (
+      articleClassLength === 5 ||
+      articleClassLength === 9 ||
+      articleClassLength === 10
+    );
+  }
+
+  /**
+   * ツイートのモードを判定（TwitterMediaHarvestのselectArtcleModeを参考）
+   */
+  protected selectArticleMode(article: HTMLElement): TweetMode {
+    if (this.isArticlePhotoMode(article)) return 'photo';
+    if (this.isArticleInStatus(article)) return 'status';
+    return 'stream';
+  }
+
+  /**
+   * ツイート要素（article）を取得
+   */
+  protected getArticleElement(buttonElement: HTMLElement): HTMLElement | null {
+    // ボタンから最も近いarticle要素を取得
+    const article = buttonElement.closest('article[role="article"]') as HTMLElement;
+    if (article) {
+      return article;
+    }
+    
+    // フォールバック: data-testid="tweet"から取得
+    const tweetElement = buttonElement.closest('[data-testid="tweet"]') as HTMLElement;
+    if (tweetElement) {
+      // tweet要素の親要素からarticleを探す
+      const parentArticle = tweetElement.closest('article[role="article"]') as HTMLElement;
+      if (parentArticle) {
+        return parentArticle;
+      }
+      return tweetElement;
+    }
+    
+    return null;
+  }
+
+  /**
    * アイコンの前の要素に背景クラスを追加（TwitterMediaHarvestのrichIconSiblingを参考）
    * ホバー時に円形の背景が明るくなるエフェクトを追加
    */
-  protected addBackgroundClassToIconSibling(icon: HTMLElement, mode: 'status' | 'stream' | 'photo' = 'stream'): void {
+  protected addBackgroundClassToIconSibling(icon: HTMLElement, mode: TweetMode = 'stream'): void {
     const previousSibling = icon.previousElementSibling as HTMLElement;
     if (previousSibling) {
       previousSibling.classList.add(`${mode}BG`);

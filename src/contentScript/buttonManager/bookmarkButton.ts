@@ -148,8 +148,19 @@ export class BookmarkButton extends BaseButton {
         z-index: 1;
       }
       
-      .comiketter-bookmark-button:hover:not(.loading):not(.success):not(.error) svg {
-        color: rgb(29, 155, 240) !important;
+      /* ホバー時のアイコン色（TwitterMediaHarvestを参考） */
+      .comiketter-bookmark-button.photoColor:hover:not(.loading):not(.success):not(.error) svg {
+        color: rgb(255, 255, 255) !important;
+      }
+      
+      .comiketter-bookmark-button.statusColor:hover:not(.loading):not(.success):not(.error) svg,
+      .comiketter-bookmark-button.streamColor:hover:not(.loading):not(.success):not(.error) svg {
+        color: rgb(241, 185, 26) !important;
+      }
+      
+      /* フォールバック: モードクラスがない場合のデフォルト色 */
+      .comiketter-bookmark-button:hover:not(.loading):not(.success):not(.error):not(.photoColor):not(.statusColor):not(.streamColor) svg {
+        color: rgb(241, 185, 26) !important;
       }
       
       /* ホバー時の円形背景エフェクト（TwitterMediaHarvestを参考） */
@@ -365,9 +376,20 @@ export class BookmarkButton extends BaseButton {
       buttonElement.appendChild(this.currentIconElement);
     }
     
-    // アイコンの前の要素に背景クラスを追加（ホバー時の円形背景エフェクト）
+    // モードを判定して適切な背景クラスと色クラスを追加
     // TwitterMediaHarvestと同様に、ボタンがDOMに追加された後に呼ぶ
-    this.addBackgroundClassToIconSibling(this.currentIconElement, 'stream');
+    const article = this.getArticleElement(buttonElement);
+    const mode = article ? this.selectArticleMode(article) : 'stream';
+    this.addBackgroundClassToIconSibling(this.currentIconElement, mode);
+    
+    // モードに応じた色クラスを追加（TwitterMediaHarvestを参考）
+    if (mode === 'photo') {
+      buttonWrapper.classList.add('photoColor');
+    } else if (mode === 'status') {
+      buttonWrapper.classList.add('statusColor');
+    } else {
+      buttonWrapper.classList.add('streamColor');
+    }
     
     // クリックイベントを設定
     this.setupBookmarkClickHandler(buttonWrapper, tweetInfo);
