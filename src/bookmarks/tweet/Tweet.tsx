@@ -70,9 +70,11 @@ export function Tweet({ id, onDelete }: TweetProps) {
   const [useEmbedTweet, setUseEmbedTweet] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isCbMenuOpen, setIsCbMenuOpen] = useState(false);
   const [cbs, setCbs] = useState<Cb[]>([]);
   const [selectedCbIds, setSelectedCbIds] = useState<Set<string>>(new Set());
+  const [initialCbIds, setInitialCbIds] = useState<Set<string>>(new Set());
   const [isLoadingCbs, setIsLoadingCbs] = useState(false);
   const [isSavingCbs, setIsSavingCbs] = useState(false);
 
@@ -201,7 +203,10 @@ export function Tweet({ id, onDelete }: TweetProps) {
             console.error(`CB ${cb.id} のツイートID取得エラー:`, error);
           }
         }
-        setSelectedCbIds(selected);
+        // 初期状態を保存（コピーを作成）
+        setInitialCbIds(new Set(selected));
+        // 選択状態を初期状態にリセット
+        setSelectedCbIds(new Set(selected));
       } catch (error) {
         console.error('CB一覧取得エラー:', error);
       } finally {
@@ -256,8 +261,35 @@ export function Tweet({ id, onDelete }: TweetProps) {
         isReply: false,
       };
 
-      // 選択されたCBに追加
+      // 初期状態と現在の選択状態を比較して差分を計算
+      const toRemove = new Set<string>(); // 削除するCB（初期にはあったが現在はない）
+      const toAdd = new Set<string>(); // 追加するCB（初期にはなかったが現在はある）
+
+      // 初期状態にはあったが、現在の選択状態にはないCBを削除リストに追加
+      for (const cbId of initialCbIds) {
+        if (!selectedCbIds.has(cbId)) {
+          toRemove.add(cbId);
+        }
+      }
+
+      // 初期状態にはなかったが、現在の選択状態にはあるCBを追加リストに追加
       for (const cbId of selectedCbIds) {
+        if (!initialCbIds.has(cbId)) {
+          toAdd.add(cbId);
+        }
+      }
+
+      // 削除処理
+      for (const cbId of toRemove) {
+        try {
+          await cbService.removeTweetFromCb(cbId, id);
+        } catch (error) {
+          console.error(`CB ${cbId} からの削除エラー:`, error);
+        }
+      }
+
+      // 追加処理
+      for (const cbId of toAdd) {
         try {
           await cbService.addTweetToCb(cbId, id, tweetData);
         } catch (error) {
@@ -265,22 +297,34 @@ export function Tweet({ id, onDelete }: TweetProps) {
         }
       }
 
+      // 初期状態を更新（現在の選択状態を新しい初期状態として保存）
+      setInitialCbIds(new Set(selectedCbIds));
+
       // メニューを閉じる
       setIsCbMenuOpen(false);
+      setIsMenuOpen(false);
       
       // 成功メッセージ
-      if (selectedCbIds.size > 0) {
+      const actionMessages: string[] = [];
+      if (toRemove.size > 0) {
+        actionMessages.push(`${toRemove.size}個のCBから削除`);
+      }
+      if (toAdd.size > 0) {
+        actionMessages.push(`${toAdd.size}個のCBに追加`);
+      }
+      
+      if (actionMessages.length > 0) {
         showNotification({
           title: '成功',
-          message: `${selectedCbIds.size}個のCBに追加しました`,
+          message: actionMessages.join('、'),
           color: 'rgb(29, 155, 240)',
         });
       }
     } catch (error) {
-      console.error('CBへの追加エラー:', error);
+      console.error('CBの更新エラー:', error);
       showNotification({
         title: 'エラー',
-        message: 'CBへの追加に失敗しました',
+        message: 'CBの更新に失敗しました',
         color: 'red',
       });
     } finally {
@@ -315,6 +359,50 @@ export function Tweet({ id, onDelete }: TweetProps) {
         color: 'red',
       });
     }
+  };
+
+  // ツイートのURLを新しいタブで開く
+  const handleTweetClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // ライトボックスが開いている場合は処理しない
+    if (lightboxSrc !== null) {
+      return;
+    }
+
+    // インタラクティブな要素（ボタン、リンク、メニュー、画像など）をクリックした場合は処理しない
+    const target = e.target as HTMLElement;
+    if (
+      target.closest('button') ||
+      target.closest('a') ||
+      target.closest('[role="menu"]') ||
+      target.closest('[role="menuitem"]') ||
+      target.closest('[data-mantine-menu-item]') ||
+      target.closest('input') ||
+      target.closest('textarea') ||
+      target.closest('select') ||
+      target.closest('img') ||
+      target.closest('video')
+    ) {
+      return;
+    }
+
+    if (!author) {
+      return;
+    }
+
+    const url = `https://x.com/${author.username}/status/${id}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  // 投稿者のプロフィールページを新しいタブで開く
+  const handleAuthorClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.stopPropagation(); // 親要素のクリックイベントを防ぐ
+    
+    if (!author) {
+      return;
+    }
+
+    const url = `https://x.com/${author.username}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   // 画像ライトボックス用の状態
@@ -511,8 +599,10 @@ export function Tweet({ id, onDelete }: TweetProps) {
         maxWidth: '598px',
         margin: '0 auto',
         backgroundColor: '#ffffff',
-        transition: 'background-color 0.2s ease'
+        transition: 'background-color 0.2s ease',
+        cursor: 'pointer'
       }}
+      onClick={handleTweetClick}
       onMouseEnter={(e) => {
         e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.03)';
       }}
@@ -524,22 +614,71 @@ export function Tweet({ id, onDelete }: TweetProps) {
         {/* ヘッダー */}
         <Box style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', width: '100%' }}>
           {/* プロフィール画像 */}
-          <Avatar
-            src={author.profileImageUrl || undefined}
-            alt={author.displayName}
-            size="md"
-            radius="xl"
-            color="rgb(29, 155, 240)"
-            style={{ flexShrink: 0 }}
+          <Box
+            style={{
+              position: 'relative',
+              flexShrink: 0,
+              cursor: 'pointer'
+            }}
+            onClick={handleAuthorClick}
+            onMouseEnter={(e) => {
+              const overlay = e.currentTarget.querySelector('[data-avatar-overlay]') as HTMLElement;
+              if (overlay) {
+                overlay.style.backgroundColor = 'rgba(26, 26, 26, 0.08)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              const overlay = e.currentTarget.querySelector('[data-avatar-overlay]') as HTMLElement;
+              if (overlay) {
+                overlay.style.backgroundColor = 'transparent';
+              }
+            }}
           >
-            {!author.profileImageUrl && <IconUser size={20} />}
-          </Avatar>
+            <Avatar
+              src={author.profileImageUrl || undefined}
+              alt={author.displayName}
+              size="md"
+              radius="xl"
+              color="rgb(29, 155, 240)"
+            >
+              {!author.profileImageUrl && <IconUser size={20} />}
+            </Avatar>
+            <Box
+              data-avatar-overlay
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                borderRadius: '50%',
+                backgroundColor: 'transparent',
+                transition: 'background-color 0.2s ease',
+                pointerEvents: 'none'
+              }}
+            />
+          </Box>
           
           {/* ユーザー情報 */}
           <Box style={{ display: 'flex', flexDirection: 'column', gap: '2px', flex: 1, minWidth: 0 }}>
             {/* ユーザー名、認証マーク、ユーザーID、時刻を横並び */}
             <Box style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
-              <Text size="15px" fw={600} style={{ whiteSpace: 'nowrap' }}>
+              <Text 
+                size="15px" 
+                fw={600} 
+                style={{ 
+                  whiteSpace: 'nowrap',
+                  cursor: 'pointer',
+                  transition: 'text-decoration 0.2s ease'
+                }} 
+                onClick={handleAuthorClick}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.textDecorationLine = 'underline';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.textDecorationLine = 'none';
+                }}
+              >
                 {author.displayName}
               </Text>
               
@@ -565,7 +704,13 @@ export function Tweet({ id, onDelete }: TweetProps) {
                     width={isCbMenuOpen ? 320 : 150} 
                     position="bottom-end" 
                     styles={{ dropdown: { borderRadius: '12px', backgroundColor: 'white' } }}
-                    onClose={() => setIsCbMenuOpen(false)}
+                    opened={isMenuOpen}
+                    onClose={() => {
+                      setIsMenuOpen(false);
+                      setIsCbMenuOpen(false);
+                      // メニューを閉じた時に選択状態を初期状態にリセット
+                      setSelectedCbIds(new Set(initialCbIds));
+                    }}
                   >
                     <Menu.Target>
                       <ActionIcon
@@ -573,6 +718,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
                         size="lg"
                         radius="xl"
                         style={menuStyles}
+                        onClick={() => setIsMenuOpen(true)}
                       >
                         <IconDots size={18.75} color="var(--mantine-color-gray-6)" />
                       </ActionIcon>
@@ -751,7 +897,8 @@ export function Tweet({ id, onDelete }: TweetProps) {
                           minHeight: '300px', 
                           maxHeight: '417.33px', 
                           objectFit: 'cover',
-                          display: 'block'
+                          display: 'block',
+                          cursor: 'pointer'
                         }}
                         onClick={(e) => handleImageClick(e, media[0].url, 0)}
                       />
@@ -819,7 +966,8 @@ export function Tweet({ id, onDelete }: TweetProps) {
                               width: '100%', 
                               height: '100%',
                               objectFit: 'cover',
-                              display: 'block'
+                              display: 'block',
+                              cursor: 'pointer'
                             }}
                             onClick={(e) => handleImageClick(e, item.url, index)}
                           />
@@ -898,7 +1046,8 @@ export function Tweet({ id, onDelete }: TweetProps) {
                             height: '100%',
                             objectFit: 'cover',
                             objectPosition: 'center',
-                            display: 'block'
+                            display: 'block',
+                            cursor: 'pointer'
                           }}
                           onClick={(e) => handleImageClick(e, media[0].url, 0)}
                         />
@@ -947,7 +1096,8 @@ export function Tweet({ id, onDelete }: TweetProps) {
                             width: '100%', 
                             height: '100%',
                             objectFit: 'cover',
-                            display: 'block'
+                            display: 'block',
+                            cursor: 'pointer'
                           }}
                           onClick={(e) => handleImageClick(e, media[1].url, 1)}
                         />
@@ -996,7 +1146,8 @@ export function Tweet({ id, onDelete }: TweetProps) {
                             width: '100%', 
                             height: '100%',
                             objectFit: 'cover',
-                            display: 'block'
+                            display: 'block',
+                            cursor: 'pointer'
                           }}
                           onClick={(e) => handleImageClick(e, media[2].url, 2)}
                         />
@@ -1074,7 +1225,8 @@ export function Tweet({ id, onDelete }: TweetProps) {
                               width: '100%', 
                               height: '100%',
                               objectFit: 'cover',
-                              display: 'block'
+                              display: 'block',
+                              cursor: 'pointer'
                             }}
                             onClick={(e) => handleImageClick(e, item.url, index)}
                           />

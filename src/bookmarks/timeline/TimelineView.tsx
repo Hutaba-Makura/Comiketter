@@ -397,71 +397,7 @@ export function TimelineView() {
   }
 
   return (
-    <Box style={{ position: 'relative', height: '100vh', display: 'flex', flexDirection: 'column' }}>
-      {/* ツイート一覧（背景レイヤー） */}
-      <Box 
-        style={{ 
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          overflowY: 'auto',
-          zIndex: 0
-        }}
-      >
-        {filteredAndSortedTweetIds.length === 0 ? (
-          <Center h={300}>
-            <Stack align="center" gap="md">
-              {searchQuery ? (
-                <>
-                  <IconSearch size={48} color="var(--mantine-color-gray-4)" />
-                  <Text size="lg" c="dimmed" fw={500}>
-                    検索結果がありません
-                  </Text>
-                  <Text size="sm" c="dimmed" ta="center">
-                    「{searchQuery}」に一致するツイートが見つかりませんでした
-                  </Text>
-                  <Button 
-                    variant="light" 
-                    size="sm"
-                    onClick={() => setSearchQuery('')}
-                  >
-                    検索をクリア
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Text size="lg" c="dimmed" fw={500}>
-                    ツイートがありません
-                  </Text>
-                  <Text size="sm" c="dimmed" ta="center">
-                    このCBにはまだツイートが追加されていません
-                  </Text>
-                </>
-              )}
-            </Stack>
-          </Center>
-        ) : shouldUseVirtualization ? (
-          <Box style={{ height: '100%' }}>
-            <VirtualizedTimeline 
-              tweetIds={filteredAndSortedTweetIds}
-              height={600}
-              itemHeight={200}
-              onDelete={refetch}
-            />
-          </Box>
-        ) : (
-          <Stack gap={0} p="md">
-            {filteredAndSortedTweetIds.map((id, index) => (
-              <Box key={id}>
-                <Tweet id={id} onDelete={refetch} />
-              </Box>
-            ))}
-          </Stack>
-        )}
-      </Box>
-
+    <Box style={{ height: '100%', overflowY: 'auto' }}>
       {/* ヘッダーとツールバーのコンテナ（sticky） */}
       <Box
         style={{
@@ -622,6 +558,60 @@ export function TimelineView() {
           </Text>
         )}
         </Box>
+      </Box>
+
+      {/* ツイート一覧（背景レイヤー） */}
+      <Box>
+        {filteredAndSortedTweetIds.length === 0 ? (
+          <Center h={300}>
+            <Stack align="center" gap="md">
+              {searchQuery ? (
+                <>
+                  <IconSearch size={48} color="var(--mantine-color-gray-4)" />
+                  <Text size="lg" c="dimmed" fw={500}>
+                    検索結果がありません
+                  </Text>
+                  <Text size="sm" c="dimmed" ta="center">
+                    「{searchQuery}」に一致するツイートが見つかりませんでした
+                  </Text>
+                  <Button 
+                    variant="light" 
+                    size="sm"
+                    onClick={() => setSearchQuery('')}
+                  >
+                    検索をクリア
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Text size="lg" c="dimmed" fw={500}>
+                    ツイートがありません
+                  </Text>
+                  <Text size="sm" c="dimmed" ta="center">
+                    このCBにはまだツイートが追加されていません
+                  </Text>
+                </>
+              )}
+            </Stack>
+          </Center>
+        ) : shouldUseVirtualization ? (
+          <Box style={{ height: '100%' }}>
+            <VirtualizedTimeline 
+              tweetIds={filteredAndSortedTweetIds}
+              height={600}
+              itemHeight={200}
+              onDelete={refetch}
+            />
+          </Box>
+        ) : (
+          <Stack gap={0} p="md">
+            {filteredAndSortedTweetIds.map((id, index) => (
+              <Box key={id}>
+                <Tweet id={id} onDelete={refetch} />
+              </Box>
+            ))}
+          </Stack>
+        )}
       </Box>
     </Box>
   );
