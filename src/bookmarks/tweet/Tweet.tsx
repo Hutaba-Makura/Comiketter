@@ -614,17 +614,50 @@ export function Tweet({ id, onDelete }: TweetProps) {
         {/* ヘッダー */}
         <Box style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', width: '100%' }}>
           {/* プロフィール画像 */}
-          <Avatar
-            src={author.profileImageUrl || undefined}
-            alt={author.displayName}
-            size="md"
-            radius="xl"
-            color="rgb(29, 155, 240)"
-            style={{ flexShrink: 0 }}
+          <Box
+            style={{
+              position: 'relative',
+              flexShrink: 0,
+              cursor: 'pointer'
+            }}
             onClick={handleAuthorClick}
+            onMouseEnter={(e) => {
+              const overlay = e.currentTarget.querySelector('[data-avatar-overlay]') as HTMLElement;
+              if (overlay) {
+                overlay.style.backgroundColor = 'rgba(26, 26, 26, 0.03)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              const overlay = e.currentTarget.querySelector('[data-avatar-overlay]') as HTMLElement;
+              if (overlay) {
+                overlay.style.backgroundColor = 'transparent';
+              }
+            }}
           >
-            {!author.profileImageUrl && <IconUser size={20} />}
-          </Avatar>
+            <Avatar
+              src={author.profileImageUrl || undefined}
+              alt={author.displayName}
+              size="md"
+              radius="xl"
+              color="rgb(29, 155, 240)"
+            >
+              {!author.profileImageUrl && <IconUser size={20} />}
+            </Avatar>
+            <Box
+              data-avatar-overlay
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                borderRadius: '50%',
+                backgroundColor: 'transparent',
+                transition: 'background-color 0.2s ease',
+                pointerEvents: 'none'
+              }}
+            />
+          </Box>
           
           {/* ユーザー情報 */}
           <Box style={{ display: 'flex', flexDirection: 'column', gap: '2px', flex: 1, minWidth: 0 }}>
