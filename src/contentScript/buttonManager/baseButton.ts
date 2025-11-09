@@ -73,13 +73,23 @@ export abstract class BaseButton {
    */
   protected async loadIcon(iconName: string): Promise<string> {
     try {
+      // 拡張機能コンテキストが有効かチェック
+      if (!chrome?.runtime?.id) {
+        throw new Error('Extension context invalidated');
+      }
+
       const response = await fetch(chrome.runtime.getURL(`icons/${iconName}.svg`));
       if (!response.ok) {
         throw new Error(`Failed to load icon: ${iconName}`);
       }
       return await response.text();
     } catch (error) {
-      console.error(`Comiketter: Failed to load icon ${iconName}:`, error);
+      // Extension context invalidatedエラーの場合は、エラーログを抑制
+      if (error instanceof Error && error.message === 'Extension context invalidated') {
+        console.debug(`Comiketter: Extension context invalidated, using default icon for ${iconName}`);
+      } else {
+        console.error(`Comiketter: Failed to load icon ${iconName}:`, error);
+      }
       // フォールバック用のデフォルトアイコン
       return this.getDefaultIcon(iconName);
     }
@@ -431,8 +441,6 @@ export abstract class BaseButton {
       }
     }
     
-    console.log(`Comiketter: アイコン作成開始 - ${iconName} (テーマ: ${theme}, 色: ${iconColor}, サイズ: ${iconSize})`);
-    
     // アイコンファイルを読み込み
     const iconSVG = await this.loadIcon(iconName);
     
@@ -453,8 +461,6 @@ export abstract class BaseButton {
 
     // 色を設定
     icon.style.color = iconColor;
-    
-    console.log(`Comiketter: アイコン作成完了 - ${iconName}`);
     
     return icon;
   }
@@ -517,18 +523,18 @@ export abstract class BaseButton {
     }
     
     // モード判定の結果をログに出力
-    const pathname = window.location.pathname;
-    const isInStatusPage = /\/.*\/status\/\d+/.test(pathname);
-    console.log('Comiketter: モード判定', {
-      mode,
-      pathname,
-      isInStatusPage,
-      articleTagName: article.tagName,
-      articleClassLength: article.classList.length,
-      isPhoto,
-      isStatus,
-      isStream
-    });
+    // const pathname = window.location.pathname;
+    // const isInStatusPage = /\/.*\/status\/\d+/.test(pathname);
+    // console.log('Comiketter: モード判定', {
+    //   mode,
+    //   pathname,
+    //   isInStatusPage,
+    //   articleTagName: article.tagName,
+    //   articleClassLength: article.classList.length,
+    //   isPhoto,
+    //   isStatus,
+    //   isStream
+    // });
     
     return mode;
   }
@@ -565,7 +571,6 @@ export abstract class BaseButton {
     const previousSibling = icon.previousElementSibling as HTMLElement;
     if (previousSibling) {
       previousSibling.classList.add(`${mode}BG`);
-      console.log(`Comiketter: 背景クラス ${mode}BG を追加しました`, previousSibling);
     } else {
       // デバッグ: アイコンの親要素の構造を確認
       console.warn('Comiketter: アイコンの前の要素が見つかりません', {

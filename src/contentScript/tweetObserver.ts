@@ -342,12 +342,6 @@ export class TweetObserver {
       // アクションバーに挿入（順序を制御）
       this.buttonFactory.insertButtonsToActionBar(actionBar, buttons);
       
-      console.log('Comiketter: ボタン追加完了', {
-        article: article.tagName,
-        tweetId: article.getAttribute('data-testid'),
-        buttonCount: buttons.length
-      });
-      
     } catch (error) {
       console.error('Comiketter: Failed to add buttons:', error);
       sendLog('Failed to add buttons:', error);

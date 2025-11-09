@@ -514,6 +514,13 @@ export class ApiInterceptor {
    */
   private processApiResponse(path: string, data: unknown): void {
     try {
+      // 拡張機能コンテキストが有効かチェック
+      if (!chrome?.runtime?.id) {
+        // コンテキストが無効な場合は、処理をスキップ
+        console.debug('Comiketter: Extension context invalidated, API response processing skipped');
+        return;
+      }
+
       const apiType = extractApiType(path);
       const apiLabel = ApiTypeLabels[apiType] || apiType;
       
@@ -530,10 +537,20 @@ export class ApiInterceptor {
       }).then(() => {
         console.log(`✅ Comiketter: ${apiLabel} の送信が完了しました`);
       }).catch((error) => {
-        console.error(`❌ Comiketter: ${apiLabel} の送信に失敗しました:`, error);
+        // Extension context invalidatedエラーの場合は、エラーログを抑制
+        if (error instanceof Error && error.message === 'Extension context invalidated') {
+          console.debug(`Comiketter: Extension context invalidated, ${apiLabel} message ignored`);
+        } else {
+          console.error(`❌ Comiketter: ${apiLabel} の送信に失敗しました:`, error);
+        }
       });
     } catch (error) {
-      console.error('Comiketter: Failed to process API response:', error);
+      // Extension context invalidatedエラーの場合は、エラーログを抑制
+      if (error instanceof Error && error.message === 'Extension context invalidated') {
+        console.debug('Comiketter: Extension context invalidated, API response processing skipped');
+      } else {
+        console.error('Comiketter: Failed to process API response:', error);
+      }
     }
   }
 

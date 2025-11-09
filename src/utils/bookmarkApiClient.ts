@@ -32,6 +32,11 @@ export class BookmarkApiClient {
    */
   private async sendMessage(action: string, data?: any): Promise<any> {
     try {
+      // 拡張機能コンテキストが有効かチェック
+      if (!chrome?.runtime?.id) {
+        throw new Error('Extension context invalidated');
+      }
+
       const response = await chrome.runtime.sendMessage({
         type: 'BOOKMARK_ACTION',
         payload: { action, data }
@@ -43,6 +48,13 @@ export class BookmarkApiClient {
       
       return response.data || response;
     } catch (error) {
+      // Extension context invalidatedエラーの場合は、エラーログを抑制
+      if (error instanceof Error && error.message === 'Extension context invalidated') {
+        // 開発者向けのログのみ出力（ユーザーには表示しない）
+        console.debug('BookmarkApiClient: Extension context invalidated, message ignored');
+        // デフォルト値を返す（呼び出し側で適切に処理される）
+        return null;
+      }
       console.error('BookmarkApiClient: Failed to send message:', error);
       throw error;
     }
@@ -53,6 +65,11 @@ export class BookmarkApiClient {
    */
   private async sendCacheMessage(action: string, data?: any): Promise<any> {
     try {
+      // 拡張機能コンテキストが有効かチェック
+      if (!chrome?.runtime?.id) {
+        throw new Error('Extension context invalidated');
+      }
+
       const response = await chrome.runtime.sendMessage({
         type: 'CACHE_ACTION',
         payload: { action, data }
@@ -64,6 +81,13 @@ export class BookmarkApiClient {
       
       return response.data || response;
     } catch (error) {
+      // Extension context invalidatedエラーの場合は、エラーログを抑制
+      if (error instanceof Error && error.message === 'Extension context invalidated') {
+        // 開発者向けのログのみ出力（ユーザーには表示しない）
+        console.debug('BookmarkApiClient: Extension context invalidated, cache message ignored');
+        // デフォルト値を返す（呼び出し側で適切に処理される）
+        return null;
+      }
       console.error('BookmarkApiClient: Failed to send cache message:', error);
       throw error;
     }
@@ -169,6 +193,22 @@ export class BookmarkApiClient {
     replyCount?: number,
     mediaPreviewUrls?: string[]
   ): Promise<BookmarkedTweet> {
+    // 送信する情報をログに出力して確認
+    console.log('Comiketter: [Bookmark] addBookmarkedTweet called with:', {
+      bookmarkId,
+      tweetId,
+      authorUsername,
+      authorDisplayName,
+      authorId,
+      authorProfileImageUrl,
+      favoriteCount,
+      retweetCount,
+      replyCount,
+      hasContent: !!content,
+      hasMediaUrls: !!mediaUrls && mediaUrls.length > 0,
+      mediaUrlsCount: mediaUrls?.length || 0
+    });
+    
     return await this.sendMessage('addBookmarkedTweet', {
       bookmarkId,
       tweetId,
@@ -312,6 +352,17 @@ export class BookmarkApiClient {
               }
             }
             
+            // キャッシュから取得した情報をログに出力して確認
+            console.log('Comiketter: [Bookmark] CachedTweet info (existing data):', {
+              hasUser: !!cachedTweet.user,
+              avatar_url: cachedTweet.user?.avatar_url,
+              favorite_count: cachedTweet.favorite_count,
+              retweet_count: cachedTweet.retweet_count,
+              reply_count: cachedTweet.reply_count,
+              hasFullText: !!cachedTweet.full_text,
+              hasCreatedAt: !!cachedTweet.created_at
+            });
+            
             await this.addBookmarkedTweet(
               bookmarkId,
               tweetId,
@@ -327,10 +378,10 @@ export class BookmarkApiClient {
               cachedTweet.in_reply_to_status_id_str,
               cachedTweet.in_reply_to_screen_name,
               'url',
-              cachedTweet.user.avatar_url,
-              cachedTweet.favorite_count,
-              cachedTweet.retweet_count,
-              cachedTweet.reply_count,
+              cachedTweet.user.avatar_url || undefined,
+              cachedTweet.favorite_count ?? undefined,
+              cachedTweet.retweet_count ?? undefined,
+              cachedTweet.reply_count ?? undefined,
               mediaPreviewUrls
             );
             return;
@@ -426,6 +477,17 @@ export class BookmarkApiClient {
           });
           
           // ProcessedTweetから情報を抽出して保存
+          // キャッシュから取得した情報をログに出力して確認
+          console.log('Comiketter: [Bookmark] CachedTweet info:', {
+            hasUser: !!cachedTweet.user,
+            avatar_url: cachedTweet.user?.avatar_url,
+            favorite_count: cachedTweet.favorite_count,
+            retweet_count: cachedTweet.retweet_count,
+            reply_count: cachedTweet.reply_count,
+            hasFullText: !!cachedTweet.full_text,
+            hasCreatedAt: !!cachedTweet.created_at
+          });
+          
           await this.addBookmarkedTweet(
             bookmarkId,
             tweetId,
@@ -441,10 +503,10 @@ export class BookmarkApiClient {
             cachedTweet.in_reply_to_status_id_str,
             cachedTweet.in_reply_to_screen_name,
             'url',
-            cachedTweet.user.avatar_url,
-            cachedTweet.favorite_count,
-            cachedTweet.retweet_count,
-            cachedTweet.reply_count,
+            cachedTweet.user.avatar_url || undefined, // undefinedの場合は明示的にundefinedを渡す
+            cachedTweet.favorite_count ?? undefined, // null/undefinedの場合はundefinedを渡す
+            cachedTweet.retweet_count ?? undefined,
+            cachedTweet.reply_count ?? undefined,
             mediaPreviewUrls
           );
         } else if (tweetInfo) {
@@ -503,6 +565,17 @@ export class BookmarkApiClient {
                   }
                 }
                 
+                // キャッシュから取得した情報をログに出力して確認
+                console.log('Comiketter: [Bookmark] RetryCachedTweet info:', {
+                  hasUser: !!retryCachedTweet.user,
+                  avatar_url: retryCachedTweet.user?.avatar_url,
+                  favorite_count: retryCachedTweet.favorite_count,
+                  retweet_count: retryCachedTweet.retweet_count,
+                  reply_count: retryCachedTweet.reply_count,
+                  hasFullText: !!retryCachedTweet.full_text,
+                  hasCreatedAt: !!retryCachedTweet.created_at
+                });
+                
                 await this.addBookmarkedTweet(
                   bookmarkId,
                   tweetId,
@@ -518,10 +591,10 @@ export class BookmarkApiClient {
                   retryCachedTweet.in_reply_to_status_id_str,
                   retryCachedTweet.in_reply_to_screen_name,
                   'url',
-                  retryCachedTweet.user.avatar_url,
-                  retryCachedTweet.favorite_count,
-                  retryCachedTweet.retweet_count,
-                  retryCachedTweet.reply_count,
+                  retryCachedTweet.user.avatar_url || undefined,
+                  retryCachedTweet.favorite_count ?? undefined,
+                  retryCachedTweet.retweet_count ?? undefined,
+                  retryCachedTweet.reply_count ?? undefined,
                   mediaPreviewUrls
                 );
                 return;
@@ -591,6 +664,18 @@ export class BookmarkApiClient {
             mediaPreviewUrls
           });
           
+          // tweetInfoから取得した情報をログに出力して確認
+          console.log('Comiketter: [Bookmark] TweetInfo info:', {
+            hasAuthor: !!tweetInfo.author,
+            profileImageUrl: tweetInfo.author?.profileImageUrl,
+            hasStats: !!tweetInfo.stats,
+            likeCount: tweetInfo.stats?.likeCount,
+            retweetCount: tweetInfo.stats?.retweetCount,
+            replyCount: tweetInfo.stats?.replyCount,
+            hasText: !!tweetInfo.text,
+            hasCreatedAt: !!tweetInfo.createdAt
+          });
+          
           await this.addBookmarkedTweet(
             bookmarkId,
             tweetId,
@@ -606,10 +691,10 @@ export class BookmarkApiClient {
             undefined, // replyToTweetId
             undefined, // replyToUsername
             'url', // saveType
-            tweetInfo.author?.profileImageUrl,
-            tweetInfo.stats?.likeCount,
-            tweetInfo.stats?.retweetCount,
-            tweetInfo.stats?.replyCount,
+            tweetInfo.author?.profileImageUrl || undefined,
+            tweetInfo.stats?.likeCount ?? undefined,
+            tweetInfo.stats?.retweetCount ?? undefined,
+            tweetInfo.stats?.replyCount ?? undefined,
             mediaPreviewUrls
           );
         } else {
@@ -654,6 +739,18 @@ export class BookmarkApiClient {
             }
           }
           
+          // tweetInfoから取得した情報をログに出力して確認（エラー時）
+          console.log('Comiketter: [Bookmark] TweetInfo info (error fallback):', {
+            hasAuthor: !!tweetInfo.author,
+            profileImageUrl: tweetInfo.author?.profileImageUrl,
+            hasStats: !!tweetInfo.stats,
+            likeCount: tweetInfo.stats?.likeCount,
+            retweetCount: tweetInfo.stats?.retweetCount,
+            replyCount: tweetInfo.stats?.replyCount,
+            hasText: !!tweetInfo.text,
+            hasCreatedAt: !!tweetInfo.createdAt
+          });
+          
           await this.addBookmarkedTweet(
             bookmarkId,
             tweetId,
@@ -669,10 +766,10 @@ export class BookmarkApiClient {
             undefined,
             undefined,
             'url',
-            tweetInfo.author?.profileImageUrl,
-            tweetInfo.stats?.likeCount,
-            tweetInfo.stats?.retweetCount,
-            tweetInfo.stats?.replyCount,
+            tweetInfo.author?.profileImageUrl || undefined,
+            tweetInfo.stats?.likeCount ?? undefined,
+            tweetInfo.stats?.retweetCount ?? undefined,
+            tweetInfo.stats?.replyCount ?? undefined,
             mediaPreviewUrls
           );
         } else {
