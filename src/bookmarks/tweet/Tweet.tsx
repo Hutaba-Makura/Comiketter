@@ -73,6 +73,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
   const [isCbMenuOpen, setIsCbMenuOpen] = useState(false);
   const [cbs, setCbs] = useState<Cb[]>([]);
   const [selectedCbIds, setSelectedCbIds] = useState<Set<string>>(new Set());
+  const [initialCbIds, setInitialCbIds] = useState<Set<string>>(new Set());
   const [isLoadingCbs, setIsLoadingCbs] = useState(false);
   const [isSavingCbs, setIsSavingCbs] = useState(false);
 
@@ -201,7 +202,10 @@ export function Tweet({ id, onDelete }: TweetProps) {
             console.error(`CB ${cb.id} のツイートID取得エラー:`, error);
           }
         }
-        setSelectedCbIds(selected);
+        // 初期状態を保存（コピーを作成）
+        setInitialCbIds(new Set(selected));
+        // 選択状態を初期状態にリセット
+        setSelectedCbIds(new Set(selected));
       } catch (error) {
         console.error('CB一覧取得エラー:', error);
       } finally {
@@ -256,8 +260,35 @@ export function Tweet({ id, onDelete }: TweetProps) {
         isReply: false,
       };
 
-      // 選択されたCBに追加
+      // 初期状態と現在の選択状態を比較して差分を計算
+      const toRemove = new Set<string>(); // 削除するCB（初期にはあったが現在はない）
+      const toAdd = new Set<string>(); // 追加するCB（初期にはなかったが現在はある）
+
+      // 初期状態にはあったが、現在の選択状態にはないCBを削除リストに追加
+      for (const cbId of initialCbIds) {
+        if (!selectedCbIds.has(cbId)) {
+          toRemove.add(cbId);
+        }
+      }
+
+      // 初期状態にはなかったが、現在の選択状態にはあるCBを追加リストに追加
       for (const cbId of selectedCbIds) {
+        if (!initialCbIds.has(cbId)) {
+          toAdd.add(cbId);
+        }
+      }
+
+      // 削除処理
+      for (const cbId of toRemove) {
+        try {
+          await cbService.removeTweetFromCb(cbId, id);
+        } catch (error) {
+          console.error(`CB ${cbId} からの削除エラー:`, error);
+        }
+      }
+
+      // 追加処理
+      for (const cbId of toAdd) {
         try {
           await cbService.addTweetToCb(cbId, id, tweetData);
         } catch (error) {
@@ -265,22 +296,33 @@ export function Tweet({ id, onDelete }: TweetProps) {
         }
       }
 
+      // 初期状態を更新（現在の選択状態を新しい初期状態として保存）
+      setInitialCbIds(new Set(selectedCbIds));
+
       // メニューを閉じる
       setIsCbMenuOpen(false);
       
       // 成功メッセージ
-      if (selectedCbIds.size > 0) {
+      const actionMessages: string[] = [];
+      if (toRemove.size > 0) {
+        actionMessages.push(`${toRemove.size}個のCBから削除`);
+      }
+      if (toAdd.size > 0) {
+        actionMessages.push(`${toAdd.size}個のCBに追加`);
+      }
+      
+      if (actionMessages.length > 0) {
         showNotification({
           title: '成功',
-          message: `${selectedCbIds.size}個のCBに追加しました`,
+          message: actionMessages.join('、'),
           color: 'rgb(29, 155, 240)',
         });
       }
     } catch (error) {
-      console.error('CBへの追加エラー:', error);
+      console.error('CBの更新エラー:', error);
       showNotification({
         title: 'エラー',
-        message: 'CBへの追加に失敗しました',
+        message: 'CBの更新に失敗しました',
         color: 'red',
       });
     } finally {
@@ -565,7 +607,11 @@ export function Tweet({ id, onDelete }: TweetProps) {
                     width={isCbMenuOpen ? 320 : 150} 
                     position="bottom-end" 
                     styles={{ dropdown: { borderRadius: '12px', backgroundColor: 'white' } }}
-                    onClose={() => setIsCbMenuOpen(false)}
+                    onClose={() => {
+                      setIsCbMenuOpen(false);
+                      // メニューを閉じた時に選択状態を初期状態にリセット
+                      setSelectedCbIds(new Set(initialCbIds));
+                    }}
                   >
                     <Menu.Target>
                       <ActionIcon
