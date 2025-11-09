@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Title, Text, Button, Stack, Group } from '@mantine/core';
 import { StorageManager } from '@/utils/storage';
 import type { CustomBookmark } from '@/types';
+import { IconSettings, IconBookmark } from '@tabler/icons-react';
 
 export const PopupApp: React.FC = () => {
   const [bookmarks, setBookmarks] = useState<CustomBookmark[]>([]);
@@ -28,8 +29,7 @@ export const PopupApp: React.FC = () => {
   };
 
   const openBookmarks = () => {
-    // TODO: Implement bookmark page navigation
-    console.log('Open bookmarks page');
+    chrome.tabs.create({ url: 'bookmarks.html' });
   };
 
   if (loading) {
@@ -50,16 +50,16 @@ export const PopupApp: React.FC = () => {
         </Text>
 
         <Group>
-          <Button onClick={openBookmarks} variant="light">
+          <Button onClick={openBookmarks} variant="light" leftSection={<IconBookmark size={16} />}>
             ブックマーク一覧 ({bookmarks.length})
           </Button>
-          <Button onClick={openOptions} variant="outline">
+          <Button onClick={openOptions} variant="outline" leftSection={<IconSettings size={16} />}>
             設定
           </Button>
         </Group>
 
         <Text size="xs" color="dimmed">
-          バージョン: 1.0.0
+          バージョン: 0.9.0
         </Text>
       </Stack>
     </Container>

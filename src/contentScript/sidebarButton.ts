@@ -58,6 +58,9 @@ export class SidebarButton {
     try {
       sendLog('サイドバーボタン初期化開始');
       
+      // スタイルを注入
+      this.injectStyles();
+      
       // ページの読み込み状態を確認
       if (document.readyState === 'loading') {
         sendLog('ページ読み込み中、DOMContentLoadedを待機');
@@ -70,7 +73,7 @@ export class SidebarButton {
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       // 既存のサイドバーにボタンを追加
-      this.initializeExistingSidebar();
+      await this.initializeExistingSidebar();
       
       // 動的コンテンツの監視を開始
       this.startObserving();
@@ -85,7 +88,7 @@ export class SidebarButton {
   /**
    * 既存のサイドバーにボタンを追加
    */
-  private initializeExistingSidebar(): void {
+  private async initializeExistingSidebar(): Promise<void> {
     sendLog('既存ナビゲーションの初期化開始');
     
     const sidebar = this.findSidebar();
@@ -93,7 +96,7 @@ export class SidebarButton {
       sendLog('ナビゲーション要素を発見、ボタン追加を試行');
       if (this.shouldAddButton(sidebar)) {
         sendLog('ボタン追加条件を満たしたため、createSidebarButtonを実行');
-        this.createSidebarButton();
+        await this.createSidebarButton();
       } else {
         sendLog('ボタン追加条件を満たさないため、スキップ');
       }
@@ -202,7 +205,9 @@ export class SidebarButton {
     for (const selector of navigationSelectors) {
       if (node.matches(selector)) {
         if (this.shouldAddButton(node)) {
-          this.createSidebarButton();
+          this.createSidebarButton().catch(error => {
+            sendLog('サイドバーボタン作成エラー:', error);
+          });
         }
         return;
       }
@@ -214,7 +219,9 @@ export class SidebarButton {
       if (navigations.length > 0) {
         navigations.forEach((navigation) => {
           if (this.shouldAddButton(navigation as HTMLElement)) {
-            this.createSidebarButton();
+            this.createSidebarButton().catch(error => {
+              sendLog('サイドバーボタン作成エラー:', error);
+            });
           }
         });
         return;
@@ -287,7 +294,7 @@ export class SidebarButton {
    */
   private isValidNavigation(element: HTMLElement): boolean {
     // 要素が表示されているかチェック
-    const style = window.getComputedStyle(element);
+    const style = window.getComputedStyle(element as Element);
     if (style.display === 'none' || style.visibility === 'hidden') {
       return false;
     }
@@ -308,9 +315,258 @@ export class SidebarButton {
   }
 
   /**
+   * サンプル要素（AppTabBar_DirectMessage_Link）を取得
+   */
+  private getSampleElement(): HTMLElement | null {
+    // まず、nav要素内から探す（より確実）
+    const nav = document.querySelector('nav[role="navigation"][aria-label*="メイン"]') || 
+                document.querySelector('nav[role="navigation"]');
+    
+    if (nav) {
+      // nav要素内から探す
+      const selectors = [
+        'a[data-testid="AppTabBar_DirectMessage_Link"]',
+        'a[href^="/messages/"][data-testid="AppTabBar_DirectMessage_Link"]',
+        'a[href^="/messages/"][aria-label*="ダイレクトメッセージ"]',
+        'a[href^="/messages/"]',
+      ];
+
+      for (const selector of selectors) {
+        const element = nav.querySelector(selector) as HTMLElement;
+        if (element) {
+          sendLog(`サンプル要素を発見（nav内）: ${selector}`);
+          return element;
+        }
+      }
+    }
+
+    // nav要素が見つからない場合、全体から探す
+    const selectors = [
+      'a[data-testid="AppTabBar_DirectMessage_Link"]',
+      'a[href^="/messages/"][data-testid="AppTabBar_DirectMessage_Link"]',
+      'a[href^="/messages/"][aria-label*="ダイレクトメッセージ"]',
+      'a[href^="/messages/"]',
+    ];
+
+    for (const selector of selectors) {
+      const element = document.querySelector(selector) as HTMLElement;
+      if (element) {
+        sendLog(`サンプル要素を発見: ${selector}`);
+        return element;
+      }
+    }
+
+    sendLog('サンプル要素が見つかりません');
+    return null;
+  }
+
+  /**
+   * サンプル要素をクローンして不要な要素を削除
+   */
+  private createButtonElement(sampleElement: HTMLElement): HTMLElement {
+    // サンプル要素をクローン
+    const button = sampleElement.cloneNode(true) as HTMLElement;
+    
+    // 既存のSVGアイコンをすべて削除
+    const existingSvgs = button.querySelectorAll('svg');
+    if (existingSvgs.length > 0) {
+      sendLog(`${existingSvgs.length}個の既存SVGアイコンを削除`);
+      existingSvgs.forEach(svg => svg.remove());
+    }
+    
+    // テキスト要素を取得して置き換え
+    // 構造: <div dir="ltr"> の中に <span> が複数ある
+    const textContainer = button.querySelector('div[dir="ltr"]') || 
+                         button.querySelector('div[dir]');
+    
+    if (textContainer) {
+      // 最初のspan要素を探して置き換え
+      const firstSpan = textContainer.querySelector('span');
+      if (firstSpan) {
+        firstSpan.textContent = 'カスタムブックマーク';
+        // 2つ目以降のspan要素は削除
+        const otherSpans = textContainer.querySelectorAll('span:not(:first-child)');
+        otherSpans.forEach(span => span.remove());
+      }
+    } else {
+      // フォールバック: すべてのspan要素を処理
+      const textElements = button.querySelectorAll('span');
+      if (textElements.length > 0) {
+        textElements[0].textContent = 'カスタムブックマーク';
+        // 2つ目以降のspan要素は削除
+        for (let i = 1; i < textElements.length; i++) {
+          textElements[i].remove();
+        }
+      }
+    }
+    
+    // href属性を削除（クリックイベントで制御するため）
+    if (button.tagName === 'A') {
+      button.removeAttribute('href');
+    }
+    
+    return button;
+  }
+
+  /**
+   * アイコン要素を作成
+   */
+  private async createIconElement(sampleElement: HTMLElement): Promise<HTMLElement> {
+    sendLog('アイコン要素作成開始');
+    
+    // アイコンファイルを読み込み
+    const iconSVG = await this.loadIcon('twitterBookmark');
+    
+    // SVG要素を作成
+    const icon = this.createElementFromHTML(iconSVG);
+    
+    // サンプル要素のアイコンからスタイルを取得
+    const sampleIcon = sampleElement.querySelector('svg');
+    if (sampleIcon) {
+      // クラス名をコピー
+      icon.setAttribute('class', sampleIcon.className);
+      
+      // サンプルアイコンのスタイルをコピー
+      const sampleStyle = window.getComputedStyle(sampleIcon as Element);
+      icon.style.width = sampleStyle.width || '24px';
+      icon.style.height = sampleStyle.height || '24px';
+      icon.style.marginRight = sampleStyle.marginRight || '16px';
+      icon.style.fill = sampleStyle.fill || 'currentColor';
+      icon.style.color = sampleStyle.color || 'inherit';
+      icon.style.flexShrink = sampleStyle.flexShrink || '0';
+      
+      // その他の重要なスタイルをコピー
+      if (sampleIcon.getAttribute('viewBox')) {
+        icon.setAttribute('viewBox', sampleIcon.getAttribute('viewBox') || '0 0 24 24');
+      }
+    } else {
+      // フォールバック: デフォルトスタイルを設定
+      icon.style.width = '24px';
+      icon.style.height = '24px';
+      icon.style.marginRight = '16px';
+      icon.style.fill = 'currentColor';
+      icon.style.flexShrink = '0';
+    }
+    
+    sendLog('アイコン要素作成完了');
+    return icon;
+  }
+
+  /**
+   * HTML文字列から要素を作成
+   */
+  private createElementFromHTML(html: string): HTMLElement {
+    const template = document.createElement('template');
+    template.innerHTML = html.trim();
+    return template.content.firstElementChild as HTMLElement;
+  }
+
+  /**
+   * アイコンファイルを読み込み
+   */
+  private async loadIcon(iconName: string): Promise<string> {
+    try {
+      const response = await fetch(chrome.runtime.getURL(`icons/${iconName}.svg`));
+      if (!response.ok) {
+        throw new Error(`Failed to load icon: ${iconName}`);
+      }
+      return await response.text();
+    } catch (error) {
+      sendLog(`アイコン読み込みエラー: ${iconName}`, error);
+      // フォールバック用のデフォルトアイコン
+      return this.getDefaultIcon(iconName);
+    }
+  }
+
+  /**
+   * デフォルトアイコンを取得
+   */
+  private getDefaultIcon(iconName: string): string {
+    const defaultIcons: Record<string, string> = {
+      'twitterBookmark': `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M4 4.5C4 3.12 5.119 2 6.5 2h11C18.881 2 20 3.12 20 4.5v18.44l-8-5.71-8 5.71V4.5zM6.5 4c-.276 0-.5.22-.5.5v14.56l6-4.29 6 4.29V4.5c0-.28-.224-.5-.5-.5h-11z"></path></svg>`,
+    };
+    
+    return defaultIcons[iconName] || defaultIcons['twitterBookmark'];
+  }
+
+  /**
+   * CSSスタイルを注入
+   */
+  private injectStyles(): void {
+    if (document.getElementById('comiketter-sidebar-button-styles')) {
+      return; // 既に注入済み
+    }
+
+    const style = document.createElement('style');
+    style.id = 'comiketter-sidebar-button-styles';
+    style.textContent = this.getStyles();
+    
+    document.head.appendChild(style);
+  }
+
+  /**
+   * ボタン固有のスタイルを取得
+   */
+  private getStyles(): string {
+    return `
+      .comiketter-sidebar-button {
+        cursor: pointer;
+        transition: opacity 0.2s ease;
+        pointer-events: auto;
+        position: relative;
+        z-index: 1;
+      }
+      
+      /* ホバー時の円形背景エフェクト（aria-labelが定義されている要素自体に適用） */
+      .comiketter-sidebar-button:hover {
+        background: rgba(15, 20, 25, 0.1) !important;
+        border-radius: 9999px !important;
+      }
+      
+      .comiketter-sidebar-button:hover:active {
+        background: rgba(15, 20, 25, 0.2) !important;
+        border-radius: 9999px !important;
+      }
+    `;
+  }
+
+  /**
+   * アイコンの前の要素に背景クラスを追加（TwitterMediaHarvestのrichIconSiblingを参考）
+   * ホバー時に円形の背景が明るくなるエフェクトを追加
+   */
+  private addBackgroundClassToIconSibling(icon: HTMLElement): void {
+    const previousSibling = icon.previousElementSibling as HTMLElement;
+    if (previousSibling) {
+      previousSibling.classList.add('sidebarBG');
+      sendLog('背景クラス sidebarBG を追加しました', previousSibling);
+    } else {
+      // デバッグ: アイコンの親要素の構造を確認
+      sendLog('アイコンの前の要素が見つかりません', {
+        icon,
+        parent: icon.parentElement,
+        parentChildren: icon.parentElement?.children,
+      });
+    }
+  }
+
+  /**
+   * ボタンラッパーを作成
+   */
+  private createButtonWrapper(): HTMLElement {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'comiketter-sidebar-button';
+    wrapper.setAttribute('data-testid', 'comiketter-sidebar-button');
+    wrapper.setAttribute('aria-label', 'カスタムブックマーク');
+    wrapper.setAttribute('role', 'button');
+    wrapper.setAttribute('tabindex', '0');
+    
+    return wrapper;
+  }
+
+  /**
    * サイドバーボタンを作成
    */
-  private createSidebarButton(): void {
+  private async createSidebarButton(): Promise<void> {
     sendLog('createSidebarButton開始');
     
     const sidebar = this.findSidebar();
@@ -324,58 +580,64 @@ export class SidebarButton {
     // 既存のボタンを削除
     this.removeSidebarButton();
 
-    // ボタンを作成
-    this.button = document.createElement('div');
-    this.button.className = 'comiketter-sidebar-button';
-    this.button.setAttribute('data-testid', 'comiketter-sidebar-button');
+    // サンプル要素を取得
+    const sampleElement = this.getSampleElement();
+    if (!sampleElement) {
+      sendLog('サンプル要素が見つかりません。ボタン作成を中止');
+      return;
+    }
+
+    // ボタンラッパーを作成
+    const buttonWrapper = this.createButtonWrapper();
     
-    // ボタンのHTML（XのUIに合わせて調整）
-    this.button.innerHTML = `
-      <div style="
-        display: flex;
-        align-items: center;
-        padding: 12px 16px;
-        cursor: pointer;
-        border-radius: 9999px;
-        transition: background-color 0.2s;
-        margin: 4px 0;
-        color: rgb(231, 233, 234);
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-        font-size: 20px;
-        font-weight: 400;
-        line-height: 24px;
-        text-decoration: none;
-        min-height: 48px;
-        box-sizing: border-box;
-      ">
-        <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; margin-right: 16px; fill: currentColor; flex-shrink: 0;">
-          <path d="M4 4.5C4 3.12 5.119 2 6.5 2h11C18.881 2 20 3.12 20 4.5v18.44l-8-5.71-8 5.71V4.5zM6.5 4c-.276 0-.5.22-.5.5v14.56l6-4.29 6 4.29V4.5c0-.28-.224-.5-.5-.5h-11z"></path>
-        </svg>
-        <span style="flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">カスタムブックマーク</span>
-      </div>
-    `;
-
+    // サンプル要素をクローンして不要な要素を削除
+    const buttonElement = this.createButtonElement(sampleElement);
+    
+    // アイコンを設定
+    const iconElement = await this.createIconElement(sampleElement);
+    
+    // アイコンの挿入位置を決定（提供された構造に基づく）
+    // 構造: <a> -> <div> -> <div> (アイコン用) + <div dir="ltr"> (テキスト用)
+    // 最初のdiv（アイコン用）を探す
+    // 構造: <a> -> <div> -> <div> (アイコン用、最初の子要素)
+    const outerDiv = buttonElement.querySelector('div');
+    if (outerDiv) {
+      // 外側のdivの最初の子要素（アイコン用のdiv）を探す
+      const iconContainer = outerDiv.firstElementChild as HTMLElement;
+      if (iconContainer) {
+        // アイコン用のdivに追加
+        iconContainer.appendChild(iconElement);
+      } else {
+        // フォールバック: 外側のdivに直接追加
+        outerDiv.insertBefore(iconElement, outerDiv.firstChild);
+      }
+    } else {
+      // フォールバック: 直接buttonElementの最初に追加
+      if (buttonElement.firstChild) {
+        buttonElement.insertBefore(iconElement, buttonElement.firstChild);
+      } else {
+        buttonElement.appendChild(iconElement);
+      }
+    }
+    
+    // ボタン要素をラッパーに追加
+    buttonWrapper.appendChild(buttonElement);
+    
     // クリックイベントを設定
-    this.button.addEventListener('click', this.handleButtonClick.bind(this));
+    buttonWrapper.addEventListener('click', (e) => {
+      e.stopImmediatePropagation();
+      e.preventDefault();
+      this.handleButtonClick();
+    }, true);
 
-    // ホバー効果を追加（XのUIに合わせて）
-    this.button.addEventListener('mouseenter', () => {
-      if (this.button) {
-        this.button.style.backgroundColor = 'rgba(239, 243, 244, 0.1)';
-      }
-    });
-
-    this.button.addEventListener('mouseleave', () => {
-      if (this.button) {
-        this.button.style.backgroundColor = 'transparent';
-      }
-    });
+    this.button = buttonWrapper;
 
     // サイドバーに挿入
     this.insertIntoSidebar(sidebar);
     
     sendLog('サイドバーボタン作成完了');
   }
+
 
   /**
    * サイドバーにボタンを挿入
@@ -570,10 +832,10 @@ export class SidebarButton {
   /**
    * 手動でボタンを再作成（デバッグ用）
    */
-  forceRecreate(): void {
+  async forceRecreate(): Promise<void> {
     sendLog('手動でボタンを再作成');
     this.removeSidebarButton();
-    this.createSidebarButton();
+    await this.createSidebarButton();
   }
 
   /**
