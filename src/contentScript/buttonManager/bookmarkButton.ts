@@ -431,13 +431,105 @@ export class BookmarkButton extends BaseButton {
       return stats;
     }
     
-    // TODO: HTML要素から統計情報を取得する実装
-    // 1. Favorite数: [data-testid="like"] 要素から取得
-    // 2. RT数: [data-testid="retweet"] 要素から取得
-    // 3. Reply数: [data-testid="reply"] 要素から取得
-    // 4. アイコン画像URL: プロフィール画像要素から取得
+    // いいね数を取得
+    const likeElement = article.querySelector('[data-testid="like"]') as HTMLElement | null;
+    if (likeElement) {
+      const count = this.extractCountFromElement(likeElement);
+      if (count !== null) {
+        stats.favoriteCount = count;
+      }
+    }
+    
+    // RT数を取得
+    const retweetElement = article.querySelector('[data-testid="retweet"]') as HTMLElement | null;
+    if (retweetElement) {
+      const count = this.extractCountFromElement(retweetElement);
+      if (count !== null) {
+        stats.retweetCount = count;
+      }
+    }
+    
+    // リプライ数を取得
+    const replyElement = article.querySelector('[data-testid="reply"]') as HTMLElement | null;
+    if (replyElement) {
+      const count = this.extractCountFromElement(replyElement);
+      if (count !== null) {
+        stats.replyCount = count;
+      }
+    }
+    
+    // アイコン画像URLを取得
+    const avatarElement = article.querySelector('[data-testid="Tweet-User-Avatar"]');
+    if (avatarElement) {
+      const imgElement = avatarElement.querySelector('img[src]');
+      if (imgElement && imgElement instanceof HTMLImageElement) {
+        const src = imgElement.src;
+        if (src) {
+          stats.profileImageUrl = src;
+        }
+      }
+    }
     
     return stats;
+  }
+
+  /**
+   * 要素からカウント数を取得
+   * data-testid="app-text-transition-container"を持つ要素を探し、
+   * その子要素の子要素にspanで囲まれた数字のみの要素を取得
+   * @param parentElement 親要素（data-testid="like"など）
+   * @returns カウント数（取得できない場合はnull）
+   */
+  private extractCountFromElement(parentElement: HTMLElement): number | null {
+    // data-testid="app-text-transition-container"を持つ要素を探す
+    const transitionContainer = parentElement.querySelector('[data-testid="app-text-transition-container"]') as HTMLElement | null;
+    if (!transitionContainer) {
+      return null;
+    }
+    
+    // 子要素の子要素にspanで囲まれた数字のみの要素を探す
+    // 再帰的にspan要素を探す
+    const findNumberSpan = (element: HTMLElement): string | null => {
+      // 直接の子要素を確認
+      for (const child of Array.from(element.children)) {
+        const childElement = child as HTMLElement;
+        // span要素を確認
+        if (childElement.tagName === 'SPAN') {
+          const text = childElement.textContent?.trim() || '';
+          // 数字のみか確認（カンマやK、Mなどの単位を含む可能性がある）
+          if (text && /^[\d,KMkm]+$/.test(text.replace(/\s/g, ''))) {
+            return text;
+          }
+        }
+        // 子要素の子要素も再帰的に確認
+        const result = findNumberSpan(childElement);
+        if (result) {
+          return result;
+        }
+      }
+      return null;
+    };
+    
+    const numberText = findNumberSpan(transitionContainer);
+    if (!numberText) {
+      return null;
+    }
+    
+    // 数字文字列を数値に変換
+    // カンマを除去し、KやMなどの単位を処理
+    const cleanedText = numberText.replace(/,/g, '').trim();
+    const lowerText = cleanedText.toLowerCase();
+    
+    if (lowerText.endsWith('k')) {
+      const num = parseFloat(lowerText.slice(0, -1));
+      return isNaN(num) ? null : Math.round(num * 1000);
+    } else if (lowerText.endsWith('m')) {
+      const num = parseFloat(lowerText.slice(0, -1));
+      return isNaN(num) ? null : Math.round(num * 1000000);
+    } else {
+      const num = parseInt(cleanedText, 10);
+      return isNaN(num) ? null : num;
+    }
   }
 
   /**
