@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  * 
  * Comiketter: 一元的なツイート監視・ボタン管理システム
+ * TwitterMediaHarvestのobserveHead/observer系実装を参考
  */
 
 import { getTweetInfoFromArticle } from './tweetInfoExtractor';

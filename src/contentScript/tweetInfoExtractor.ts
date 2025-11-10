@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  * 
  * Comiketter: ツイート情報抽出機能
+ * TwitterMediaHarvestのtweetInfoExtractor.tsを参考
  */
 
 // TypeScriptの型定義拡張
