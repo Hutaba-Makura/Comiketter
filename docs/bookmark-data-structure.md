@@ -34,6 +34,7 @@
 4. **メディア情報**（任意）
    - `mediaUrls`: メディアURLの配列
    - `mediaTypes`: メディアタイプの配列
+   - `mediaPreviewUrls`: メディアのサムネイルURLの配列（動画/GIFのプレビュー用）
 
 5. **リプライ情報**（任意）
    - `replyToTweetId`: リプライ先のツイートID
@@ -53,6 +54,7 @@ export interface BookmarkedTweetDB {
   content: string;
   mediaUrls?: string[];
   mediaTypes?: string[];
+  mediaPreviewUrls?: string[];  // メディアのサムネイルURL（動画/GIFのプレビュー用）
   tweetDate: string;
   savedAt: string;
   isRetweet: boolean;
@@ -81,8 +83,11 @@ export interface BookmarkedTweetDB {
    - favorite_count → favoriteCount
    - retweet_count → retweetCount
    - reply_count → replyCount
+   - media[] → mediaUrls, mediaTypes, mediaPreviewUrls
+     - 動画/GIFの場合はMediaExtractorを使用して実際の動画URLを取得
+     - プレビューURLとしてmedia_url_httpsを保存
    ↓
-4. BookmarkDBに保存
+4. BookmarkDBに保存（既に同じbookmarkIdとtweetIdの組み合わせが存在する場合は上書き）
 ```
 
 ### 2. ツイート表示時
@@ -138,6 +143,34 @@ Twitter APIレスポンスのJSON構造から、以下のパスで情報を抽�
 
 ```typescript
 // ProcessedTweetからBookmarkDBへの変換
+const mediaExtractor = new MediaExtractor();
+const mediaUrls: string[] = [];
+const mediaTypes: string[] = [];
+const mediaPreviewUrls: string[] = [];
+
+// メディア情報を抽出
+if (cachedTweet.media && Array.isArray(cachedTweet.media)) {
+  for (const m of cachedTweet.media) {
+    mediaTypes.push(m.type || 'photo');
+    
+    if (m.type === 'video' || m.type === 'animated_gif') {
+      // 動画/GIFの場合はMediaExtractorを使用して実際の動画URLを取得
+      const videoUrl = mediaExtractor.getBestVideoUrl(m);
+      if (videoUrl) {
+        mediaUrls.push(videoUrl);
+        mediaPreviewUrls.push(m.media_url_https || '');  // プレビューURL
+      } else {
+        mediaUrls.push(m.media_url_https || '');
+        mediaPreviewUrls.push(m.media_url_https || '');
+      }
+    } else {
+      // 画像の場合はmedia_url_httpsを使用
+      mediaUrls.push(m.media_url_https || '');
+      mediaPreviewUrls.push(m.media_url_https || '');
+    }
+  }
+}
+
 const bookmarkedTweet = {
   tweetId: cachedTweet.id_str,
   authorUsername: cachedTweet.user.screen_name,
@@ -145,6 +178,9 @@ const bookmarkedTweet = {
   authorId: cachedTweet.user.screen_name,
   authorProfileImageUrl: cachedTweet.user.avatar_url,  // プロフィール画像URL
   content: cachedTweet.full_text,
+  mediaUrls,
+  mediaTypes,
+  mediaPreviewUrls,  // メディアのサムネイルURL
   favoriteCount: cachedTweet.favorite_count,  // いいね数
   retweetCount: cachedTweet.retweet_count,    // リツイート数
   replyCount: cachedTweet.reply_count,        // リプライ数
@@ -168,8 +204,11 @@ const bookmarkedTweet = {
 - **データ変換**: `src/bookmarks/utils/tweet-converter.ts`
 - **登録処理**: `src/utils/bookmarkApiClient.ts` (addTweetToBookmark)
 - **表示処理**: `src/bookmarks/tweet/Tweet.tsx`
+- **キャッシュ検索**: `src/utils/api-cache.ts` (ApiCacheManager.findTweetById)
+- **メディア抽出**: `src/api-processor/media-extractor.ts` (MediaExtractor)
 
 ## 更新履歴
 
 - 2025-01-XX: 統計情報（いいね数、リツイート数、リプライ数）とプロフィール画像URLを必須項目として追加
+- 2025-01-XX: メディアプレビューURL（mediaPreviewUrls）フィールドを追加
 

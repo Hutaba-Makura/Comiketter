@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  * 
  * Comiketter: サイドバーにCustomBookmarksボタンを追加
+ * TwitterMediaHarvestのサイドバー拡張ロジックを参考
  */
 
 import { showErrorToast } from '../utils/toast';

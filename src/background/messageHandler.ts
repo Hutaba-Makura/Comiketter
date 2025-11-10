@@ -9,8 +9,6 @@
 import { DownloadManager } from './downloadManager';
 import { StorageManager } from '../utils/storage';
 import { ApiProcessor } from '../api-processor/api-processor';
-import { VideoDownloader, type VideoDownloadRequest } from '../downloaders/video-downloader';
-import { ImageDownloader, type ImageDownloadRequest } from '../downloaders/image-downloader';
 import { MediaDownloader, type MediaDownloadRequest } from '../downloaders/media-downloader';
 import type { ApiResponseMessage } from '../api-processor/types';
 import { cbService } from '../bookmarks/services/cbService';
@@ -18,8 +16,6 @@ import { cbService } from '../bookmarks/services/cbService';
 export class MessageHandler {
   private downloadManager: DownloadManager;
   private apiProcessor: ApiProcessor;
-  private videoDownloader: VideoDownloader;
-  private imageDownloader: ImageDownloader;
   private mediaDownloader: MediaDownloader;
   private recentApiCalls: Map<string, number> = new Map(); // API重複防止用
   private readonly API_CALL_COOLDOWN = 1000; // 1秒間のクールダウン
@@ -27,8 +23,6 @@ export class MessageHandler {
   constructor() {
     this.downloadManager = new DownloadManager();
     this.apiProcessor = new ApiProcessor();
-    this.videoDownloader = new VideoDownloader();
-    this.imageDownloader = new ImageDownloader();
     this.mediaDownloader = new MediaDownloader();
     this.setupMessageListeners();
   }
@@ -69,16 +63,6 @@ export class MessageHandler {
           // ログメッセージは既にバックグラウンドスクリプトで処理されているため、
           // ここでは何もしない（警告を出さない）
           sendResponse({ success: true });
-          break;
-
-
-
-        case 'DOWNLOAD_VIDEO':
-          await this.handleDownloadVideo(message.payload, sendResponse);
-          break;
-
-        case 'DOWNLOAD_IMAGE':
-          await this.handleDownloadImage(message.payload, sendResponse);
           break;
 
         case 'DOWNLOAD_MEDIA':
@@ -201,48 +185,6 @@ export class MessageHandler {
       sendResponse({ 
         success: false, 
         error: error instanceof Error ? error.message : 'Test download failed' 
-      });
-    }
-  }
-
-
-
-  /**
-   * 動画ダウンロード要求を処理
-   */
-  private async handleDownloadVideo(
-    payload: VideoDownloadRequest, 
-    sendResponse: (response: any) => void
-  ): Promise<void> {
-    try {
-      console.log('🎬 Comiketter: 動画ダウンロード要求を受信:', payload);
-      const result = await this.videoDownloader.downloadVideo(payload);
-      sendResponse(result);
-    } catch (error) {
-      console.error('🎬 Comiketter: 動画ダウンロードエラー:', error);
-      sendResponse({ 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error' 
-      });
-    }
-  }
-
-  /**
-   * 画像ダウンロード要求を処理
-   */
-  private async handleDownloadImage(
-    payload: ImageDownloadRequest, 
-    sendResponse: (response: any) => void
-  ): Promise<void> {
-    try {
-      console.log('🖼️ Comiketter: 画像ダウンロード要求を受信:', payload);
-      const result = await this.imageDownloader.downloadImages(payload);
-      sendResponse(result);
-    } catch (error) {
-      console.error('🖼️ Comiketter: 画像ダウンロードエラー:', error);
-      sendResponse({ 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error' 
       });
     }
   }
@@ -707,6 +649,7 @@ export class MessageHandler {
       // GraphQLエンドポイントの場合は操作名を抽出
       if (path.includes('HomeLatestTimeline')) return 'HomeLatestTimeline';
       if (path.includes('HomeTimeline')) return 'HomeTimeline';
+      if (path.includes('TweetResultByRestId')) return 'TweetResultByRestId';
       if (path.includes('TweetDetail')) return 'TweetDetail';
       if (path.includes('ListLatestTweetsTimeline')) return 'ListLatestTweetsTimeline';
       if (path.includes('SearchTimeline')) return 'SearchTimeline';
@@ -727,7 +670,7 @@ export class MessageHandler {
       if (path.includes('CreateTweet')) return 'CreateTweet';
       if (path.includes('UserMedia')) return 'UserMedia';
       if (path.includes('NotificationsTimeline')) return 'NotificationsTimeline';
-      if (path.includes('useUpsellTrackingMutation')) return 'useUpsellTrackingMutation';
+      // if (path.includes('useUpsellTrackingMutation')) return 'useUpsellTrackingMutation'; // 画面縦横比変更追跡はコメントアウト
       return 'GraphQL';
     }
     
@@ -752,7 +695,7 @@ export class MessageHandler {
       'CreateTweet',
       'UserMedia',
       'NotificationsTimeline',
-      'useUpsellTrackingMutation'
+      // 'useUpsellTrackingMutation' // 画面縦横比変更追跡はコメントアウト
     ].includes(apiType);
   }
 

@@ -7,15 +7,16 @@
 | 分類 | 技術 | バージョン | 用途 |
 |------|------|-----------|------|
 | **プラットフォーム** | Chrome Extension | Manifest v3 | 拡張機能基盤 |
-| **言語** | TypeScript | 5.0+ | メイン開発言語 |
-| **フレームワーク** | React | 18.0+ | UI構築 |
-| **ビルドツール** | Webpack | 5.0+ | バンドル・ビルド |
-| **UIライブラリ** | Mantine | 7.0+ | コンポーネントライブラリ |
+| **言語** | TypeScript | 5.2+ | メイン開発言語 |
+| **フレームワーク** | React | 18.2+ | UI構築 |
+| **ビルドツール** | Webpack | 5.89+ | バンドル・ビルド |
+| **UIライブラリ** | Mantine | 7.17+ | コンポーネントライブラリ |
 | **データベース** | IndexedDB | - | ローカルデータ保存 |
 | **パッケージ管理** | Yarn | 1.22+ | 依存関係管理 |
-| **テスト** | Jest | 29.0+ | ユニットテスト |
-| **Lint/Format** | ESLint + Prettier | 8.0+ | コード品質管理 |
+| **テスト** | Jest | 29.7+ | ユニットテスト |
+| **Lint/Format** | ESLint + Prettier | 8.53+ | コード品質管理 |
 | **Gitフック** | Husky | 8.0+ | コミット前チェック |
+| **UI開発** | Storybook | 9.1+ | コンポーネント開発・テスト |
 
 ### 開発ツール
 
@@ -35,6 +36,19 @@ Comiketter/
 │   │   ├── index.ts             # メインエントリーポイント
 │   │   ├── messageHandler.ts    # メッセージハンドラー
 │   │   └── downloadManager.ts   # ダウンロード管理
+│   ├── api-processor/           # API処理・メディア抽出
+│   │   ├── index.ts             # エントリーポイント
+│   │   ├── api-processor.ts     # メイン処理クラス
+│   │   ├── tweet-extractor.ts   # ツイート情報抽出
+│   │   ├── user-extractor.ts    # ユーザー情報抽出
+│   │   ├── media-extractor.ts   # メディア情報抽出
+│   │   ├── types.ts             # 型定義
+│   │   └── README.md            # API処理機能ドキュメント
+│   ├── background/              # バックグラウンドスクリプト
+│   │   ├── index.ts             # メインエントリーポイント
+│   │   ├── messageHandler.ts    # メッセージハンドラー
+│   │   ├── downloadManager.ts   # ダウンロード管理
+│   │   └── downloadTestManager.ts # ダウンロードテスト管理
 │   ├── contentScript/           # コンテンツスクリプト
 │   │   ├── index.ts             # メインエントリーポイント
 │   │   ├── apiInterceptor.ts    # API傍受
@@ -49,13 +63,43 @@ Comiketter/
 │   │       └── index.ts
 │   ├── bookmarks/               # ブックマークページ
 │   │   ├── index.tsx            # エントリーポイント
-│   │   ├── BookmarkPage.tsx     # メインページ
-│   │   ├── BookmarkList.tsx     # ブックマーク一覧
-│   │   └── BookmarkDetail.tsx   # ブックマーク詳細
+│   │   ├── BookmarkApp.tsx      # メインアプリ
+│   │   ├── hooks/               # カスタムフック
+│   │   │   ├── useThemeBridge.ts # テーマブリッジ
+│   │   │   └── useTimeline.ts   # タイムラインフック
+│   │   ├── layout/              # レイアウトコンポーネント
+│   │   │   ├── BookmarkLayout.tsx # メインレイアウト
+│   │   │   └── ...
+│   │   ├── sidebar/              # サイドバーコンポーネント
+│   │   │   ├── CbSidebar.tsx    # サイドバー
+│   │   │   └── CbSidebarItem.tsx # サイドバーアイテム
+│   │   ├── timeline/            # タイムラインコンポーネント
+│   │   │   ├── TimelineView.tsx  # タイムライン表示
+│   │   │   └── VirtualizedTimeline.tsx # 仮想化タイムライン
+│   │   ├── tweet/               # ツイートコンポーネント
+│   │   │   ├── Tweet.tsx        # ツイートカード
+│   │   │   ├── TweetEmbed.tsx   # ツイート埋め込み
+│   │   │   └── ...
+│   │   ├── services/            # サービス層
+│   │   │   ├── cbService.ts     # CBサービス
+│   │   │   └── cbDataService.ts # CBデータサービス
+│   │   ├── state/               # 状態管理
+│   │   │   └── cbStore.ts       # CBストア
+│   │   ├── types/               # 型定義
+│   │   │   ├── cb.ts            # CB型定義
+│   │   │   └── tweet.ts         # ツイート型定義
+│   │   └── utils/               # ユーティリティ
+│   │       ├── tweet-converter.ts # ツイート変換
+│   │       └── ...
 │   ├── components/              # 再利用可能なUIコンポーネント
-│   │   ├── BookmarkSelector.tsx # CB選択UI
 │   │   ├── BookmarkManager.tsx  # CB管理UI
+│   │   ├── DownloadHistoryManager.tsx # ダウンロード履歴管理UI
 │   │   └── FilenameSettings.tsx # ファイル名設定
+│   ├── downloaders/            # ダウンロード処理
+│   │   ├── index.ts             # エントリーポイント
+│   │   ├── media-downloader.ts  # メディアダウンロード
+│   │   ├── image-downloader.ts  # 画像ダウンロード
+│   │   └── video-downloader.ts  # 動画ダウンロード
 │   ├── options/                 # オプションページ
 │   │   ├── index.tsx            # エントリーポイント
 │   │   └── OptionsApp.tsx       # メインアプリ
@@ -64,14 +108,24 @@ Comiketter/
 │   │   └── PopupApp.tsx         # メインアプリ
 │   ├── hooks/                   # カスタムReactフック
 │   ├── stores/                  # 状態管理
+│   ├── stories/                 # Storybookストーリー
+│   │   ├── components/          # コンポーネントストーリー
+│   │   └── data/                # サンプルデータ
 │   ├── test/                    # テストファイル
+│   │   ├── api-cache.test.ts    # APIキャッシュテスト
+│   │   ├── api-processor.test.ts # APIプロセッサーテスト
+│   │   └── ...
 │   ├── types/                   # 型定義
 │   │   ├── index.ts             # メイン型定義
 │   │   └── api.d.ts             # API型定義
 │   └── utils/                   # ユーティリティ関数
+│       ├── api-cache.ts         # APIキャッシュ管理
+│       ├── bookmarkDB.ts        # ブックマークDB
+│       ├── bookmarkApiClient.ts # ブックマークAPIクライアント
 │       ├── bookmarkManager.ts   # CB管理
 │       ├── storage.ts           # ストレージ管理
 │       ├── filenameGenerator.ts # ファイル名生成
+│       ├── downloadHistoryDB.ts # ダウンロード履歴DB
 │       └── constants.ts         # 定数定義
 ├── docs/                        # ドキュメント
 ├── icons/                       # アイコン画像
@@ -97,31 +151,52 @@ Comiketter/
   "description": "X（Twitter）専用Chrome拡張機能",
   "main": "src/background/index.ts",
   "scripts": {
-    "build": "webpack --mode production",
-    "dev": "webpack --mode development --watch",
+    "build": "webpack --config webpack.config.mjs",
+    "build:dev": "webpack --config webpack.config.mjs --mode development",
+    "build:prod": "webpack --config webpack.config.mjs --mode production",
+    "watch": "webpack --config webpack.config.mjs --watch",
     "test": "jest",
-    "lint": "eslint src/**/*.{ts,tsx}",
-    "format": "prettier --write src/**/*.{ts,tsx}",
-    "type-check": "tsc --noEmit"
+    "test:watch": "jest --watch",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
+    "format": "prettier --write src/**/*.{ts,tsx,js,jsx,json,css,scss}",
+    "type-check": "tsc --noEmit",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   },
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "@mantine/core": "^7.0.0",
-    "@mantine/hooks": "^7.0.0"
+    "@mantine/core": "^7.17.8",
+    "@mantine/hooks": "^7.17.8",
+    "@mantine/notifications": "^7.17.8",
+    "@tabler/icons-react": "^3.34.0",
+    "react-tweet": "^3.2.2",
+    "react-window": "^1.8.11",
+    "react-window-infinite-loader": "^1.0.10",
+    "zustand": "^5.0.7"
   },
   "devDependencies": {
-    "@types/chrome": "^0.0.254",
-    "@types/react": "^18.2.0",
-    "@types/react-dom": "^18.2.0",
-    "@types/jest": "^29.5.0",
-    "typescript": "^5.0.0",
-    "webpack": "^5.88.0",
-    "webpack-cli": "^5.1.0",
-    "jest": "^29.5.0",
-    "eslint": "^8.45.0",
-    "prettier": "^3.0.0",
-    "husky": "^8.0.0"
+    "@storybook/addon-docs": "9.1.3",
+    "@storybook/addon-links": "^9.1.3",
+    "@storybook/addon-onboarding": "9.1.3",
+    "@storybook/addon-themes": "^9.1.3",
+    "@storybook/react-webpack5": "9.1.3",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@types/chrome": "^0.0.260",
+    "@types/react": "^18.2.37",
+    "@types/react-dom": "^18.2.15",
+    "@types/jest": "^29.5.8",
+    "@typescript-eslint/eslint-plugin": "^6.10.0",
+    "@typescript-eslint/parser": "^6.10.0",
+    "typescript": "^5.2.2",
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.4",
+    "jest": "^29.7.0",
+    "eslint": "^8.53.0",
+    "prettier": "^3.0.3",
+    "husky": "^8.0.3",
+    "storybook": "^9.1.13"
   }
 }
 ```
@@ -267,16 +342,28 @@ export default {
 ### 開発ビルド
 ```bash
 # 開発モードでビルド（監視モード）
-yarn dev
+yarn watch
+
+# 開発ビルド
+yarn build:dev
 
 # 本番ビルド
-yarn build
+yarn build:prod
 
 # テスト実行
 yarn test
 
+# テスト（ウォッチモード）
+yarn test:watch
+
 # 型チェック
 yarn type-check
+
+# Storybook起動
+yarn storybook
+
+# Storybookビルド
+yarn build-storybook
 ```
 
 ### Chrome拡張機能の読み込み

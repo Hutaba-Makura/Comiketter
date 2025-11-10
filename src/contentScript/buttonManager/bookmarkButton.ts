@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  * 
  * Comiketter: ブックマークボタン管理
+ * TwitterMediaHarvestのbutton.ts/bookmark関連実装を参考
  */
 
 /// <reference lib="dom" />
@@ -39,10 +40,21 @@ export enum BookmarkButtonStatus {
   Error = 'error',
 }
 
+/**
+ * HTML要素から取得した統計情報の型定義
+ */
+export interface TweetStatsFromHTML {
+  favoriteCount?: number;
+  retweetCount?: number;
+  replyCount?: number;
+  profileImageUrl?: string;
+}
+
 export class BookmarkButton extends BaseButton {
   private bookmarkSelector: HTMLElement | null = null;
   private currentTweetInfo: Tweet | null = null;
   private currentButton: HTMLElement | null = null;
+  private currentArticle: HTMLElement | null = null; // 現在のツイートのarticle要素
   private initialCheckedBookmarks: Set<string> = new Set(); // 初期チェック状態を保存
 
   constructor() {
@@ -124,14 +136,6 @@ export class BookmarkButton extends BaseButton {
       ? (targetButton.querySelector('svg') as HTMLElement)
       : this.currentIconElement;
     
-    console.log('Comiketter: updateIcon called', { 
-      iconName, 
-      color, 
-      hasCurrentIcon: !!this.currentIconElement,
-      hasTargetButton: !!targetButton,
-      hasIconElement: !!iconElement
-    });
-    
     if (!iconElement) {
       console.warn('Comiketter: iconElement is null, cannot update icon', {
         hasTargetButton: !!targetButton,
@@ -150,19 +154,11 @@ export class BookmarkButton extends BaseButton {
                              '18.75';
       const existingClass = iconElement.className;
       
-      console.log('Comiketter: Existing icon properties', { 
-        existingWidth, 
-        existingHeight, 
-        existingClass,
-        iconElement 
-      });
-      
       // テーマを検出して色を決定
       const theme = this.detectTheme();
       const iconColor = color || this.getButtonColor(theme);
       
       // アイコンファイルを読み込み
-      console.log('Comiketter: Loading icon:', iconName);
       const iconSVG = await this.loadIcon(iconName);
       
       // 新しいSVG要素を作成
@@ -180,13 +176,6 @@ export class BookmarkButton extends BaseButton {
       // 色を設定
       newIcon.style.color = iconColor;
       
-      console.log('Comiketter: New icon created', { 
-        newIcon, 
-        iconColor, 
-        width: newIcon.getAttribute('width'),
-        height: newIcon.getAttribute('height')
-      });
-      
       // 既存のアイコンを置き換え
       iconElement.replaceWith(newIcon);
       
@@ -194,8 +183,6 @@ export class BookmarkButton extends BaseButton {
       if (this.currentIconElement === iconElement) {
         this.currentIconElement = newIcon;
       }
-      
-      console.log('Comiketter: Icon updated successfully', { iconName, iconColor });
     } catch (error) {
       console.error('Comiketter: Failed to update icon:', error);
       throw error;
@@ -409,6 +396,145 @@ export class BookmarkButton extends BaseButton {
   }
 
   /**
+   * HTML要素から統計情報を取得
+   * @param article ツイートのarticle要素
+   * @returns 統計情報（取得できなかった項目はundefined）
+   */
+  private extractStatsFromHTML(article: HTMLElement | null): TweetStatsFromHTML {
+    const stats: TweetStatsFromHTML = {};
+    
+    if (!article) {
+      console.warn('Comiketter: [HTML解析] article要素がnullのため、統計情報を取得できませんでした');
+      return stats;
+    }
+    
+    // いいね数を取得
+    const likeElement = article.querySelector('[data-testid="like"], [data-testid="unlike"]') as HTMLElement | null;
+    if (likeElement) {
+      const count = this.extractCountFromElement(likeElement);
+      if (count !== null) {
+        stats.favoriteCount = count;
+      } else {
+        console.warn('Comiketter: [HTML解析] いいね数を取得できませんでした');
+      }
+    } else {
+      console.warn('Comiketter: [HTML解析] data-testid="like"または"unlike"要素が見つかりませんでした');
+    }
+    
+    // RT数を取得
+    const retweetElement = article.querySelector('[data-testid="retweet"], [data-testid="unretweet"]') as HTMLElement | null;
+    if (retweetElement) {
+      const count = this.extractCountFromElement(retweetElement);
+      if (count !== null) {
+        stats.retweetCount = count;
+      } else {
+        console.warn('Comiketter: [HTML解析] RT数を取得できませんでした');
+      }
+    } else {
+      console.warn('Comiketter: [HTML解析] data-testid="retweet"または"unretweet"要素が見つかりませんでした');
+    }
+    
+    // リプライ数を取得
+    const replyElement = article.querySelector('[data-testid="reply"]') as HTMLElement | null;
+    if (replyElement) {
+      const count = this.extractCountFromElement(replyElement);
+      if (count !== null) {
+        stats.replyCount = count;
+      } else {
+        console.warn('Comiketter: [HTML解析] リプライ数を取得できませんでした');
+      }
+    } else {
+      console.warn('Comiketter: [HTML解析] data-testid="reply"要素が見つかりませんでした');
+    }
+    
+    // アイコン画像URLを取得
+    const avatarElement = article.querySelector('[data-testid="Tweet-User-Avatar"]');
+    if (avatarElement) {
+      const imgElement = avatarElement.querySelector('img[src]');
+      if (imgElement && imgElement instanceof HTMLImageElement) {
+        const src = imgElement.src;
+        if (src) {
+          stats.profileImageUrl = src;
+        } else {
+          console.warn('Comiketter: [HTML解析] アイコン画像のsrc属性が空でした');
+        }
+      } else {
+        console.warn('Comiketter: [HTML解析] data-testid="Tweet-User-Avatar"要素内にimg要素が見つかりませんでした');
+      }
+    } else {
+      console.warn('Comiketter: [HTML解析] data-testid="Tweet-User-Avatar"要素が見つかりませんでした');
+    }
+    
+    return stats;
+  }
+
+  /**
+   * 要素からカウント数を取得
+   * data-testid="app-text-transition-container"を持つ要素を探し、
+   * その子要素の子要素にspanで囲まれた数字のみの要素を取得
+   * @param parentElement 親要素（data-testid="like"など）
+   * @returns カウント数（取得できない場合はnull）
+   */
+  private extractCountFromElement(parentElement: HTMLElement): number | null {
+    // data-testid="app-text-transition-container"を持つ要素を探す
+    const transitionContainer = parentElement.querySelector('[data-testid="app-text-transition-container"]') as HTMLElement | null;
+    if (!transitionContainer) {
+      return null;
+    }
+    
+    // 子要素の子要素にspanで囲まれた数字のみの要素を探す
+    // 再帰的にspan要素を探す
+    const findNumberSpan = (element: HTMLElement): string | null => {
+      // 直接の子要素を確認
+      for (const child of Array.from(element.children)) {
+        const childElement = child as HTMLElement;
+        // span要素を確認
+        if (childElement.tagName === 'SPAN') {
+          const text = childElement.textContent?.trim() || '';
+          const sanitizedText = text.replace(/\s/g, '');
+          // 数字のみか確認（カンマ、ドット、K/M/万などの単位を含む場合がある）
+          if (sanitizedText && /^[\d,.KMkm万]+$/.test(sanitizedText)) {
+            return sanitizedText;
+          }
+        }
+        // 子要素の子要素も再帰的に確認
+        const result = findNumberSpan(childElement);
+        if (result) {
+          return result;
+        }
+      }
+      return null;
+    };
+    
+    const numberText = findNumberSpan(transitionContainer);
+    if (!numberText) {
+      return null;
+    }
+    
+    // 数字文字列を数値に変換
+    // カンマを除去し、KやM、万などの単位を処理
+    const cleanedText = numberText.replace(/,/g, '').trim();
+    const normalizedText = cleanedText.replace(/\s/g, '');
+    const lowerText = normalizedText.toLowerCase();
+
+    if (normalizedText.endsWith('万')) {
+      const num = parseFloat(normalizedText.slice(0, -1));
+      return isNaN(num) ? null : Math.round(num * 10000);
+    }
+    if (lowerText.endsWith('k')) {
+      const num = parseFloat(lowerText.slice(0, -1));
+      return isNaN(num) ? null : Math.round(num * 1000);
+    }
+    if (lowerText.endsWith('m')) {
+      const num = parseFloat(lowerText.slice(0, -1));
+      return isNaN(num) ? null : Math.round(num * 1000000);
+    }
+
+    const num = parseFloat(normalizedText);
+    return isNaN(num) ? null : Math.round(num);
+  }
+
+  /**
    * ブックマークボタンを作成
    */
   async createButton(tweetInfo: Tweet, article?: HTMLElement): Promise<HTMLElement> {
@@ -554,6 +680,9 @@ export class BookmarkButton extends BaseButton {
       // 現在のボタンとツイート情報を保存
       this.currentButton = button;
       this.currentTweetInfo = tweetInfo;
+      
+      // article要素を取得して保存
+      this.currentArticle = this.getArticleElement(button);
       
       // BookmarkApiClientを初期化
       const bookmarkManager = BookmarkApiClient.getInstance();
@@ -979,15 +1108,10 @@ export class BookmarkButton extends BaseButton {
       current: Array.from(currentSelectedBookmarks)
     });
     
-    // 変更がない場合は何もしない
-    if (bookmarksToRemove.length === 0 && bookmarksToAdd.length === 0) {
-      this.hideBookmarkSelector();
-      return;
-    }
-
     let addSuccessCount = 0;
     let removeSuccessCount = 0;
     let hasError = false;
+    let updateSuccessCount = 0;
 
     // チェックが外されたブックマークからツイートを削除
     for (const bookmarkId of bookmarksToRemove) {
@@ -1002,9 +1126,41 @@ export class BookmarkButton extends BaseButton {
     }
 
     // チェックが入ったブックマークにツイートを追加
+    // HTMLから統計情報を取得（優先）
+    const htmlStats = this.extractStatsFromHTML(this.currentArticle);
+    
+    // ツイート情報にHTMLから取得した統計情報をマージ
+    // addTweetToBookmarkはany型を受け取るため、型アサーションを使用
+    const tweetInfoWithStats: any = { ...this.currentTweetInfo };
+    if (htmlStats.favoriteCount !== undefined && htmlStats.favoriteCount !== null && htmlStats.favoriteCount > 0) {
+      tweetInfoWithStats.stats = {
+        ...(tweetInfoWithStats.stats || {}),
+        likeCount: htmlStats.favoriteCount,
+      };
+    }
+    if (htmlStats.retweetCount !== undefined && htmlStats.retweetCount !== null && htmlStats.retweetCount > 0) {
+      tweetInfoWithStats.stats = {
+        ...(tweetInfoWithStats.stats || {}),
+        retweetCount: htmlStats.retweetCount,
+      };
+    }
+    if (htmlStats.replyCount !== undefined && htmlStats.replyCount !== null && htmlStats.replyCount > 0) {
+      tweetInfoWithStats.stats = {
+        ...(tweetInfoWithStats.stats || {}),
+        replyCount: htmlStats.replyCount,
+      };
+    }
+    if (htmlStats.profileImageUrl) {
+      tweetInfoWithStats.author = {
+        ...tweetInfoWithStats.author,
+        profileImageUrl: htmlStats.profileImageUrl,
+      };
+    }
+    
     for (const bookmarkId of bookmarksToAdd) {
       try {
-        await bookmarkManager.addTweetToBookmark(bookmarkId, this.currentTweetInfo.id, this.currentTweetInfo);
+        // HTMLから取得した統計情報を含むツイート情報を使用
+        await bookmarkManager.addTweetToBookmark(bookmarkId, this.currentTweetInfo.id, tweetInfoWithStats);
         addSuccessCount++;
         console.log('Comiketter: Added tweet to bookmark:', bookmarkId);
       } catch (error) {
@@ -1013,11 +1169,66 @@ export class BookmarkButton extends BaseButton {
       }
     }
     
-    console.log('Comiketter: Saved bookmark changes:', { 
-      removed: removeSuccessCount, 
-      added: addSuccessCount, 
-      hasError 
-    });
+    // 既存のブックマーク済みツイートの情報を更新（変更がない場合でも更新）
+    try {
+      // HTMLから統計情報を取得（優先）
+      const htmlStats = this.extractStatsFromHTML(this.currentArticle);
+      
+      // キャッシュから最新のツイート情報を取得（フォールバック用）
+      const cachedTweet = await bookmarkManager.getCachedTweetById(this.currentTweetInfo.id);
+      
+      // 既存のブックマーク済みツイートを取得
+      const existingBookmarkedTweets = await bookmarkManager.getBookmarkedTweetByTweetId(this.currentTweetInfo.id);
+      
+      // 各ブックマーク済みツイートの情報を更新
+      for (const bookmarkedTweet of existingBookmarkedTweets) {
+        const updates: Partial<typeof bookmarkedTweet> = {};
+        
+        // HTMLから取得した統計情報を優先し、取得できない場合はキャッシュから取得
+        // Favorite数
+        if (htmlStats.favoriteCount !== undefined && htmlStats.favoriteCount !== null && htmlStats.favoriteCount > 0) {
+          updates.favoriteCount = htmlStats.favoriteCount;
+        } else if (cachedTweet?.favorite_count !== undefined && cachedTweet.favorite_count !== null && cachedTweet.favorite_count > 0) {
+          updates.favoriteCount = cachedTweet.favorite_count;
+        }
+        
+        // RT数
+        if (htmlStats.retweetCount !== undefined && htmlStats.retweetCount !== null && htmlStats.retweetCount > 0) {
+          updates.retweetCount = htmlStats.retweetCount;
+        } else if (cachedTweet?.retweet_count !== undefined && cachedTweet.retweet_count !== null && cachedTweet.retweet_count > 0) {
+          updates.retweetCount = cachedTweet.retweet_count;
+        }
+        
+        // リプライ数
+        if (htmlStats.replyCount !== undefined && htmlStats.replyCount !== null && htmlStats.replyCount > 0) {
+          updates.replyCount = htmlStats.replyCount;
+        } else if (cachedTweet?.reply_count !== undefined && cachedTweet.reply_count !== null && cachedTweet.reply_count > 0) {
+          updates.replyCount = cachedTweet.reply_count;
+        }
+        
+        // プロフィール画像URL
+        if (htmlStats.profileImageUrl) {
+          updates.authorProfileImageUrl = htmlStats.profileImageUrl;
+        } else if (cachedTweet?.user?.avatar_url) {
+          updates.authorProfileImageUrl = cachedTweet.user.avatar_url;
+        }
+        
+        // 更新する項目がある場合のみ更新
+        if (Object.keys(updates).length > 0) {
+          try {
+            await bookmarkManager.updateBookmarkedTweet(bookmarkedTweet.id, updates);
+            updateSuccessCount++;
+            console.log('Comiketter: Updated bookmarked tweet:', bookmarkedTweet.id, updates);
+          } catch (error) {
+            console.error('Comiketter: Failed to update bookmarked tweet:', bookmarkedTweet.id, error);
+            hasError = true;
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Comiketter: Failed to update bookmarked tweets:', error);
+      hasError = true;
+    }
     
     // 少なくとも1つのブックマークに追加できた場合、または削除が成功した場合はアイコンを更新
     const hasAnyBookmark = currentSelectedBookmarks.size > 0;
@@ -1049,13 +1260,28 @@ export class BookmarkButton extends BaseButton {
     if (addSuccessCount > 0) {
       messages.push(`${addSuccessCount}個のブックマークに追加`);
     }
+    if (updateSuccessCount > 0) {
+      messages.push(`${updateSuccessCount}件の情報を更新`);
+    }
     
-    if (hasError && removeSuccessCount === 0 && addSuccessCount === 0) {
-      showErrorToast('ブックマークの保存に失敗しました');
-    } else if (hasError) {
-      showErrorToast(`${messages.join('、')}しました（一部失敗しました）`);
-    } else if (messages.length > 0) {
-      showSuccessToast(`${messages.join('、')}しました`);
+    // 変更がない場合は、更新のみを行ったことを通知
+    if (bookmarksToRemove.length === 0 && bookmarksToAdd.length === 0) {
+      if (updateSuccessCount > 0) {
+        showSuccessToast(`${updateSuccessCount}件の情報を更新しました`);
+      } else {
+        // 更新する情報がない場合は何も表示しない
+        this.hideBookmarkSelector();
+        return;
+      }
+    } else {
+      // 変更がある場合の既存の処理
+      if (hasError && removeSuccessCount === 0 && addSuccessCount === 0 && updateSuccessCount === 0) {
+        showErrorToast('ブックマークの保存に失敗しました');
+      } else if (hasError) {
+        showErrorToast(`${messages.join('、')}しました（一部失敗しました）`);
+      } else if (messages.length > 0) {
+        showSuccessToast(`${messages.join('、')}しました`);
+      }
     }
   }
 

@@ -127,13 +127,20 @@ class EnhancedBookmarkManager {
 
 以下のAPIタイプに対応しています：
 
-- `HomeLatestTimeline` - ホームタイムライン
-- `UserTweets` - ユーザーのツイート
+- `HomeTimeline` - ホームタイムライン（おすすめ）
+- `HomeLatestTimeline` - ホームタイムライン（フォロー中）
 - `TweetDetail` - ツイート詳細
-- `Bookmarks` - ブックマーク
-- `Likes` - いいね
-- `CommunitiesExploreTimeline` - コミュニティタイムライン
+- `TweetResultByRestId` - REST IDによるツイート取得（ツイート詳細の追加情報として使用）
 - `ListLatestTweetsTimeline` - リストタイムライン
+- `SearchTimeline` - 検索タイムライン
+- `CommunityTweetsTimeline` - コミュニティのタイムライン
+- `CommunityTweetSearchModuleQuery` - コミュニティの検索タイムライン
+- `Bookmarks` - ブックマークのタイムライン
+- `BookmarkSearchTimeline` - ブックマークの検索タイムライン
+- `UserTweets` - ユーザーのツイート
+- `UserTweetsAndReplies` - ユーザーの返信
+- `Likes` - ユーザーのいいね
+- `UserHighlightsTweets` - ユーザーのハイライトツイート
 
 ## 処理される情報
 

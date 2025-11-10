@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  * 
  * Comiketter: ボタンファクトリ
+ * TwitterMediaHarvestのbuttonFactory相当ロジックを参考
  */
 
 import type { Tweet } from '../../types';

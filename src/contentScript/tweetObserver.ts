@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  * 
  * Comiketter: 一元的なツイート監視・ボタン管理システム
+ * TwitterMediaHarvestのobserveHead/observer系実装を参考
  */
 
 import { getTweetInfoFromArticle } from './tweetInfoExtractor';
@@ -76,7 +77,6 @@ export class TweetObserver {
   private observePageNavigation(): void {
     // ページ遷移イベントをリッスン
     window.addEventListener('comiketter:page-navigation', () => {
-      console.log('Comiketter: ページ遷移イベントを受信、ボタンを再作成');
       // 処理済み要素をクリア
       this.processedElements = new WeakSet<HTMLElement>();
       // 既存のツイートを再処理（遅延を長くしてDOMが完全に更新されるのを待つ）
@@ -91,10 +91,10 @@ export class TweetObserver {
       const headObserver = new MutationObserver(() => {
         const currentPathname = window.location.pathname;
         if (currentPathname !== this.lastPathname) {
-          console.log('Comiketter: head要素の変更でページ遷移を検知', {
-            from: this.lastPathname,
-            to: currentPathname
-          });
+          // console.log('Comiketter: head要素の変更でページ遷移を検知', {
+          //   from: this.lastPathname,
+          //   to: currentPathname
+          // });
           this.lastPathname = currentPathname;
           // 処理済み要素をクリア
           this.processedElements = new WeakSet<HTMLElement>();
@@ -289,12 +289,6 @@ export class TweetObserver {
     
     // どちらかのボタンが既に存在する場合は追加しない
     if (hasBookmarkButton || hasDownloadButton) {
-      console.log('Comiketter: 既にボタンが存在するためスキップ', {
-        hasBookmarkButton,
-        hasDownloadButton,
-        article: article.tagName,
-        tweetId: article.getAttribute('data-testid')
-      });
       return false;
     }
     
@@ -332,10 +326,6 @@ export class TweetObserver {
 
       // 最終チェック：ボタン作成後に再度チェック
       if (!this.shouldAddButtons(article)) {
-        console.log('Comiketter: ボタン作成後の最終チェックで中止', {
-          article: article.tagName,
-          tweetId: article.getAttribute('data-testid')
-        });
         return;
       }
 

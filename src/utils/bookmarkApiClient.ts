@@ -194,20 +194,20 @@ export class BookmarkApiClient {
     mediaPreviewUrls?: string[]
   ): Promise<BookmarkedTweet> {
     // 送信する情報をログに出力して確認
-    console.log('Comiketter: [Bookmark] addBookmarkedTweet called with:', {
-      bookmarkId,
-      tweetId,
-      authorUsername,
-      authorDisplayName,
-      authorId,
-      authorProfileImageUrl,
-      favoriteCount,
-      retweetCount,
-      replyCount,
-      hasContent: !!content,
-      hasMediaUrls: !!mediaUrls && mediaUrls.length > 0,
-      mediaUrlsCount: mediaUrls?.length || 0
-    });
+    // console.log('Comiketter: [Bookmark] addBookmarkedTweet called with:', {
+    //   bookmarkId,
+    //   tweetId,
+    //   authorUsername,
+    //   authorDisplayName,
+    //   authorId,
+    //   authorProfileImageUrl,
+    //   favoriteCount,
+    //   retweetCount,
+    //   replyCount,
+    //   hasContent: !!content,
+    //   hasMediaUrls: !!mediaUrls && mediaUrls.length > 0,
+    //   mediaUrlsCount: mediaUrls?.length || 0
+    // });
     
     return await this.sendMessage('addBookmarkedTweet', {
       bookmarkId,
@@ -285,12 +285,12 @@ export class BookmarkApiClient {
    * 既に同じリストに同じツイートが存在する場合は、最新情報で上書きする
    */
   async addTweetToBookmark(bookmarkId: string, tweetId: string, tweetInfo?: any): Promise<void> {
-    console.log('Comiketter: [Bookmark] addTweetToBookmark called', {
-      bookmarkId,
-      tweetId,
-      hasTweetInfo: !!tweetInfo,
-      tweetInfoMedia: tweetInfo?.media
-    });
+    // console.log('Comiketter: [Bookmark] addTweetToBookmark called', {
+    //   bookmarkId,
+    //   tweetId,
+    //   hasTweetInfo: !!tweetInfo,
+    //   tweetInfoMedia: tweetInfo?.media
+    // });
     
     // 既に同じリストにブックマークされているかチェック（ログ出力用）
     const isAlreadyBookmarked = await this.isTweetBookmarked(tweetId, bookmarkId);
@@ -428,7 +428,7 @@ export class BookmarkApiClient {
           const mediaTypes: string[] = [];
           const mediaPreviewUrls: string[] = [];
           
-          console.log('Comiketter: [Bookmark] cachedTweet.media:', cachedTweet.media);
+          // console.log('Comiketter: [Bookmark] cachedTweet.media:', cachedTweet.media);
           
           if (cachedTweet.media && Array.isArray(cachedTweet.media)) {
             for (const m of cachedTweet.media) {
@@ -461,7 +461,7 @@ export class BookmarkApiClient {
                 }
               } else {
                 // 画像の場合はmedia_url_httpsを使用
-                console.log('Comiketter: [Bookmark] Processing as image');
+                // console.log('Comiketter: [Bookmark] Processing as image');
                 mediaUrls.push(m.media_url_https || '');
                 mediaPreviewUrls.push(m.media_url_https || '');
               }
@@ -470,11 +470,11 @@ export class BookmarkApiClient {
             console.warn('Comiketter: [Bookmark] No media found in cachedTweet');
           }
           
-          console.log('Comiketter: [Bookmark] Final media arrays:', {
-            mediaUrls,
-            mediaTypes,
-            mediaPreviewUrls
-          });
+          // console.log('Comiketter: [Bookmark] Final media arrays:', {
+          //   mediaUrls,
+          //   mediaTypes,
+          //   mediaPreviewUrls
+          // });
           
           // ProcessedTweetから情報を抽出して保存
           // キャッシュから取得した情報をログに出力して確認
@@ -658,11 +658,11 @@ export class BookmarkApiClient {
             }
           }
           
-          console.log('Comiketter: [Bookmark] Final media arrays from tweetInfo:', {
-            mediaUrls,
-            mediaTypes,
-            mediaPreviewUrls
-          });
+          // console.log('Comiketter: [Bookmark] Final media arrays from tweetInfo:', {
+          //   mediaUrls,
+          //   mediaTypes,
+          //   mediaPreviewUrls
+          // });
           
           // tweetInfoから取得した情報をログに出力して確認
           console.log('Comiketter: [Bookmark] TweetInfo info:', {
@@ -883,5 +883,14 @@ export class BookmarkApiClient {
    */
   async clearAllData(): Promise<void> {
     return await this.sendMessage('clearBookmarkData');
+  }
+
+  /**
+   * キャッシュからツイート情報を取得
+   */
+  async getCachedTweetById(tweetId: string): Promise<any> {
+    return await this.sendCacheMessage('findTweetById', {
+      id_str: tweetId
+    });
   }
 } 

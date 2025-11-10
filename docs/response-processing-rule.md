@@ -46,6 +46,7 @@ interface ApiProcessingResult {
   - `HomeTimeline` - ホームタイムライン（おすすめ）
   - `HomeLatestTimeline` - ホームタイムライン（フォロー中）
   - `TweetDetail` - ツイート詳細
+  - `TweetResultByRestId` - REST IDによるツイート取得（ツイート詳細の追加情報として使用）
   - `ListLatestTweetsTimeline` - リストタイムライン
   - `SearchTimeline` - 検索タイムライン
   - `CommunityTweetsTimeline` - コミュニティのタイムライン
@@ -59,7 +60,6 @@ interface ApiProcessingResult {
 - 使われているのが確認出来なかったAPI
   - `UserTweetsAndReplies` - ユーザーのツイートとリプライ
   - `UserArticlesTweets` - ユーザーの記事ツイート
-  - `TweetResultByRestId` - REST IDによるツイート取得
   - `CommunitiesExploreTimeline` - コミュニティタイムライン
 
 ### 2.2 処理対象外API
@@ -97,7 +97,7 @@ interface ApiProcessingResult {
 ### 2.3 APIレスポンス構造の処理
 
 #### 対応するAPIレスポンス構造
-実装では以下の3つの構造に対応しています：
+実装では以下の4つの構造に対応しています：
 
 1. **ホームタイムライン系**
    ```json
@@ -123,7 +123,30 @@ interface ApiProcessingResult {
    }
    ```
 
-3. **その他のAPI**
+3. **TweetResultByRestId系**
+   ```json
+   {
+     "data": {
+       "tweetResult": {
+         "result": {
+           "__typename": "Tweet",
+           "legacy": {...},
+           "core": {
+             "user_results": {
+               "result": {...}
+             }
+           }
+         }
+       }
+     }
+   }
+   ```
+   - `TweetDetail`の後に通信されることが多い
+   - `data.tweetResult.result`から直接ツイート情報を抽出
+   - `favorite_count`、`retweet_count`、`avatar.image_url`、メディアURLなどがよく格納されている
+   - 既存のツイート情報を更新するために使用される
+
+4. **その他のAPI**
    ```json
    {
      "data": {
@@ -133,6 +156,8 @@ interface ApiProcessingResult {
    ```
 
 #### 処理フロー
+
+**instructionsベースのAPI（HomeTimeline、TweetDetailなど）**
 - `instructions`（配列）
   - 各要素の `type` が `"TimelineAddEntries"` のみ処理対象
   - `entries`（配列）
@@ -145,6 +170,17 @@ interface ApiProcessingResult {
 entry.content.itemContent.tweet_results.resultに収集したい要素がある。
 <br>つまり、entries[].content.itemContent.tweet_results.result から tweet を取り出す
 <br>必須キーが欠けているものは収集しなくてよい
+
+**TweetResultByRestId**
+- `data.tweetResult.result`から直接ツイート情報を抽出
+- `instructions`配列を使用せず、直接ツイートオブジェクトを処理
+- 既存の`TweetExtractor`を使用してツイート情報を抽出
+- キャッシュ機能により、同じツイートIDのデータはマージ処理で更新される
+  - 0やundefinedの値は既存の正常な値で補完される
+  - 新しい値が0より大きい場合はそれを使用
+  - 新しい値がundefinedやnullの場合は既存の値を使用
+  - `favorite_count`、`retweet_count`、`reply_count`、`avatar.image_url`、メディアURLなどがよく格納されている
+  - 既存のツイート情報を更新するために使用される
 
 ```json
 {
@@ -296,8 +332,39 @@ interface ApiCacheEntry {
 - 期限切れのキャッシュは自動的に削除
 - 最大1000エントリまで保存（超過時は古いものから削除）
 
-### 4.4 重複検出
+### 4.4 重複検出とマージ処理
 - `tweet.legacy.id_str` をキーとして重複を検出
 - 既存のツイートは更新、新規ツイートのみを追加
 - DB層での重複管理を前提とした設計
+
+### 4.5 ツイート情報のマージ処理
+同じツイートIDのデータが取得された場合、以下のルールでマージ処理が行われます：
+
+1. **数値フィールド（favorite_count、retweet_count、reply_count、quote_count）**
+   - 新しい値がundefinedやnullの場合 → 既存の正常な値を使用
+   - 新しい値が0の場合 → 既存の値が0より大きければ既存の値を使用（0は有効な値だが、既存の値の方が信頼できる場合）
+   - 新しい値が0より大きい場合 → 新しい値を使用
+
+2. **文字列フィールド（full_text、created_atなど）**
+   - 新しい値が空文字列やundefinedの場合 → 既存の値を使用
+   - 新しい値が存在する場合 → 新しい値を使用
+
+3. **ユーザー情報（user）**
+   - 新しい値が空文字列やundefinedの場合 → 既存の値を使用
+   - 各フィールド（name、screen_name、avatar_url）は個別にマージ
+
+4. **メディア情報（media）**
+   - 新しい方が存在し、空でない場合 → 新しい値を使用
+   - 新しい方が空やundefinedの場合 → 既存の値を使用
+
+5. **その他のオプショナルフィールド**
+   - `in_reply_to_screen_name`、`in_reply_to_status_id_str`、`in_reply_to_user_id_str`、`conversation_id_str`など
+   - 新しい値が存在する場合 → 新しい値を使用
+   - 新しい値が空やundefinedの場合 → 既存の値を使用
+
+6. **リツイート元の情報（retweeted_status）**
+   - 新しい方が存在する場合 → 新しい値を使用
+   - 新しい方が存在しない場合 → 既存の値を使用
+
+これにより、`TweetResultByRestId`などで取得された追加情報が既存のツイート情報を適切に更新し、0やundefinedの値は既存の正常な値で補完されます。
 
