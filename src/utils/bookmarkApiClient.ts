@@ -884,4 +884,13 @@ export class BookmarkApiClient {
   async clearAllData(): Promise<void> {
     return await this.sendMessage('clearBookmarkData');
   }
+
+  /**
+   * キャッシュからツイート情報を取得
+   */
+  async getCachedTweetById(tweetId: string): Promise<any> {
+    return await this.sendCacheMessage('findTweetById', {
+      id_str: tweetId
+    });
+  }
 } 

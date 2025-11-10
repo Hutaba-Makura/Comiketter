@@ -979,15 +979,10 @@ export class BookmarkButton extends BaseButton {
       current: Array.from(currentSelectedBookmarks)
     });
     
-    // 変更がない場合は何もしない
-    if (bookmarksToRemove.length === 0 && bookmarksToAdd.length === 0) {
-      this.hideBookmarkSelector();
-      return;
-    }
-
     let addSuccessCount = 0;
     let removeSuccessCount = 0;
     let hasError = false;
+    let updateSuccessCount = 0;
 
     // チェックが外されたブックマークからツイートを削除
     for (const bookmarkId of bookmarksToRemove) {
@@ -1013,9 +1008,52 @@ export class BookmarkButton extends BaseButton {
       }
     }
     
+    // 既存のブックマーク済みツイートの情報を更新（変更がない場合でも更新）
+    try {
+      // キャッシュから最新のツイート情報を取得
+      const cachedTweet = await bookmarkManager.getCachedTweetById(this.currentTweetInfo.id);
+      
+      if (cachedTweet) {
+        // 既存のブックマーク済みツイートを取得
+        const existingBookmarkedTweets = await bookmarkManager.getBookmarkedTweetByTweetId(this.currentTweetInfo.id);
+        
+        // 各ブックマーク済みツイートの情報を更新
+        for (const bookmarkedTweet of existingBookmarkedTweets) {
+          const updates: Partial<typeof bookmarkedTweet> = {};
+          
+          // 最新の値がundefinedや0でない場合のみ更新
+          if (cachedTweet.favorite_count !== undefined && cachedTweet.favorite_count !== null && cachedTweet.favorite_count > 0) {
+            updates.favoriteCount = cachedTweet.favorite_count;
+          }
+          if (cachedTweet.retweet_count !== undefined && cachedTweet.retweet_count !== null && cachedTweet.retweet_count > 0) {
+            updates.retweetCount = cachedTweet.retweet_count;
+          }
+          if (cachedTweet.reply_count !== undefined && cachedTweet.reply_count !== null && cachedTweet.reply_count > 0) {
+            updates.replyCount = cachedTweet.reply_count;
+          }
+          
+          // 更新する項目がある場合のみ更新
+          if (Object.keys(updates).length > 0) {
+            try {
+              await bookmarkManager.updateBookmarkedTweet(bookmarkedTweet.id, updates);
+              updateSuccessCount++;
+              console.log('Comiketter: Updated bookmarked tweet:', bookmarkedTweet.id, updates);
+            } catch (error) {
+              console.error('Comiketter: Failed to update bookmarked tweet:', bookmarkedTweet.id, error);
+              hasError = true;
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Comiketter: Failed to update bookmarked tweets:', error);
+      hasError = true;
+    }
+    
     console.log('Comiketter: Saved bookmark changes:', { 
       removed: removeSuccessCount, 
-      added: addSuccessCount, 
+      added: addSuccessCount,
+      updated: updateSuccessCount,
       hasError 
     });
     
@@ -1049,13 +1087,28 @@ export class BookmarkButton extends BaseButton {
     if (addSuccessCount > 0) {
       messages.push(`${addSuccessCount}個のブックマークに追加`);
     }
+    if (updateSuccessCount > 0) {
+      messages.push(`${updateSuccessCount}件の情報を更新`);
+    }
     
-    if (hasError && removeSuccessCount === 0 && addSuccessCount === 0) {
-      showErrorToast('ブックマークの保存に失敗しました');
-    } else if (hasError) {
-      showErrorToast(`${messages.join('、')}しました（一部失敗しました）`);
-    } else if (messages.length > 0) {
-      showSuccessToast(`${messages.join('、')}しました`);
+    // 変更がない場合は、更新のみを行ったことを通知
+    if (bookmarksToRemove.length === 0 && bookmarksToAdd.length === 0) {
+      if (updateSuccessCount > 0) {
+        showSuccessToast(`${updateSuccessCount}件の情報を更新しました`);
+      } else {
+        // 更新する情報がない場合は何も表示しない
+        this.hideBookmarkSelector();
+        return;
+      }
+    } else {
+      // 変更がある場合の既存の処理
+      if (hasError && removeSuccessCount === 0 && addSuccessCount === 0 && updateSuccessCount === 0) {
+        showErrorToast('ブックマークの保存に失敗しました');
+      } else if (hasError) {
+        showErrorToast(`${messages.join('、')}しました（一部失敗しました）`);
+      } else if (messages.length > 0) {
+        showSuccessToast(`${messages.join('、')}しました`);
+      }
     }
   }
 

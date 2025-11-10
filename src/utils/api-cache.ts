@@ -10,6 +10,8 @@ import type {
   ApiCacheEntry, 
   ApiCacheResult, 
   ProcessedTweet, 
+  ProcessedUser,
+  ProcessedMedia,
   ApiType 
 } from '../api-processor/types';
 
