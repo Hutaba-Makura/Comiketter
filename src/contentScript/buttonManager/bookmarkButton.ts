@@ -408,7 +408,7 @@ export class BookmarkButton extends BaseButton {
     }
     
     // いいね数を取得
-    const likeElement = article.querySelector('[data-testid="like"]') as HTMLElement | null;
+    const likeElement = article.querySelector('[data-testid="like"], [data-testid="unlike"]') as HTMLElement | null;
     if (likeElement) {
       const count = this.extractCountFromElement(likeElement);
       if (count !== null) {
@@ -417,11 +417,11 @@ export class BookmarkButton extends BaseButton {
         console.warn('Comiketter: [HTML解析] いいね数を取得できませんでした');
       }
     } else {
-      console.warn('Comiketter: [HTML解析] data-testid="like"要素が見つかりませんでした');
+      console.warn('Comiketter: [HTML解析] data-testid="like"または"unlike"要素が見つかりませんでした');
     }
     
     // RT数を取得
-    const retweetElement = article.querySelector('[data-testid="retweet"]') as HTMLElement | null;
+    const retweetElement = article.querySelector('[data-testid="retweet"], [data-testid="unretweet"]') as HTMLElement | null;
     if (retweetElement) {
       const count = this.extractCountFromElement(retweetElement);
       if (count !== null) {
@@ -430,7 +430,7 @@ export class BookmarkButton extends BaseButton {
         console.warn('Comiketter: [HTML解析] RT数を取得できませんでした');
       }
     } else {
-      console.warn('Comiketter: [HTML解析] data-testid="retweet"要素が見つかりませんでした');
+      console.warn('Comiketter: [HTML解析] data-testid="retweet"または"unretweet"要素が見つかりませんでした');
     }
     
     // リプライ数を取得
