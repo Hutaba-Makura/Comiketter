@@ -39,10 +39,21 @@ export enum BookmarkButtonStatus {
   Error = 'error',
 }
 
+/**
+ * HTML要素から取得した統計情報の型定義
+ */
+export interface TweetStatsFromHTML {
+  favoriteCount?: number;
+  retweetCount?: number;
+  replyCount?: number;
+  profileImageUrl?: string;
+}
+
 export class BookmarkButton extends BaseButton {
   private bookmarkSelector: HTMLElement | null = null;
   private currentTweetInfo: Tweet | null = null;
   private currentButton: HTMLElement | null = null;
+  private currentArticle: HTMLElement | null = null; // 現在のツイートのarticle要素
   private initialCheckedBookmarks: Set<string> = new Set(); // 初期チェック状態を保存
 
   constructor() {
@@ -409,6 +420,27 @@ export class BookmarkButton extends BaseButton {
   }
 
   /**
+   * HTML要素から統計情報を取得
+   * @param article ツイートのarticle要素
+   * @returns 統計情報（取得できなかった項目はundefined）
+   */
+  private extractStatsFromHTML(article: HTMLElement | null): TweetStatsFromHTML {
+    const stats: TweetStatsFromHTML = {};
+    
+    if (!article) {
+      return stats;
+    }
+    
+    // TODO: HTML要素から統計情報を取得する実装
+    // 1. Favorite数: [data-testid="like"] 要素から取得
+    // 2. RT数: [data-testid="retweet"] 要素から取得
+    // 3. Reply数: [data-testid="reply"] 要素から取得
+    // 4. アイコン画像URL: プロフィール画像要素から取得
+    
+    return stats;
+  }
+
+  /**
    * ブックマークボタンを作成
    */
   async createButton(tweetInfo: Tweet, article?: HTMLElement): Promise<HTMLElement> {
@@ -554,6 +586,9 @@ export class BookmarkButton extends BaseButton {
       // 現在のボタンとツイート情報を保存
       this.currentButton = button;
       this.currentTweetInfo = tweetInfo;
+      
+      // article要素を取得して保存
+      this.currentArticle = this.getArticleElement(button);
       
       // BookmarkApiClientを初期化
       const bookmarkManager = BookmarkApiClient.getInstance();
@@ -997,9 +1032,41 @@ export class BookmarkButton extends BaseButton {
     }
 
     // チェックが入ったブックマークにツイートを追加
+    // HTMLから統計情報を取得（優先）
+    const htmlStats = this.extractStatsFromHTML(this.currentArticle);
+    
+    // ツイート情報にHTMLから取得した統計情報をマージ
+    // addTweetToBookmarkはany型を受け取るため、型アサーションを使用
+    const tweetInfoWithStats: any = { ...this.currentTweetInfo };
+    if (htmlStats.favoriteCount !== undefined && htmlStats.favoriteCount !== null && htmlStats.favoriteCount > 0) {
+      tweetInfoWithStats.stats = {
+        ...(tweetInfoWithStats.stats || {}),
+        likeCount: htmlStats.favoriteCount,
+      };
+    }
+    if (htmlStats.retweetCount !== undefined && htmlStats.retweetCount !== null && htmlStats.retweetCount > 0) {
+      tweetInfoWithStats.stats = {
+        ...(tweetInfoWithStats.stats || {}),
+        retweetCount: htmlStats.retweetCount,
+      };
+    }
+    if (htmlStats.replyCount !== undefined && htmlStats.replyCount !== null && htmlStats.replyCount > 0) {
+      tweetInfoWithStats.stats = {
+        ...(tweetInfoWithStats.stats || {}),
+        replyCount: htmlStats.replyCount,
+      };
+    }
+    if (htmlStats.profileImageUrl) {
+      tweetInfoWithStats.author = {
+        ...tweetInfoWithStats.author,
+        profileImageUrl: htmlStats.profileImageUrl,
+      };
+    }
+    
     for (const bookmarkId of bookmarksToAdd) {
       try {
-        await bookmarkManager.addTweetToBookmark(bookmarkId, this.currentTweetInfo.id, this.currentTweetInfo);
+        // HTMLから取得した統計情報を含むツイート情報を使用
+        await bookmarkManager.addTweetToBookmark(bookmarkId, this.currentTweetInfo.id, tweetInfoWithStats);
         addSuccessCount++;
         console.log('Comiketter: Added tweet to bookmark:', bookmarkId);
       } catch (error) {
@@ -1010,38 +1077,57 @@ export class BookmarkButton extends BaseButton {
     
     // 既存のブックマーク済みツイートの情報を更新（変更がない場合でも更新）
     try {
-      // キャッシュから最新のツイート情報を取得
+      // HTMLから統計情報を取得（優先）
+      const htmlStats = this.extractStatsFromHTML(this.currentArticle);
+      
+      // キャッシュから最新のツイート情報を取得（フォールバック用）
       const cachedTweet = await bookmarkManager.getCachedTweetById(this.currentTweetInfo.id);
       
-      if (cachedTweet) {
-        // 既存のブックマーク済みツイートを取得
-        const existingBookmarkedTweets = await bookmarkManager.getBookmarkedTweetByTweetId(this.currentTweetInfo.id);
+      // 既存のブックマーク済みツイートを取得
+      const existingBookmarkedTweets = await bookmarkManager.getBookmarkedTweetByTweetId(this.currentTweetInfo.id);
+      
+      // 各ブックマーク済みツイートの情報を更新
+      for (const bookmarkedTweet of existingBookmarkedTweets) {
+        const updates: Partial<typeof bookmarkedTweet> = {};
         
-        // 各ブックマーク済みツイートの情報を更新
-        for (const bookmarkedTweet of existingBookmarkedTweets) {
-          const updates: Partial<typeof bookmarkedTweet> = {};
-          
-          // 最新の値がundefinedや0でない場合のみ更新
-          if (cachedTweet.favorite_count !== undefined && cachedTweet.favorite_count !== null && cachedTweet.favorite_count > 0) {
-            updates.favoriteCount = cachedTweet.favorite_count;
-          }
-          if (cachedTweet.retweet_count !== undefined && cachedTweet.retweet_count !== null && cachedTweet.retweet_count > 0) {
-            updates.retweetCount = cachedTweet.retweet_count;
-          }
-          if (cachedTweet.reply_count !== undefined && cachedTweet.reply_count !== null && cachedTweet.reply_count > 0) {
-            updates.replyCount = cachedTweet.reply_count;
-          }
-          
-          // 更新する項目がある場合のみ更新
-          if (Object.keys(updates).length > 0) {
-            try {
-              await bookmarkManager.updateBookmarkedTweet(bookmarkedTweet.id, updates);
-              updateSuccessCount++;
-              console.log('Comiketter: Updated bookmarked tweet:', bookmarkedTweet.id, updates);
-            } catch (error) {
-              console.error('Comiketter: Failed to update bookmarked tweet:', bookmarkedTweet.id, error);
-              hasError = true;
-            }
+        // HTMLから取得した統計情報を優先し、取得できない場合はキャッシュから取得
+        // Favorite数
+        if (htmlStats.favoriteCount !== undefined && htmlStats.favoriteCount !== null && htmlStats.favoriteCount > 0) {
+          updates.favoriteCount = htmlStats.favoriteCount;
+        } else if (cachedTweet?.favorite_count !== undefined && cachedTweet.favorite_count !== null && cachedTweet.favorite_count > 0) {
+          updates.favoriteCount = cachedTweet.favorite_count;
+        }
+        
+        // RT数
+        if (htmlStats.retweetCount !== undefined && htmlStats.retweetCount !== null && htmlStats.retweetCount > 0) {
+          updates.retweetCount = htmlStats.retweetCount;
+        } else if (cachedTweet?.retweet_count !== undefined && cachedTweet.retweet_count !== null && cachedTweet.retweet_count > 0) {
+          updates.retweetCount = cachedTweet.retweet_count;
+        }
+        
+        // リプライ数
+        if (htmlStats.replyCount !== undefined && htmlStats.replyCount !== null && htmlStats.replyCount > 0) {
+          updates.replyCount = htmlStats.replyCount;
+        } else if (cachedTweet?.reply_count !== undefined && cachedTweet.reply_count !== null && cachedTweet.reply_count > 0) {
+          updates.replyCount = cachedTweet.reply_count;
+        }
+        
+        // プロフィール画像URL
+        if (htmlStats.profileImageUrl) {
+          updates.authorProfileImageUrl = htmlStats.profileImageUrl;
+        } else if (cachedTweet?.user?.avatar_url) {
+          updates.authorProfileImageUrl = cachedTweet.user.avatar_url;
+        }
+        
+        // 更新する項目がある場合のみ更新
+        if (Object.keys(updates).length > 0) {
+          try {
+            await bookmarkManager.updateBookmarkedTweet(bookmarkedTweet.id, updates);
+            updateSuccessCount++;
+            console.log('Comiketter: Updated bookmarked tweet:', bookmarkedTweet.id, updates);
+          } catch (error) {
+            console.error('Comiketter: Failed to update bookmarked tweet:', bookmarkedTweet.id, error);
+            hasError = true;
           }
         }
       }
