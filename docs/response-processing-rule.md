@@ -179,6 +179,8 @@ entry.content.itemContent.tweet_results.resultに収集したい要素がある�
   - 0やundefinedの値は既存の正常な値で補完される
   - 新しい値が0より大きい場合はそれを使用
   - 新しい値がundefinedやnullの場合は既存の値を使用
+  - `favorite_count`、`retweet_count`、`reply_count`、`avatar.image_url`、メディアURLなどがよく格納されている
+  - 既存のツイート情報を更新するために使用される
 
 ```json
 {
@@ -345,13 +347,24 @@ interface ApiCacheEntry {
 
 2. **文字列フィールド（full_text、created_atなど）**
    - 新しい値が空文字列やundefinedの場合 → 既存の値を使用
+   - 新しい値が存在する場合 → 新しい値を使用
 
 3. **ユーザー情報（user）**
    - 新しい値が空文字列やundefinedの場合 → 既存の値を使用
+   - 各フィールド（name、screen_name、avatar_url）は個別にマージ
 
 4. **メディア情報（media）**
    - 新しい方が存在し、空でない場合 → 新しい値を使用
    - 新しい方が空やundefinedの場合 → 既存の値を使用
 
-これにより、`TweetResultByRestId`などで取得された追加情報が既存のツイート情報を適切に更新します。
+5. **その他のオプショナルフィールド**
+   - `in_reply_to_screen_name`、`in_reply_to_status_id_str`、`in_reply_to_user_id_str`、`conversation_id_str`など
+   - 新しい値が存在する場合 → 新しい値を使用
+   - 新しい値が空やundefinedの場合 → 既存の値を使用
+
+6. **リツイート元の情報（retweeted_status）**
+   - 新しい方が存在する場合 → 新しい値を使用
+   - 新しい方が存在しない場合 → 既存の値を使用
+
+これにより、`TweetResultByRestId`などで取得された追加情報が既存のツイート情報を適切に更新し、0やundefinedの値は既存の正常な値で補完されます。
 
