@@ -26,4 +26,4 @@
 
 ## 📄 ライセンス
 
-MIT License
+このプロジェクトは [Mozilla Public License Version 2.0](LICENSE) の下で公開されています。
