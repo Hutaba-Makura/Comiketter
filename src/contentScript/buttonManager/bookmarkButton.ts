@@ -428,6 +428,7 @@ export class BookmarkButton extends BaseButton {
     const stats: TweetStatsFromHTML = {};
     
     if (!article) {
+      console.warn('Comiketter: [HTML解析] article要素がnullのため、統計情報を取得できませんでした');
       return stats;
     }
     
@@ -437,7 +438,11 @@ export class BookmarkButton extends BaseButton {
       const count = this.extractCountFromElement(likeElement);
       if (count !== null) {
         stats.favoriteCount = count;
+      } else {
+        console.warn('Comiketter: [HTML解析] いいね数を取得できませんでした');
       }
+    } else {
+      console.warn('Comiketter: [HTML解析] data-testid="like"要素が見つかりませんでした');
     }
     
     // RT数を取得
@@ -446,7 +451,11 @@ export class BookmarkButton extends BaseButton {
       const count = this.extractCountFromElement(retweetElement);
       if (count !== null) {
         stats.retweetCount = count;
+      } else {
+        console.warn('Comiketter: [HTML解析] RT数を取得できませんでした');
       }
+    } else {
+      console.warn('Comiketter: [HTML解析] data-testid="retweet"要素が見つかりませんでした');
     }
     
     // リプライ数を取得
@@ -455,7 +464,11 @@ export class BookmarkButton extends BaseButton {
       const count = this.extractCountFromElement(replyElement);
       if (count !== null) {
         stats.replyCount = count;
+      } else {
+        console.warn('Comiketter: [HTML解析] リプライ数を取得できませんでした');
       }
+    } else {
+      console.warn('Comiketter: [HTML解析] data-testid="reply"要素が見つかりませんでした');
     }
     
     // アイコン画像URLを取得
@@ -466,8 +479,14 @@ export class BookmarkButton extends BaseButton {
         const src = imgElement.src;
         if (src) {
           stats.profileImageUrl = src;
+        } else {
+          console.warn('Comiketter: [HTML解析] アイコン画像のsrc属性が空でした');
         }
+      } else {
+        console.warn('Comiketter: [HTML解析] data-testid="Tweet-User-Avatar"要素内にimg要素が見つかりませんでした');
       }
+    } else {
+      console.warn('Comiketter: [HTML解析] data-testid="Tweet-User-Avatar"要素が見つかりませんでした');
     }
     
     return stats;
@@ -496,9 +515,10 @@ export class BookmarkButton extends BaseButton {
         // span要素を確認
         if (childElement.tagName === 'SPAN') {
           const text = childElement.textContent?.trim() || '';
-          // 数字のみか確認（カンマやK、Mなどの単位を含む可能性がある）
-          if (text && /^[\d,KMkm]+$/.test(text.replace(/\s/g, ''))) {
-            return text;
+          const sanitizedText = text.replace(/\s/g, '');
+          // 数字のみか確認（カンマ、ドット、K/M/万などの単位を含む場合がある）
+          if (sanitizedText && /^[\d,.KMkm万]+$/.test(sanitizedText)) {
+            return sanitizedText;
           }
         }
         // 子要素の子要素も再帰的に確認
@@ -516,20 +536,26 @@ export class BookmarkButton extends BaseButton {
     }
     
     // 数字文字列を数値に変換
-    // カンマを除去し、KやMなどの単位を処理
+    // カンマを除去し、KやM、万などの単位を処理
     const cleanedText = numberText.replace(/,/g, '').trim();
-    const lowerText = cleanedText.toLowerCase();
-    
+    const normalizedText = cleanedText.replace(/\s/g, '');
+    const lowerText = normalizedText.toLowerCase();
+
+    if (normalizedText.endsWith('万')) {
+      const num = parseFloat(normalizedText.slice(0, -1));
+      return isNaN(num) ? null : Math.round(num * 10000);
+    }
     if (lowerText.endsWith('k')) {
       const num = parseFloat(lowerText.slice(0, -1));
       return isNaN(num) ? null : Math.round(num * 1000);
-    } else if (lowerText.endsWith('m')) {
+    }
+    if (lowerText.endsWith('m')) {
       const num = parseFloat(lowerText.slice(0, -1));
       return isNaN(num) ? null : Math.round(num * 1000000);
-    } else {
-      const num = parseInt(cleanedText, 10);
-      return isNaN(num) ? null : num;
     }
+
+    const num = parseFloat(normalizedText);
+    return isNaN(num) ? null : Math.round(num);
   }
 
   /**
