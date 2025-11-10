@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  * 
  * Comiketter: ブックマークボタン管理
+ * TwitterMediaHarvestのbutton.ts/bookmark関連実装を参考
  */
 
 /// <reference lib="dom" />

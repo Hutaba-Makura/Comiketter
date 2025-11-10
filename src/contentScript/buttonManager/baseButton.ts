@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  * 
  * Comiketter: 基本ボタンクラス
+ * TwitterMediaHarvestのbutton.ts/baseButton.tsを参考に再実装
  */
 
 import type { Tweet } from '../../types';

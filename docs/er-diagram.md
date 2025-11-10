@@ -25,6 +25,7 @@ erDiagram
         string content "ツイート内容"
         array media_urls "メディアURL配列"
         array media_types "メディアタイプ配列"
+        array media_preview_urls "メディアプレビューURL配列"
         date tweet_date "ツイート投稿日時"
         date saved_at "保存日時"
         boolean is_retweet "リツイートフラグ"
@@ -122,6 +123,7 @@ erDiagram
 | content | string | NULL | ツイートの本文 |
 | media_urls | array | NULL | メディアURLの配列 |
 | media_types | array | NULL | メディアタイプの配列（image/video） |
+| media_preview_urls | array | NULL | メディアプレビューURLの配列（動画/GIFのプレビュー用） |
 | tweet_date | date | NOT NULL | ツイートの投稿日時 |
 | saved_at | date | NOT NULL | ブックマーク保存日時 |
 | is_retweet | boolean | NOT NULL | リツイートかどうか |
@@ -212,130 +214,3 @@ erDiagram
 | target_bookmark_id | string | FK | 対象ブックマークID（NULL=全ブックマーク） |
 | created_at | date | NOT NULL | 作成日時 |
 | updated_at | date | NOT NULL | 更新日時 |
-
-## 🔗 リレーション詳細
-
-### 1対多リレーション
-
-```mermaid
-graph LR
-    A[BOOKMARKS] --> B[BOOKMARKED_TWEETS]
-    A --> C[AUTO_DOWNLOAD_RULES]
-    B --> D[DOWNLOAD_HISTORY]
-```
-
-### 外部キー制約
-
-```sql
--- BOOKMARKED_TWEETS.bookmark_id -> BOOKMARKS.id
-ALTER TABLE BOOKMARKED_TWEETS 
-ADD CONSTRAINT fk_bookmarked_tweets_bookmark 
-FOREIGN KEY (bookmark_id) REFERENCES BOOKMARKS(id) 
-ON DELETE CASCADE;
-
--- AUTO_DOWNLOAD_RULES.target_bookmark_id -> BOOKMARKS.id
-ALTER TABLE AUTO_DOWNLOAD_RULES 
-ADD CONSTRAINT fk_auto_download_rules_bookmark 
-FOREIGN KEY (target_bookmark_id) REFERENCES BOOKMARKS(id) 
-ON DELETE SET NULL;
-```
-
-## 📊 データサンプル
-
-### BOOKMARKS サンプル
-```json
-{
-  "id": "550e8400-e29b-41d4-a716-446655440000",
-  "name": "1日目",
-  "description": "コミケ1日目のブックマーク",
-  "color": "#FF6B6B",
-  "created_at": "2024-01-01T00:00:00Z",
-  "updated_at": "2024-01-01T00:00:00Z",
-  "is_active": true
-}
-```
-
-### BOOKMARKED_TWEETS サンプル
-```json
-{
-  "id": "550e8400-e29b-41d4-a716-446655440001",
-  "bookmark_id": "550e8400-e29b-41d4-a716-446655440000",
-  "tweet_id": "1734567890123456789",
-  "author_username": "example_user",
-  "author_display_name": "Example User",
-  "author_id": "123456789",
-  "author_profile_image_url": "https://pbs.twimg.com/profile_images/1234567890/example_normal.jpg",
-  "content": "コミケ1日目の情報です！",
-  "media_urls": ["https://example.com/image1.jpg"],
-  "media_types": ["image"],
-  "tweet_date": "2024-01-01T10:00:00Z",
-  "saved_at": "2024-01-01T10:30:00Z",
-  "is_retweet": false,
-  "is_reply": false,
-  "reply_to_tweet_id": null,
-  "reply_to_username": null,
-  "favorite_count": 1234,
-  "retweet_count": 567,
-  "reply_count": 89
-}
-```
-
-### DOWNLOAD_HISTORY サンプル
-```json
-{
-  "id": "550e8400-e29b-41d4-a716-446655440002",
-  "tweet_id": "1734567890123456789",
-  "author_username": "example_user",
-  "filename": "example_user-20240101-1734567890123456789-01.jpg",
-  "filepath": "comiketter/example_user/example_user-20240101-1734567890123456789-01.jpg",
-  "original_url": "https://example.com/image1.jpg",
-  "download_method": "chrome_downloads",
-  "file_size": "1024000",
-  "file_type": "image/jpeg",
-  "downloaded_at": "2024-01-01T10:35:00Z",
-  "status": "success",
-  "error_message": null
-}
-```
-
-## 🔍 クエリ例
-
-### ブックマーク別ツイート数取得
-```sql
-SELECT 
-  b.name,
-  COUNT(bt.id) as tweet_count
-FROM BOOKMARKS b
-LEFT JOIN BOOKMARKED_TWEETS bt ON b.id = bt.bookmark_id
-WHERE b.is_active = true
-GROUP BY b.id, b.name
-ORDER BY tweet_count DESC;
-```
-
-### 最近のダウンロード履歴
-```sql
-SELECT 
-  dh.filename,
-  dh.author_username,
-  dh.downloaded_at,
-  dh.status
-FROM DOWNLOAD_HISTORY dh
-ORDER BY dh.downloaded_at DESC
-LIMIT 10;
-```
-
-### メディア付きツイート一覧
-```sql
-SELECT 
-  bt.content,
-  bt.author_username,
-  bt.media_urls,
-  b.name as bookmark_name
-FROM BOOKMARKED_TWEETS bt
-JOIN BOOKMARKS b ON bt.bookmark_id = b.id
-WHERE bt.media_urls IS NOT NULL
-  AND bt.media_urls != '[]'
-ORDER BY bt.saved_at DESC;
-```
-
-このER図により、Comiketterのデータ構造が明確になり、効率的なデータ管理とクエリ実行が可能になります。 

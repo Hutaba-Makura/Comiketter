@@ -83,7 +83,7 @@ export const PopupAppStorybook: React.FC<PopupAppStorybookProps> = ({
         </Group>
 
         <Text size="xs" color="dimmed">
-          バージョン: 0.9.0
+          バージョン: 1.0.0
         </Text>
       </Stack>
     </Container>

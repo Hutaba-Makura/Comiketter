@@ -15,7 +15,7 @@
 #### 主要機能
 - **キャッシュ保存**: `saveCache()` - ツイート情報をキャッシュとして保存
 - **キャッシュ取得**: `getCachedTweets()` - 有効期限内のキャッシュからツイートを取得
-- **重複除去**: `processWithCache()` - 新規ツイートのみを抽出してキャッシュを更新
+- **重複除去・マージ**: `processWithCache()` - 新規ツイートのみを抽出し、既存ツイートは最新情報でマージしてキャッシュを更新
 - **期限切れ削除**: `cleanupExpiredCache()` - 期限切れキャッシュを自動削除
 - **統計取得**: `getCacheStats()` - キャッシュの統計情報を取得
 
@@ -34,9 +34,10 @@
 #### 処理フロー
 1. APIレスポンスを受信
 2. ツイート情報を抽出
-3. キャッシュと比較して新規ツイートを特定
-4. 新規ツイートをキャッシュに保存
-5. キャッシュ済みツイートと新規ツイートを統合して返却
+3. キャッシュと比較して新規ツイートと既存ツイートを分離
+4. 既存ツイートは最新情報でマージ（0やundefinedの値は既存の正常な値で補完）
+5. 新規ツイートとマージ済みツイートをキャッシュに保存
+6. キャッシュ済みツイートと新規ツイートを統合して返却
 
 ### 4. バックグラウンドスクリプトの統合 (`src/background/messageHandler.ts`)
 
@@ -44,14 +45,15 @@
 - **キャッシュアクション**: `CACHE_ACTION`メッセージタイプの処理
 - **API処理統合**: `ApiProcessor`を使用したキャッシュ機能付きAPI処理
 - **エラーハンドリング**: キャッシュ処理エラーの適切な処理
+- **API重複防止**: 1秒間のクールダウンでAPI呼び出しの重複を防止
 
 #### 対応アクション
 - `getCacheStats`: キャッシュ統計の取得
 - `cleanupExpiredCache`: 期限切れキャッシュの削除
 - `clearAllCache`: 全キャッシュの削除
-- `findTweetById`: 指定されたid_strでツイートを検索
-- `findTweetsByIds`: 指定されたid_strのリストでツイートを一括検索
-- `findTweetsByUsername`: 指定されたユーザー名でツイートを検索
+- `findTweetById`: 指定されたid_strでツイートを検索（期限切れキャッシュも含む）
+- `findTweetsByIds`: 指定されたid_strのリストでツイートを一括検索（有効期限内のみ）
+- `findTweetsByUsername`: 指定されたユーザー名でツイートを検索（有効期限内のみ）
 
 ### 5. テスト実装 (`src/test/api-cache.test.ts`)
 
@@ -102,7 +104,7 @@ await ApiProcessor.clearAllCache();
 ### キャッシュ検索機能
 
 ```typescript
-// 指定されたid_strでツイートを検索
+// 指定されたid_strでツイートを検索（期限切れキャッシュも含む）
 const tweet = await ApiProcessor.findTweetById('1234567890');
 if (tweet) {
   console.log(`ツイートを発見: ${tweet.full_text}`);
@@ -111,6 +113,9 @@ if (tweet) {
 } else {
   console.log('ツイートが見つかりませんでした');
 }
+
+// 有効期限内のキャッシュのみを検索
+const validTweet = await ApiProcessor.findTweetById('1234567890', false);
 
 // 複数のid_strでツイートを一括検索
 const tweetIds = ['1234567890', '0987654321', '1122334455'];
@@ -175,6 +180,7 @@ chrome.runtime.sendMessage({
 ### 1. 重複処理の回避
 - 同じツイートの重複処理を防止
 - API呼び出し回数の削減
+- 既存ツイートの最新情報でのマージ（0やundefinedの値は既存の正常な値で補完）
 
 ### 2. レスポンス時間の短縮
 - キャッシュからの高速取得
