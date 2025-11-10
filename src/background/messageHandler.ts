@@ -707,6 +707,7 @@ export class MessageHandler {
       // GraphQLエンドポイントの場合は操作名を抽出
       if (path.includes('HomeLatestTimeline')) return 'HomeLatestTimeline';
       if (path.includes('HomeTimeline')) return 'HomeTimeline';
+      if (path.includes('TweetResultByRestId')) return 'TweetResultByRestId';
       if (path.includes('TweetDetail')) return 'TweetDetail';
       if (path.includes('ListLatestTweetsTimeline')) return 'ListLatestTweetsTimeline';
       if (path.includes('SearchTimeline')) return 'SearchTimeline';
@@ -727,7 +728,7 @@ export class MessageHandler {
       if (path.includes('CreateTweet')) return 'CreateTweet';
       if (path.includes('UserMedia')) return 'UserMedia';
       if (path.includes('NotificationsTimeline')) return 'NotificationsTimeline';
-      if (path.includes('useUpsellTrackingMutation')) return 'useUpsellTrackingMutation';
+      // if (path.includes('useUpsellTrackingMutation')) return 'useUpsellTrackingMutation'; // 画面縦横比変更追跡はコメントアウト
       return 'GraphQL';
     }
     
@@ -752,7 +753,7 @@ export class MessageHandler {
       'CreateTweet',
       'UserMedia',
       'NotificationsTimeline',
-      'useUpsellTrackingMutation'
+      // 'useUpsellTrackingMutation' // 画面縦横比変更追跡はコメントアウト
     ].includes(apiType);
   }
 

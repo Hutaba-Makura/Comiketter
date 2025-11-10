@@ -80,6 +80,7 @@ export type ApiType =
   | 'HomeTimeline'
   | 'HomeLatestTimeline'
   | 'TweetDetail'
+  | 'TweetResultByRestId'
   | 'ListLatestTweetsTimeline'
   | 'SearchTimeline'
   | 'CommunityTweetsTimeline'
@@ -99,5 +100,5 @@ export type ApiType =
   | 'CreateTweet'
   | 'UserMedia'
   | 'NotificationsTimeline'
-  | 'useUpsellTrackingMutation'
+  // | 'useUpsellTrackingMutation' // 画面縦横比変更追跡はコメントアウト
   | 'Unknown'; 

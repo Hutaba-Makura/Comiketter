@@ -10,6 +10,8 @@ import type {
   ApiCacheEntry, 
   ApiCacheResult, 
   ProcessedTweet, 
+  ProcessedUser,
+  ProcessedMedia,
   ApiType 
 } from '../api-processor/types';
 
@@ -140,6 +142,7 @@ export class ApiCacheManager {
   /**
    * キャッシュ機能を使用してAPIレスポンスを処理
    * 同じツイートが読み込まれたら最新情報で上書きする
+   * ただし、0やundefinedの値は既存の正常な値で補完する
    */
   static async processWithCache(
     apiType: ApiType,
@@ -156,16 +159,18 @@ export class ApiCacheManager {
     try {
       // 既存のキャッシュからツイートを取得
       const cachedTweets = await this.getCachedTweets(apiType, apiPath, timestamp);
-      const cachedTweetIds = new Set(cachedTweets.map(tweet => tweet.id_str));
+      const cachedTweetMap = new Map(cachedTweets.map(tweet => [tweet.id_str, tweet]));
 
       // 新規ツイートと既存ツイートを分離
       const newTweetsOnly: ProcessedTweet[] = [];
       const updatedTweets: ProcessedTweet[] = [];
 
       for (const tweet of newTweets) {
-        if (cachedTweetIds.has(tweet.id_str)) {
-          // 既存のツイートは最新情報で上書き
-          updatedTweets.push(tweet);
+        const cachedTweet = cachedTweetMap.get(tweet.id_str);
+        if (cachedTweet) {
+          // 既存のツイートはマージ処理で更新
+          const mergedTweet = this.mergeTweets(cachedTweet, tweet);
+          updatedTweets.push(mergedTweet);
           console.log(`Comiketter: キャッシュ内のツイートを更新: ${tweet.id_str}`);
         } else {
           // 新規ツイート
@@ -201,6 +206,124 @@ export class ApiCacheManager {
     }
 
     return result;
+  }
+
+  /**
+   * 2つのツイートをマージする
+   * 後から来た方の数値に更新し、0やundefinedの値は既存の正常な値で補完する
+   * @param existing 既存のツイート（キャッシュ）
+   * @param incoming 新しく来たツイート
+   * @returns マージされたツイート
+   */
+  private static mergeTweets(
+    existing: CachedTweet | ProcessedTweet,
+    incoming: ProcessedTweet
+  ): ProcessedTweet {
+    // 基本的には新しいツイートで上書き
+    const merged: ProcessedTweet = {
+      ...incoming,
+      // 数値フィールドのマージ処理
+      favorite_count: this.mergeNumberValue(
+        incoming.favorite_count,
+        existing.favorite_count
+      ),
+      retweet_count: this.mergeNumberValue(
+        incoming.retweet_count,
+        existing.retweet_count
+      ),
+      reply_count: this.mergeNumberValue(
+        incoming.reply_count,
+        existing.reply_count
+      ),
+      quote_count: this.mergeNumberValue(
+        incoming.quote_count,
+        existing.quote_count
+      ),
+      // 文字列フィールドのマージ処理（空文字列やundefinedの場合は既存の値を使用）
+      full_text: incoming.full_text || existing.full_text || '',
+      created_at: incoming.created_at || existing.created_at || '',
+      // ユーザー情報のマージ処理
+      user: this.mergeUser(existing.user, incoming.user),
+      // メディア情報のマージ処理（新しい方が空の場合は既存の値を使用）
+      media: this.mergeMedia(existing.media, incoming.media),
+      // その他のオプショナルフィールド
+      in_reply_to_screen_name: incoming.in_reply_to_screen_name || existing.in_reply_to_screen_name,
+      in_reply_to_status_id_str: incoming.in_reply_to_status_id_str || existing.in_reply_to_status_id_str,
+      in_reply_to_user_id_str: incoming.in_reply_to_user_id_str || existing.in_reply_to_user_id_str,
+      conversation_id_str: incoming.conversation_id_str || existing.conversation_id_str,
+      // リツイート元の情報（新しい方が存在する場合はそれを使用、なければ既存の値）
+      retweeted_status: incoming.retweeted_status || existing.retweeted_status,
+    };
+
+    return merged;
+  }
+
+  /**
+   * 数値をマージする
+   * 新しい値がundefinedやnullの場合は、既存の正常な値を使用する
+   * 新しい値が0の場合は、既存の値が0より大きければ既存の値を使用（0は有効な値だが、既存の値の方が信頼できる場合）
+   * @param newValue 新しい値
+   * @param existingValue 既存の値
+   * @returns マージされた値
+   */
+  private static mergeNumberValue(
+    newValue: number | undefined,
+    existingValue: number | undefined
+  ): number {
+    // 新しい値がundefinedやnullの場合は、既存の値を使用（既存の値もundefinedやnullの場合は0）
+    if (newValue === undefined || newValue === null) {
+      return existingValue ?? 0;
+    }
+    // 新しい値が0の場合、既存の値が0より大きければ既存の値を使用（0は有効な値だが、既存の値の方が信頼できる）
+    if (newValue === 0 && existingValue !== undefined && existingValue !== null && existingValue > 0) {
+      return existingValue;
+    }
+    // 新しい値が0より大きい場合は、それを使用
+    if (newValue > 0) {
+      return newValue;
+    }
+    // その他の場合は新しい値を使用
+    return newValue;
+  }
+
+  /**
+   * ユーザー情報をマージする
+   * @param existing 既存のユーザー情報
+   * @param incoming 新しいユーザー情報
+   * @returns マージされたユーザー情報
+   */
+  private static mergeUser(
+    existing: ProcessedUser,
+    incoming: ProcessedUser
+  ): ProcessedUser {
+    return {
+      name: incoming.name || existing.name || '',
+      screen_name: incoming.screen_name || existing.screen_name || '',
+      avatar_url: incoming.avatar_url || existing.avatar_url || '',
+    };
+  }
+
+  /**
+   * メディア情報をマージする
+   * 新しい方が空の場合は既存の値を使用
+   * @param existing 既存のメディア情報
+   * @param incoming 新しいメディア情報
+   * @returns マージされたメディア情報
+   */
+  private static mergeMedia(
+    existing: ProcessedMedia[] | undefined,
+    incoming: ProcessedMedia[] | undefined
+  ): ProcessedMedia[] | undefined {
+    // 新しい方が存在し、空でない場合はそれを使用
+    if (incoming && incoming.length > 0) {
+      return incoming;
+    }
+    // 新しい方が空やundefinedの場合は、既存の値を使用
+    if (existing && existing.length > 0) {
+      return existing;
+    }
+    // どちらも存在しない場合はundefined
+    return undefined;
   }
 
   /**
