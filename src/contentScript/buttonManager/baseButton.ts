@@ -156,10 +156,10 @@ export abstract class BaseButton {
         return; // URLが変わっていない場合はスキップ
       }
       
-      console.log('Comiketter: ページ遷移を検知、サンプルボタンを再取得', {
-        from: BaseButton.lastPathname,
-        to: currentPathname
-      });
+      // console.log('Comiketter: ページ遷移を検知、サンプルボタンを再取得', {
+      //   from: BaseButton.lastPathname,
+      //   to: currentPathname
+      // });
       
       BaseButton.lastPathname = currentPathname;
       

@@ -76,7 +76,6 @@ export class TweetObserver {
   private observePageNavigation(): void {
     // ページ遷移イベントをリッスン
     window.addEventListener('comiketter:page-navigation', () => {
-      console.log('Comiketter: ページ遷移イベントを受信、ボタンを再作成');
       // 処理済み要素をクリア
       this.processedElements = new WeakSet<HTMLElement>();
       // 既存のツイートを再処理（遅延を長くしてDOMが完全に更新されるのを待つ）
@@ -91,10 +90,10 @@ export class TweetObserver {
       const headObserver = new MutationObserver(() => {
         const currentPathname = window.location.pathname;
         if (currentPathname !== this.lastPathname) {
-          console.log('Comiketter: head要素の変更でページ遷移を検知', {
-            from: this.lastPathname,
-            to: currentPathname
-          });
+          // console.log('Comiketter: head要素の変更でページ遷移を検知', {
+          //   from: this.lastPathname,
+          //   to: currentPathname
+          // });
           this.lastPathname = currentPathname;
           // 処理済み要素をクリア
           this.processedElements = new WeakSet<HTMLElement>();
