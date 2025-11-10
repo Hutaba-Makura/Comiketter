@@ -46,7 +46,8 @@ function cleanupOldFetchRequests(): void {
 
 const Pattern = Object.freeze({
   tweetRelated:
-    /^(?:\/i\/api)?\/graphql\/(?<queryId>.+)?\/(?<queryName>TweetDetail|TweetResultByRestId|HomeTimeline|HomeLatestTimeline|ListLatestTweetsTimeline|SearchTimeline|CommunityTweetsTimeline|CommunityTweetSearchModuleQuery|Bookmarks|BookmarkSearchTimeline|UserTweets|UserTweetsAndReplies|Likes|UserHighlightsTweets|CreateBookmarks|DeleteBookmark|FavoriteTweet|UnfavoriteTweet|CreateRetweet|DeleteRetweet|CreateTweet|UserMedia|NotificationsTimeline|useUpsellTrackingMutation)$/,
+    /^(?:\/i\/api)?\/graphql\/(?<queryId>.+)?\/(?<queryName>TweetDetail|TweetResultByRestId|HomeTimeline|HomeLatestTimeline|ListLatestTweetsTimeline|SearchTimeline|CommunityTweetsTimeline|CommunityTweetSearchModuleQuery|Bookmarks|BookmarkSearchTimeline|UserTweets|UserTweetsAndReplies|Likes|UserHighlightsTweets|CreateBookmarks|DeleteBookmark|FavoriteTweet|UnfavoriteTweet|CreateRetweet|DeleteRetweet|CreateTweet|UserMedia|NotificationsTimeline)$/,
+    // |useUpsellTrackingMutation 画面縦横比変更追跡はコメントアウト
 });
 
 // API種類の定義
@@ -74,7 +75,7 @@ const ApiTypes = {
   CreateTweet: 'CreateTweet',
   UserMedia: 'UserMedia',
   NotificationsTimeline: 'NotificationsTimeline',
-  useUpsellTrackingMutation: 'useUpsellTrackingMutation',
+  // useUpsellTrackingMutation: 'useUpsellTrackingMutation', // 画面縦横比変更追跡はコメントアウト
 } as const;
 
 // API種類を日本語で表示するマッピング
@@ -102,7 +103,7 @@ const ApiTypeLabels: Record<string, string> = {
   [ApiTypes.CreateTweet]: 'ツイート作成',
   [ApiTypes.UserMedia]: 'ユーザーメディア',
   [ApiTypes.NotificationsTimeline]: '通知タイムライン',
-  [ApiTypes.useUpsellTrackingMutation]: '画面縦横比変更追跡',
+  // [ApiTypes.useUpsellTrackingMutation]: '画面縦横比変更追跡', // コメントアウト
 };
 
 const enum ComiketterEvent {

@@ -135,14 +135,6 @@ export class BookmarkButton extends BaseButton {
       ? (targetButton.querySelector('svg') as HTMLElement)
       : this.currentIconElement;
     
-    console.log('Comiketter: updateIcon called', { 
-      iconName, 
-      color, 
-      hasCurrentIcon: !!this.currentIconElement,
-      hasTargetButton: !!targetButton,
-      hasIconElement: !!iconElement
-    });
-    
     if (!iconElement) {
       console.warn('Comiketter: iconElement is null, cannot update icon', {
         hasTargetButton: !!targetButton,
@@ -161,19 +153,11 @@ export class BookmarkButton extends BaseButton {
                              '18.75';
       const existingClass = iconElement.className;
       
-      console.log('Comiketter: Existing icon properties', { 
-        existingWidth, 
-        existingHeight, 
-        existingClass,
-        iconElement 
-      });
-      
       // テーマを検出して色を決定
       const theme = this.detectTheme();
       const iconColor = color || this.getButtonColor(theme);
       
       // アイコンファイルを読み込み
-      console.log('Comiketter: Loading icon:', iconName);
       const iconSVG = await this.loadIcon(iconName);
       
       // 新しいSVG要素を作成
@@ -191,13 +175,6 @@ export class BookmarkButton extends BaseButton {
       // 色を設定
       newIcon.style.color = iconColor;
       
-      console.log('Comiketter: New icon created', { 
-        newIcon, 
-        iconColor, 
-        width: newIcon.getAttribute('width'),
-        height: newIcon.getAttribute('height')
-      });
-      
       // 既存のアイコンを置き換え
       iconElement.replaceWith(newIcon);
       
@@ -205,8 +182,6 @@ export class BookmarkButton extends BaseButton {
       if (this.currentIconElement === iconElement) {
         this.currentIconElement = newIcon;
       }
-      
-      console.log('Comiketter: Icon updated successfully', { iconName, iconColor });
     } catch (error) {
       console.error('Comiketter: Failed to update icon:', error);
       throw error;
@@ -1253,13 +1228,6 @@ export class BookmarkButton extends BaseButton {
       console.error('Comiketter: Failed to update bookmarked tweets:', error);
       hasError = true;
     }
-    
-    console.log('Comiketter: Saved bookmark changes:', { 
-      removed: removeSuccessCount, 
-      added: addSuccessCount,
-      updated: updateSuccessCount,
-      hasError 
-    });
     
     // 少なくとも1つのブックマークに追加できた場合、または削除が成功した場合はアイコンを更新
     const hasAnyBookmark = currentSelectedBookmarks.size > 0;

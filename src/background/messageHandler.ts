@@ -728,7 +728,7 @@ export class MessageHandler {
       if (path.includes('CreateTweet')) return 'CreateTweet';
       if (path.includes('UserMedia')) return 'UserMedia';
       if (path.includes('NotificationsTimeline')) return 'NotificationsTimeline';
-      if (path.includes('useUpsellTrackingMutation')) return 'useUpsellTrackingMutation';
+      // if (path.includes('useUpsellTrackingMutation')) return 'useUpsellTrackingMutation'; // 画面縦横比変更追跡はコメントアウト
       return 'GraphQL';
     }
     
@@ -753,7 +753,7 @@ export class MessageHandler {
       'CreateTweet',
       'UserMedia',
       'NotificationsTimeline',
-      'useUpsellTrackingMutation'
+      // 'useUpsellTrackingMutation' // 画面縦横比変更追跡はコメントアウト
     ].includes(apiType);
   }
 

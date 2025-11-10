@@ -205,7 +205,7 @@ export class ApiProcessor {
       if (path.includes('CreateTweet')) return 'CreateTweet';
       if (path.includes('UserMedia')) return 'UserMedia';
       if (path.includes('NotificationsTimeline')) return 'NotificationsTimeline';
-      if (path.includes('useUpsellTrackingMutation')) return 'useUpsellTrackingMutation';
+      // if (path.includes('useUpsellTrackingMutation')) return 'useUpsellTrackingMutation'; // 画面縦横比変更追跡はコメントアウト
     }
 
     if (path.includes('/favorites/create')) return 'FavoriteTweet';
@@ -517,7 +517,7 @@ export class ApiProcessor {
       'CreateTweet',
       'UserMedia',
       'NotificationsTimeline',
-      'useUpsellTrackingMutation'
+      // 'useUpsellTrackingMutation' // 画面縦横比変更追跡はコメントアウト
     ].includes(apiType);
   }
 } 
