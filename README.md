@@ -24,6 +24,8 @@
 
 インストール後、X（旧Twitter）のページで拡張機能が自動的に動作します。
 
+本リポジトリは、一部機能を [TwitterMediaHarvest](https://github.com/EltonChou/TwitterMediaHarvest) を参考に作成しており、該当箇所には出典表記を記載しています。
+
 ## 📄 ライセンス
 
 このプロジェクトは [Mozilla Public License Version 2.0](LICENSE) の下で公開されています。
