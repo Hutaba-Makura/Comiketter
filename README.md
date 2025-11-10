@@ -7,7 +7,7 @@
 ### 1. 拡張機能のダウンロード
 
 1. [Comiketter Releases](https://github.com/Hutaba-Makura/Comiketter/releases) ページにアクセス
-2. **Assets** セクションから **Comiketter-v0.9.0.zip** をダウンロード
+2. **Assets** セクションから **Comiketter-v1.0.0.zip** をダウンロード
 3. 任意のフォルダに保存
 
 ### 2. Chromeへのインストール
