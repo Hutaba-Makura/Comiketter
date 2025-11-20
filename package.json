@@ -1,7 +1,7 @@
 {
-  "name": "comiketter",
+  "name": "Comiketter - X(Twitter)支援機能パック",
   "version": "1.0.0",
-  "description": "コミックマーケット参加者向けX（旧Twitter）専用Chrome拡張機能",
+  "description": "Twitterに複数のブックマークリストの作成機能、メディアのダウンロード機能を追加する拡張機能",
   "main": "index.js",
   "scripts": {
     "build": "webpack --config webpack.config.mjs",
