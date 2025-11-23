@@ -417,7 +417,7 @@ export class VideoDownloader {
             directory: '{account}',
             noSubDirectory: false,
             filenamePattern: [PatternToken.TweetId, PatternToken.Serial],
-            fileAggregation: false,
+            fileAggregation: true,
             groupBy: AggregationToken.Account
           },
           mediaDownloadSettings: {

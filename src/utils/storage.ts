@@ -33,7 +33,7 @@ const DEFAULT_SETTINGS: AppSettings = {
     directory: 'comiketter',
     noSubDirectory: false,
     filenamePattern: [PatternToken.Account, PatternToken.TweetDate, PatternToken.TweetId, PatternToken.Serial],
-    fileAggregation: false,
+    fileAggregation: true,
     groupBy: AggregationToken.Account,
   },
   mediaDownloadSettings: {
