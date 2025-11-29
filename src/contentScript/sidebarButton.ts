@@ -40,6 +40,7 @@ export class SidebarButton {
   private processedElements = new WeakSet<HTMLElement>();
   private processingTimeout: number | null = null;
   private pendingNodes: HTMLElement[] = [];
+  private isCreatingButton = false; // ボタン作成中のフラグ（重複防止）
 
   private constructor() {}
 
@@ -75,10 +76,10 @@ export class SidebarButton {
       // 既存のサイドバーにボタンを追加
       await this.initializeExistingSidebar();
       
-      // 動的コンテンツの監視を開始
-      this.startObserving();
-      
+      // 初期化完了後に動的コンテンツの監視を開始
+      // （初期化処理中にMutationObserverが反応しないようにする）
       this.isInitialized = true;
+      this.startObserving();
     } catch (error) {
       sendLog('サイドバーボタン初期化エラー:', error);
     }
@@ -88,6 +89,13 @@ export class SidebarButton {
    * 既存のサイドバーにボタンを追加
    */
   private async initializeExistingSidebar(): Promise<void> {
+    // 既にボタンが存在する場合はスキップ
+    const existingButton = document.querySelector('[data-testid="comiketter-sidebar-button"]');
+    if (existingButton) {
+      sendLog('既にボタンが存在するため、初期化をスキップ');
+      return;
+    }
+
     const sidebar = this.findSidebar();
     if (sidebar) {
       if (this.shouldAddButton(sidebar)) {
@@ -199,6 +207,7 @@ export class SidebarButton {
     for (const selector of navigationSelectors) {
       if (node.matches(selector)) {
         if (this.shouldAddButton(node)) {
+          // 1回だけ実行して終了
           this.createSidebarButton().catch(error => {
             sendLog('サイドバーボタン作成エラー:', error);
           });
@@ -211,13 +220,18 @@ export class SidebarButton {
     for (const selector of navigationSelectors) {
       const navigations = node.querySelectorAll(selector);
       if (navigations.length > 0) {
-        navigations.forEach((navigation) => {
-          if (this.shouldAddButton(navigation as HTMLElement)) {
+        // 最初の有効なナビゲーション要素に対してのみボタンを追加
+        // 複数のナビゲーション要素がある場合でも、1回だけ実行する
+        for (let i = 0; i < navigations.length; i++) {
+          const navigation = navigations[i] as HTMLElement;
+          if (this.shouldAddButton(navigation)) {
             this.createSidebarButton().catch(error => {
               sendLog('サイドバーボタン作成エラー:', error);
             });
+            // 1回だけ実行して終了
+            return;
           }
-        });
+        }
         return;
       }
     }
@@ -227,9 +241,15 @@ export class SidebarButton {
    * ボタンを追加すべきかどうかを判定
    */
   private shouldAddButton(sidebar: HTMLElement): boolean {
-    // 既にボタンが追加されている場合はスキップ
-    const existingButton = sidebar.querySelector('[data-testid="comiketter-sidebar-button"]');
-    return !existingButton;
+    // グローバルに既にボタンが追加されている場合はスキップ
+    const existingButton = document.querySelector('[data-testid="comiketter-sidebar-button"]');
+    if (existingButton) {
+      return false;
+    }
+    
+    // 特定のサイドバー要素内にボタンがある場合もスキップ
+    const existingButtonInSidebar = sidebar.querySelector('[data-testid="comiketter-sidebar-button"]');
+    return !existingButtonInSidebar;
   }
 
   /**
@@ -531,14 +551,31 @@ export class SidebarButton {
    * サイドバーボタンを作成
    */
   private async createSidebarButton(): Promise<void> {
-    const sidebar = this.findSidebar();
-    if (!sidebar) {
-      sendLog('ナビゲーション要素が見つかりません');
+    // 既にボタン作成処理中の場合はスキップ（重複防止）
+    if (this.isCreatingButton) {
+      sendLog('ボタン作成処理中のため、作成をスキップ');
       return;
     }
 
-    // 既存のボタンを削除
-    this.removeSidebarButton();
+    // グローバルに既にボタンが存在する場合はスキップ（重複防止）
+    const existingButton = document.querySelector('[data-testid="comiketter-sidebar-button"]');
+    if (existingButton) {
+      sendLog('既にボタンが存在するため、作成をスキップ');
+      return;
+    }
+
+    // ボタン作成処理開始
+    this.isCreatingButton = true;
+
+    try {
+      const sidebar = this.findSidebar();
+      if (!sidebar) {
+        sendLog('ナビゲーション要素が見つかりません');
+        return;
+      }
+
+      // 既存のボタンを削除（念のため）
+      this.removeSidebarButton();
 
     // サンプル要素を取得
     const sampleElement = this.getSampleElement();
@@ -592,8 +629,12 @@ export class SidebarButton {
 
     this.button = buttonWrapper;
 
-    // サイドバーに挿入
-    this.insertIntoSidebar(sidebar);
+      // サイドバーに挿入
+      this.insertIntoSidebar(sidebar);
+    } finally {
+      // ボタン作成処理完了
+      this.isCreatingButton = false;
+    }
   }
 
 
