@@ -848,7 +848,14 @@ export class BookmarkButton extends BaseButton {
     const bookmarkManager = BookmarkApiClient.getInstance();
     const bookmarks = await bookmarkManager.getBookmarks();
     
-    if (bookmarks.length === 0) {
+    // updateAt順（降順：新しい順）にソート
+    const sortedBookmarks = [...bookmarks].sort((a, b) => {
+      const dateA = new Date(a.updatedAt).getTime();
+      const dateB = new Date(b.updatedAt).getTime();
+      return dateB - dateA;
+    });
+    
+    if (sortedBookmarks.length === 0) {
       // ブックマークがない場合
       const noBookmarksText = document.createElement('p');
       noBookmarksText.textContent = 'ブックマークがありません。新しいブックマークを作成してください。';
@@ -878,7 +885,7 @@ export class BookmarkButton extends BaseButton {
       const currentTweetId = this.currentTweetInfo?.id;
       
       // 各ブックマークに対して、ツイートが既に登録されているかチェック
-      for (const bookmark of bookmarks) {
+      for (const bookmark of sortedBookmarks) {
         const bookmarkItem = document.createElement('div');
         bookmarkItem.className = 'comiketter-bookmark-item';
         

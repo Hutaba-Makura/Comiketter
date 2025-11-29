@@ -80,11 +80,18 @@ export function CbSidebar() {
     }
   };
 
-  // 検索フィルタリング
-  const filteredCbs = cbs.filter(cb => 
-    cb.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (cb.description || '').toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // 検索フィルタリングとupdateAt順にソート
+  const filteredCbs = cbs
+    .filter(cb => 
+      cb.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (cb.description || '').toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .sort((a, b) => {
+      // updateAtが新しい順（降順）にソート
+      const dateA = a.updatedAt instanceof Date ? a.updatedAt : new Date(a.updatedAt);
+      const dateB = b.updatedAt instanceof Date ? b.updatedAt : new Date(b.updatedAt);
+      return dateB.getTime() - dateA.getTime();
+    });
 
   // 統計情報
   const totalTweets = cbs.reduce((sum, cb) => sum + cb.tweetCount, 0);

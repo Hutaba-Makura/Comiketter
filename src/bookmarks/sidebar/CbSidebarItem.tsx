@@ -155,7 +155,7 @@ export function CbSidebarItem({ cb }: CbSidebarItemProps) {
                   </Text>
                 )}
                 <Text size="xs" c="dimmed" mt={2}>
-                  {new Date(cb.createdAt).toLocaleDateString('ja-JP')}
+                  {new Date(cb.updatedAt).toLocaleDateString('ja-JP')}
                 </Text>
               </div>
             </Group>
