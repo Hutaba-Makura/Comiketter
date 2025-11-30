@@ -225,7 +225,11 @@ export interface AppSettings {
   
   // ファイル名・パス設定
   filenameSettings: FilenameSettingProps
-  
+
+  // 言語設定
+  language: 'ja' | 'en'
+
+
   // メディアダウンロード設定
   mediaDownloadSettings: {
     includeVideoThumbnail: boolean; // 動画サムネイルを含めるかどうか

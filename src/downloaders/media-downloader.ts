@@ -492,6 +492,7 @@ export class MediaDownloader {
             fileAggregation: true,
             groupBy: AggregationToken.Account
           },
+          language: 'ja',
           mediaDownloadSettings: {
             includeVideoThumbnail: false,
             excludeProfileImages: true,

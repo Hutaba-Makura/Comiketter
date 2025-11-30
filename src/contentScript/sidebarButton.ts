@@ -319,6 +319,7 @@ export class SidebarButton {
         'a[data-testid="AppTabBar_DirectMessage_Link"]',
         'a[href^="/messages/"][data-testid="AppTabBar_DirectMessage_Link"]',
         'a[href^="/messages/"][aria-label*="ダイレクトメッセージ"]',
+        'a[href^="/messages/"][aria-label*="Direct Messages"]',
         'a[href^="/messages/"]',
       ];
 

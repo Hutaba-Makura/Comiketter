@@ -290,7 +290,7 @@ function getQuotedTweetContainers(article: HTMLElement): HTMLElement[] {
   const allSpans = article.querySelectorAll('span');
   allSpans.forEach(span => {
     const text = (span.textContent || '').trim();
-    if (text === '引用') {
+    if (text === '引用' || text === 'Quote') {
       // 親要素（P）を取得
       const parentP = span.parentElement;
       if (parentP) {

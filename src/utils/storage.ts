@@ -36,6 +36,7 @@ const DEFAULT_SETTINGS: AppSettings = {
     fileAggregation: true,
     groupBy: AggregationToken.Account,
   },
+  language: 'ja',
   mediaDownloadSettings: {
     includeVideoThumbnail: true, // 動画サムネイルを含める（テスト用）
     excludeProfileImages: true, // プロフィール画像は除外

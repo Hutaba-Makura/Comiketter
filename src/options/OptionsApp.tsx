@@ -157,6 +157,19 @@ export const OptionsApp: React.FC = () => {
         <Divider />
         
         <Stack gap="md">
+          <Title order={3} size="h4">言語設定（未実装、更新をお待ちください）</Title>
+          <Select
+            label="言語"
+            value={settings.language}
+            onChange={(value) => updateSettings({ language: value as 'ja' | 'en' })}
+            data={[
+              { value: 'ja', label: '日本語' },
+              { value: 'en', label: '英語' },
+            ]}
+          />
+        </Stack>
+        
+        <Stack gap="md">
           <Title order={3} size="h4">自動ダウンロード条件（未実装、更新をお待ちください）</Title>
           <Switch
             label="リツイート時に自動ダウンロード"
