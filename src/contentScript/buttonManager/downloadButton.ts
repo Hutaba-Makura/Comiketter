@@ -8,6 +8,7 @@
 
 import type { Tweet } from '../../types';
 import { BaseButton, ButtonStatus, ButtonConfig } from './baseButton';
+import { getText } from '../i18n';
 
 export class DownloadButton extends BaseButton {
   constructor() {
@@ -249,7 +250,7 @@ export class DownloadButton extends BaseButton {
       const hasImage = tweetInfo.media?.some(m => m.type === 'image');
       
       if (!hasVideo && !hasImage) {
-        throw new Error('ダウンロード可能なメディアが見つかりません');
+        throw new Error(getText('ダウンロード可能なメディアが見つかりません'));
       }
 
       // 統合メディアダウンロード要求を送信（画像・動画同時ダウンロード）

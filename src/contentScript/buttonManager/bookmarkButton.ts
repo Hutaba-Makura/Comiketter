@@ -13,6 +13,7 @@ import { BaseButton, ButtonConfig } from './baseButton';
 import { BookmarkApiClient } from '../../utils/bookmarkApiClient';
 import { showErrorToast, showSuccessToast } from '../../utils/toast';
 import type { Tweet } from '../../types';
+import { getText } from '../i18n';
 
 // ログ送信関数
 const sendLog = (message: string, data?: any) => {
@@ -703,7 +704,7 @@ export class BookmarkButton extends BaseButton {
         this.setBookmarkButtonStatus(button, BookmarkButtonStatus.Idle);
       }, 2000);
     } catch (error) {
-      sendLog('ブックマークボタンクリック処理でエラー発生:', error);
+      sendLog(getText('ブックマークボタンクリック処理でエラー発生'), error);
       this.setBookmarkButtonStatus(button, BookmarkButtonStatus.Error);
       
       // 3秒後に通常状態に戻す
@@ -778,7 +779,7 @@ export class BookmarkButton extends BaseButton {
     
     const title = document.createElement('div');
     title.className = 'comiketter-bookmark-selector-title';
-    title.textContent = 'ブックマークに追加';
+    title.textContent = getText('ブックマークに追加');
     
     const closeButton = document.createElement('button');
     closeButton.className = 'comiketter-bookmark-selector-close';
@@ -858,12 +859,12 @@ export class BookmarkButton extends BaseButton {
     if (sortedBookmarks.length === 0) {
       // ブックマークがない場合
       const noBookmarksText = document.createElement('p');
-      noBookmarksText.textContent = 'ブックマークがありません。新しいブックマークを作成してください。';
+      noBookmarksText.textContent = getText('ブックマークがありません。新しいブックマークを作成してください。');
       content.appendChild(noBookmarksText);
       
       // 新規作成ボタン
       const createButton = document.createElement('button');
-      createButton.textContent = '新しいブックマークを作成';
+      createButton.textContent = getText('新しいブックマークを作成');
       createButton.style.cssText = `
         background: #1da1f2;
         color: white;
@@ -932,7 +933,7 @@ export class BookmarkButton extends BaseButton {
       
       // 新規作成ボタン
       const createButton = document.createElement('button');
-      createButton.textContent = '＋ 新しいブックマークを作成';
+      createButton.textContent = `＋ ${getText('新しいブックマークを作成')}`;
       createButton.style.cssText = `
         background: none;
         border: 1px solid #1da1f2;
@@ -979,12 +980,12 @@ export class BookmarkButton extends BaseButton {
     `;
     
     const nameLabel = document.createElement('label');
-    nameLabel.textContent = 'ブックマーク名 *';
+    nameLabel.textContent = getText('ブックマーク名 *');
     nameLabel.style.cssText = 'display: block; margin-bottom: 4px; font-size: 14px; font-weight: 500;';
     
     const nameInput = document.createElement('input');
     nameInput.type = 'text';
-    nameInput.placeholder = 'ブックマーク名を入力';
+    nameInput.placeholder = getText('ブックマーク名を入力');
     nameInput.style.cssText = `
       width: 100%;
       padding: 8px 12px;
@@ -1000,7 +1001,7 @@ export class BookmarkButton extends BaseButton {
     descLabel.style.cssText = 'display: block; margin-bottom: 4px; font-size: 14px; font-weight: 500;';
     
     const descInput = document.createElement('textarea');
-    descInput.placeholder = 'ブックマークの説明を入力';
+    descInput.placeholder = getText('ブックマークの説明を入力');
     descInput.style.cssText = `
       width: 100%;
       padding: 8px 12px;
@@ -1060,7 +1061,7 @@ export class BookmarkButton extends BaseButton {
    */
   private async createBookmark(name: string, description: string): Promise<void> {
     if (!name.trim()) {
-      showErrorToast('ブックマーク名を入力してください');
+      showErrorToast(getText('ブックマーク名を入力してください'));
       return;
     }
     
@@ -1077,10 +1078,10 @@ export class BookmarkButton extends BaseButton {
       }
       
       console.log('Comiketter: Created new bookmark:', newBookmark);
-      showSuccessToast('ブックマークを作成しました');
+      showSuccessToast(getText('ブックマークを作成しました'));
     } catch (error) {
       console.error('Comiketter: Failed to create bookmark:', error);
-      showErrorToast('ブックマークの作成に失敗しました');
+      showErrorToast(getText('ブックマークの作成に失敗しました'));
     }
   }
 
@@ -1283,7 +1284,7 @@ export class BookmarkButton extends BaseButton {
     } else {
       // 変更がある場合の既存の処理
       if (hasError && removeSuccessCount === 0 && addSuccessCount === 0 && updateSuccessCount === 0) {
-        showErrorToast('ブックマークの保存に失敗しました');
+        showErrorToast(getText('ブックマークの保存に失敗しました'));
       } else if (hasError) {
         showErrorToast(`${messages.join('、')}しました（一部失敗しました）`);
       } else if (messages.length > 0) {

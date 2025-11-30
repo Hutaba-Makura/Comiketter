@@ -3,6 +3,7 @@
   "name": "Comiketter - X(Twitter)支援機能パック",
   "version": "1.0.0",
   "description": "Twitterに複数のブックマークリストの作成機能、メディアのダウンロード機能を追加する拡張機能",
+  "default_locale": "ja",
   "permissions": [
     "storage",
     "downloads",

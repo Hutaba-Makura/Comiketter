@@ -1,0 +1,192 @@
+{
+  "custom_bookmark": {
+    "message": "カスタムブックマーク"
+  },
+  "sidebar_button_init_error": {
+    "message": "サイドバーボタン初期化エラー"
+  },
+  "button_already_exists_skip": {
+    "message": "既にボタンが存在するため、初期化をスキップ"
+  },
+  "button_add_condition_not_met_skip": {
+    "message": "ボタン追加条件を満たさないため、スキップ"
+  },
+  "navigation_element_not_found_skip": {
+    "message": "ナビゲーション要素が見つからないため、スキップ"
+  },
+  "valid_navigation_element_not_found": {
+    "message": "有効なナビゲーション要素が見つかりません"
+  },
+  "sample_element_not_found": {
+    "message": "サンプル要素が見つかりません"
+  },
+  "icon_load_error": {
+    "message": "アイコン読み込みエラー"
+  },
+  "sidebar_button_create_error": {
+    "message": "サイドバーボタン作成エラー"
+  },
+  "bookmark_page_open_failed": {
+    "message": "ブックマークページを開けませんでした。手動でブックマークページにアクセスしてください。"
+  },
+  "button_creation_in_progress_skip": {
+    "message": "ボタン作成処理中のため、作成をスキップ"
+  },
+  "button_already_exists_create_skip": {
+    "message": "既にボタンが存在するため、作成をスキップ"
+  },
+  "navigation_element_not_found": {
+    "message": "ナビゲーション要素が見つかりません"
+  },
+  "sample_element_not_found_abort": {
+    "message": "サンプル要素が見つかりません。ボタン作成を中止"
+  },
+  "insert_target_not_found": {
+    "message": "挿入先が見つかりません"
+  },
+  "bookmark_link_not_found_alternative": {
+    "message": "ブックマークリンクが見つからないため、代替手段を試行"
+  },
+  "navigation_element_selected_as_insert_target": {
+    "message": "ナビゲーション要素を挿入先として選択"
+  },
+  "tab_element_parent_selected_as_insert_target": {
+    "message": "タブ要素の親を挿入先として選択"
+  },
+  "extension_context_invalid_fallback": {
+    "message": "拡張機能コンテキストが無効です。フォールバック処理を実行"
+  },
+  "sidebar_button_click_error": {
+    "message": "サイドバーボタンクリックエラー"
+  },
+  "bookmark_page_open_failed_log": {
+    "message": "ブックマークページを開けませんでした"
+  },
+  "fallback_bookmark_page_opened": {
+    "message": "フォールバック処理でブックマークページを開きました"
+  },
+  "fallback_also_failed": {
+    "message": "フォールバック処理も失敗しました"
+  },
+  "manual_button_recreate": {
+    "message": "手動でボタンを再作成"
+  },
+  "sidebar_selected_as_insert_target": {
+    "message": "サイドバー自体を挿入先として選択"
+  },
+  "icon_previous_element_not_found": {
+    "message": "アイコンの前の要素が見つかりません"
+  },
+  "home_timeline": {
+    "message": "ホームタイムライン"
+  },
+  "home_latest_timeline": {
+    "message": "ホーム最新タイムライン"
+  },
+  "tweet_detail": {
+    "message": "ツイート詳細"
+  },
+  "tweet_result_by_rest_id": {
+    "message": "ツイート結果（ID指定）"
+  },
+  "list_latest_tweets_timeline": {
+    "message": "リスト最新ツイートタイムライン"
+  },
+  "search_timeline": {
+    "message": "検索タイムライン"
+  },
+  "community_tweets_timeline": {
+    "message": "コミュニティタイムライン"
+  },
+  "community_tweet_search_module_query": {
+    "message": "コミュニティ検索タイムライン"
+  },
+  "bookmarks": {
+    "message": "ブックマークタイムライン"
+  },
+  "bookmark_search_timeline": {
+    "message": "ブックマーク検索タイムライン"
+  },
+  "user_tweets": {
+    "message": "ユーザーツイート"
+  },
+  "user_tweets_and_replies": {
+    "message": "ユーザー返信"
+  },
+  "likes": {
+    "message": "ユーザーいいね"
+  },
+  "user_highlights_tweets": {
+    "message": "ユーザーハイライトツイート"
+  },
+  "create_bookmarks": {
+    "message": "ブックマーク作成"
+  },
+  "delete_bookmark": {
+    "message": "ブックマーク削除"
+  },
+  "favorite_tweet": {
+    "message": "ツイートいいね"
+  },
+  "unfavorite_tweet": {
+    "message": "ツイートいいね解除"
+  },
+  "create_retweet": {
+    "message": "リツイート作成"
+  },
+  "delete_retweet": {
+    "message": "リツイート削除"
+  },
+  "create_tweet": {
+    "message": "ツイート作成"
+  },
+  "user_media": {
+    "message": "ユーザーメディア"
+  },
+  "notifications_timeline": {
+    "message": "通知タイムライン"
+  },
+  "quote": {
+    "message": "引用"
+  },
+  "no_bookmarks_create_new": {
+    "message": "ブックマークがありません。新しいブックマークを作成してください。"
+  },
+  "add_to_bookmark": {
+    "message": "ブックマークに追加"
+  },
+  "create_new_bookmark": {
+    "message": "新しいブックマークを作成"
+  },
+  "bookmark_name_label": {
+    "message": "ブックマーク名 *"
+  },
+  "bookmark_name_placeholder": {
+    "message": "ブックマーク名を入力"
+  },
+  "bookmark_description_placeholder": {
+    "message": "ブックマークの説明を入力"
+  },
+  "bookmark_name_required": {
+    "message": "ブックマーク名を入力してください"
+  },
+  "bookmark_created_success": {
+    "message": "ブックマークを作成しました"
+  },
+  "bookmark_create_failed": {
+    "message": "ブックマークの作成に失敗しました"
+  },
+  "bookmark_save_failed": {
+    "message": "ブックマークの保存に失敗しました"
+  },
+  "downloadable_media_not_found": {
+    "message": "ダウンロード可能なメディアが見つかりません"
+  },
+  "bookmark_button_click_error": {
+    "message": "ブックマークボタンクリック処理でエラー発生"
+  },
+  "video_info_check_error": {
+    "message": "動画情報チェック中にエラーが発生しました"
+  }
+}
+
