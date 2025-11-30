@@ -4,10 +4,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  * 
  * Comiketter: i18n utility for contentScript
- * HTMLのlang属性から言語を検出し、webextension-polyfillのi18n APIを使用
+ * HTMLのlang属性から言語を検出し、Chrome拡張機能のi18n APIを使用
+ * MAINワールドでも動作するように、webextension-polyfillを使わずに直接chrome.i18nを使用
  */
 
-import Browser from 'webextension-polyfill';
+// MAINワールドでも動作するように、webextension-polyfillの代わりに直接chrome.i18nを使用
+// 型定義のため
+declare const chrome: {
+  i18n?: {
+    getMessage: (messageName: string, substitutions?: string | string[]) => string;
+    getUILanguage: () => string;
+  };
+};
 
 /**
  * HTMLのlang属性から言語を取得
@@ -118,13 +126,21 @@ export function getText(
   const lang = getLanguageFromHTML();
   const messageKey = makeMessageKey(text, context);
   
-  // webextension-polyfillのi18n APIを使用
+  // Chrome拡張機能のi18n APIを使用（MAINワールドでも動作）
   // メッセージキーは _locales/{lang}/messages.json に定義されている必要がある
-  let message = Browser.i18n.getMessage(messageKey);
+  let message = text; // デフォルトは元のテキスト
   
-  // メッセージが見つからない場合は元のテキストを返す
-  if (!message) {
-    message = text;
+  // chrome.i18nが利用可能な場合のみ使用
+  if (typeof chrome !== 'undefined' && chrome.i18n) {
+    try {
+      const i18nMessage = chrome.i18n.getMessage(messageKey);
+      if (i18nMessage) {
+        message = i18nMessage;
+      }
+    } catch (error) {
+      // i18n APIが使えない場合は無視（デフォルトのtextを使用）
+      console.debug('Comiketter: chrome.i18n.getMessage failed:', error);
+    }
   }
   
   // プレースホルダーを置換
