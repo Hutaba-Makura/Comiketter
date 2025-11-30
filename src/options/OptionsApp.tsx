@@ -160,11 +160,11 @@ export const OptionsApp: React.FC = () => {
           <Title order={3} size="h4">言語設定（未実装、更新をお待ちください）</Title>
           <Select
             label="言語"
-            value={settings.language}
-            onChange={(value) => updateSettings({ language: value as 'ja' | 'en' })}
+            value={settings.language || 'ja'}
+            onChange={(value) => updateSettings({ language: value as 'ja' | 'en' || 'ja' })}
             data={[
-              { value: 'ja', label: '日本語' },
-              { value: 'en', label: '英語' },
+              { value: 'ja', label: '日本語 -Japanese' },
+              { value: 'en', label: '英語 -English' },
             ]}
           />
         </Stack>
