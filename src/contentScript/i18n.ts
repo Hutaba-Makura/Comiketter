@@ -5,11 +5,14 @@
  * 
  * Comiketter: i18n utility for contentScript
  * HTMLのlang属性から言語を検出し、Chrome拡張機能のi18n APIを使用
- * MAINワールドでも動作するように、webextension-polyfillを使わずに直接chrome.i18nを使用
+ * MAINワールドでも動作するように、翻訳テーブルを直接埋め込む
  */
 
-// MAINワールドでも動作するように、webextension-polyfillの代わりに直接chrome.i18nを使用
-// 型定義のため
+// 翻訳テーブルを直接import（main worldでも動作するように）
+import jaMessages from '../_locales/ja/messages.json';
+import enMessages from '../_locales/en/messages.json';
+
+// chrome.i18nの型定義（isolated worldで使用可能な場合）
 declare const chrome: {
   i18n?: {
     getMessage: (messageName: string, substitutions?: string | string[]) => string;
@@ -27,6 +30,31 @@ function getLanguageFromHTML(): 'ja' | 'en' {
     return 'ja';
   }
   return 'en';
+}
+
+/**
+ * chrome.i18nが利用可能かどうかを判定
+ * isolated world（content script）では利用可能、main worldでは利用不可
+ * @returns chrome.i18nが利用可能な場合true
+ */
+function isChromeI18nAvailable(): boolean {
+  return (
+    typeof chrome !== 'undefined' &&
+    chrome.i18n !== undefined &&
+    typeof chrome.i18n.getMessage === 'function'
+  );
+}
+
+/**
+ * 翻訳テーブルからメッセージを取得
+ * @param messageKey メッセージキー
+ * @param lang 言語
+ * @returns 翻訳されたメッセージ、見つからない場合は空文字列
+ */
+function getMessageFromTable(messageKey: string, lang: 'ja' | 'en'): string {
+  const messages = lang === 'ja' ? jaMessages : enMessages;
+  const message = messages[messageKey as keyof typeof messages];
+  return message?.message || '';
 }
 
 /**
@@ -126,20 +154,28 @@ export function getText(
   const lang = getLanguageFromHTML();
   const messageKey = makeMessageKey(text, context);
   
-  // Chrome拡張機能のi18n APIを使用（MAINワールドでも動作）
-  // メッセージキーは _locales/{lang}/messages.json に定義されている必要がある
   let message = text; // デフォルトは元のテキスト
   
-  // chrome.i18nが利用可能な場合のみ使用
-  if (typeof chrome !== 'undefined' && chrome.i18n) {
+  // chrome.i18nが利用可能な場合（isolated world）はそれを使用
+  if (isChromeI18nAvailable()) {
     try {
-      const i18nMessage = chrome.i18n.getMessage(messageKey);
+      const i18nMessage = chrome.i18n!.getMessage(messageKey);
       if (i18nMessage) {
         message = i18nMessage;
       }
     } catch (error) {
-      // i18n APIが使えない場合は無視（デフォルトのtextを使用）
-      console.debug('Comiketter: chrome.i18n.getMessage failed:', error);
+      // i18n APIが使えない場合は翻訳テーブルにフォールバック
+      console.debug('Comiketter: chrome.i18n.getMessage failed, using table:', error);
+      const tableMessage = getMessageFromTable(messageKey, lang);
+      if (tableMessage) {
+        message = tableMessage;
+      }
+    }
+  } else {
+    // main worldでは翻訳テーブルから直接取得
+    const tableMessage = getMessageFromTable(messageKey, lang);
+    if (tableMessage) {
+      message = tableMessage;
     }
   }
   
