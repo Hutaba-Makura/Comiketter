@@ -1263,19 +1263,19 @@ export class BookmarkButton extends BaseButton {
     // メッセージを表示
     const messages: string[] = [];
     if (removeSuccessCount > 0) {
-      messages.push(`${removeSuccessCount}個のブックマークから削除`);
+      messages.push(getText('個のブックマークから削除', undefined, { count: removeSuccessCount.toString() }));
     }
     if (addSuccessCount > 0) {
-      messages.push(`${addSuccessCount}個のブックマークに追加`);
+      messages.push(getText('個のブックマークに追加', undefined, { count: addSuccessCount.toString() }));
     }
     if (updateSuccessCount > 0) {
-      messages.push(`${updateSuccessCount}件の情報を更新`);
+      messages.push(getText('件の情報を更新', undefined, { count: updateSuccessCount.toString() }));
     }
     
     // 変更がない場合は、更新のみを行ったことを通知
     if (bookmarksToRemove.length === 0 && bookmarksToAdd.length === 0) {
       if (updateSuccessCount > 0) {
-        showSuccessToast(`${updateSuccessCount}件の情報を更新しました`);
+        showSuccessToast(getText('件の情報を更新しました', undefined, { count: updateSuccessCount.toString() }));
       } else {
         // 更新する情報がない場合は何も表示しない
         this.hideBookmarkSelector();
@@ -1286,9 +1286,11 @@ export class BookmarkButton extends BaseButton {
       if (hasError && removeSuccessCount === 0 && addSuccessCount === 0 && updateSuccessCount === 0) {
         showErrorToast(getText('ブックマークの保存に失敗しました'));
       } else if (hasError) {
-        showErrorToast(`${messages.join('、')}しました（一部失敗しました）`);
+        const actionsText = messages.join('、');
+        showErrorToast(getText('しました（一部失敗しました）', undefined, { actions: actionsText }));
       } else if (messages.length > 0) {
-        showSuccessToast(`${messages.join('、')}しました`);
+        const actionsText = messages.join('、');
+        showSuccessToast(getText('しました', undefined, { actions: actionsText }));
       }
     }
   }

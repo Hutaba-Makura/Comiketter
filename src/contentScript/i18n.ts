@@ -115,6 +115,12 @@ const textToKeyMap: Record<string, string> = {
   'キャンセル': 'cancel',
   '作成': 'create',
   '説明（任意）': 'description_optional',
+  '個のブックマークから削除': 'bookmarks_removed',
+  '個のブックマークに追加': 'bookmarks_added',
+  '件の情報を更新': 'info_updated',
+  '件の情報を更新しました': 'info_updated_complete',
+  'しました': 'actions_completed',
+  'しました（一部失敗しました）': 'actions_completed_partial_failure',
 };
 
 /**

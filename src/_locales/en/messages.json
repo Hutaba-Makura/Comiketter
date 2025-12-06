@@ -199,6 +199,24 @@
   },
   "description_optional": {
     "message": "Description (Optional)"
+  },
+  "bookmarks_removed": {
+    "message": "Removed from {{count}} bookmarks"
+  },
+  "bookmarks_added": {
+    "message": "Added to {{count}} bookmarks"
+  },
+  "info_updated": {
+    "message": "Updated {{count}} items"
+  },
+  "info_updated_complete": {
+    "message": "Updated {{count}} items"
+  },
+  "actions_completed": {
+    "message": "{{actions}} completed"
+  },
+  "actions_completed_partial_failure": {
+    "message": "{{actions}} completed (some failed)"
   }
 }
 

@@ -199,6 +199,24 @@
   },
   "description_optional": {
     "message": "説明（任意）"
+  },
+  "bookmarks_removed": {
+    "message": "{{count}}個のブックマークから削除"
+  },
+  "bookmarks_added": {
+    "message": "{{count}}個のブックマークに追加"
+  },
+  "info_updated": {
+    "message": "{{count}}件の情報を更新"
+  },
+  "info_updated_complete": {
+    "message": "{{count}}件の情報を更新しました"
+  },
+  "actions_completed": {
+    "message": "{{actions}}しました"
+  },
+  "actions_completed_partial_failure": {
+    "message": "{{actions}}しました（一部失敗しました）"
   }
 }
 
