@@ -111,6 +111,10 @@ const textToKeyMap: Record<string, string> = {
   'ダウンロード可能なメディアが見つかりません': 'downloadable_media_not_found',
   'ブックマークボタンクリック処理でエラー発生': 'bookmark_button_click_error',
   '動画情報チェック中にエラーが発生しました': 'video_info_check_error',
+  '保存': 'save',
+  'キャンセル': 'cancel',
+  '作成': 'create',
+  '説明（任意）': 'description_optional',
 };
 
 /**

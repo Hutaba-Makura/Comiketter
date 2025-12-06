@@ -804,7 +804,7 @@ export class BookmarkButton extends BaseButton {
     
     const cancelButton = document.createElement('button');
     cancelButton.className = 'comiketter-bookmark-button-secondary';
-    cancelButton.textContent = 'キャンセル';
+    cancelButton.textContent = getText('キャンセル');
     cancelButton.style.cssText = `
       background: #f7f9fa;
       color: #14171a;
@@ -820,7 +820,7 @@ export class BookmarkButton extends BaseButton {
     
     const saveButton = document.createElement('button');
     saveButton.className = 'comiketter-bookmark-button-primary';
-    saveButton.textContent = '保存';
+    saveButton.textContent = getText('保存');
     saveButton.addEventListener('click', () => {
       this.saveBookmarks();
     });
@@ -997,7 +997,7 @@ export class BookmarkButton extends BaseButton {
     `;
     
     const descLabel = document.createElement('label');
-    descLabel.textContent = '説明（任意）';
+    descLabel.textContent = getText('説明（任意）');
     descLabel.style.cssText = 'display: block; margin-bottom: 4px; font-size: 14px; font-weight: 500;';
     
     const descInput = document.createElement('textarea');
@@ -1015,7 +1015,7 @@ export class BookmarkButton extends BaseButton {
     `;
     
     const createButton = document.createElement('button');
-    createButton.textContent = '作成';
+    createButton.textContent = getText('作成');
     createButton.style.cssText = `
       background: #1da1f2;
       color: white;
@@ -1031,7 +1031,7 @@ export class BookmarkButton extends BaseButton {
     });
     
     const cancelButton = document.createElement('button');
-    cancelButton.textContent = 'キャンセル';
+    cancelButton.textContent = getText('キャンセル');
     cancelButton.style.cssText = `
       background: #f7f9fa;
       color: #14171a;

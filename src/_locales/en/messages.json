@@ -187,6 +187,18 @@
   },
   "video_info_check_error": {
     "message": "Error occurred while checking video info"
+  },
+  "save": {
+    "message": "Save"
+  },
+  "cancel": {
+    "message": "Cancel"
+  },
+  "create": {
+    "message": "Create"
+  },
+  "description_optional": {
+    "message": "Description (Optional)"
   }
 }
 
