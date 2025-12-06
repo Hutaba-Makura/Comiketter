@@ -217,6 +217,78 @@
   },
   "actions_completed_partial_failure": {
     "message": "{{actions}} completed (some failed)"
+  },
+  "reload": {
+    "message": "Reload"
+  },
+  "tweets_count": {
+    "message": "{{count}} Tweets"
+  },
+  "search_cb_placeholder": {
+    "message": "Search CBs..."
+  },
+  "no_cb_found_for_query": {
+    "message": "No CBs found matching \"{{query}}\""
+  },
+  "no_cb_available": {
+    "message": "No CBs available"
+  },
+  "create_cb_from_button": {
+    "message": "Please create a CB from the create button"
+  },
+  "last_updated_time": {
+    "message": "Last updated:"
+  },
+  "create_new": {
+    "message": "Create New"
+  },
+  "settings": {
+    "message": "Settings"
+  },
+  "create_cb": {
+    "message": "Create CB"
+  },
+  "cb_name_label": {
+    "message": "CB Name *"
+  },
+  "cb_name_placeholder": {
+    "message": "Enter CB name"
+  },
+  "cb_description_placeholder": {
+    "message": "Enter CB description"
+  },
+  "cb_name_required": {
+    "message": "Please enter CB name"
+  },
+  "cb_create_failed": {
+    "message": "Failed to create CB"
+  },
+  "cb_list_fetch_failed": {
+    "message": "Failed to fetch CB list"
+  },
+  "tweet_count": {
+    "message": "{{count}} tweets"
+  },
+  "edit": {
+    "message": "Edit"
+  },
+  "copy": {
+    "message": "Copy"
+  },
+  "confirm_delete_cb": {
+    "message": "Delete custom bookmark?"
+  },
+  "cannot_undo": {
+    "message": "This action cannot be undone"
+  },
+  "cb_delete_failed": {
+    "message": "Failed to delete CB"
+  },
+  "cb_copy_failed": {
+    "message": "Failed to copy CB"
+  },
+  "app_init_failed": {
+    "message": "Failed to initialize app"
   }
 }
 

@@ -17,6 +17,7 @@ import { IconPencilPlus, IconSearch, IconBookmark, IconSettings} from '@tabler/i
 import { useCbStore } from '../state/cbStore';
 import { CbSidebarItem } from './CbSidebarItem';
 import { cbService } from '../services/cbService';
+import { getTextSync, clearLanguageCache, getLanguage } from '../utils/i18n';
 
 /**
  * CBサイドバーコンポーネント
@@ -28,6 +29,38 @@ export function CbSidebar() {
   const [cbName, setCbName] = useState('');
   const [cbDescription, setCbDescription] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+  const [languageReady, setLanguageReady] = useState(false);
+  const [languageKey, setLanguageKey] = useState(0); // 言語変更時に再レンダリングをトリガー
+
+  // 言語設定を取得してキャッシュに保存
+  useEffect(() => {
+    const initLanguage = async () => {
+      await getLanguage();
+      setLanguageReady(true);
+    };
+    initLanguage();
+  }, []);
+
+  // ストレージ変更を監視して言語設定の変更を検知
+  useEffect(() => {
+    const handleStorageChange = (changes: { [key: string]: chrome.storage.StorageChange }, areaName: string) => {
+      if (areaName === 'local' && changes.comiketter_settings) {
+        // 言語設定が変更された場合、キャッシュをクリアして再取得
+        clearLanguageCache();
+        getLanguage().then(() => {
+          // 強制的に再レンダリング（言語キーを変更）
+          setLanguageKey(prev => prev + 1);
+        });
+      }
+    };
+
+    // ストレージ変更イベントをリッスン
+    chrome.storage.onChanged.addListener(handleStorageChange);
+
+    return () => {
+      chrome.storage.onChanged.removeListener(handleStorageChange);
+    };
+  }, []);
 
   // CB一覧を取得
   useEffect(() => {
@@ -40,7 +73,7 @@ export function CbSidebar() {
         setCbs(cbList);
       } catch (err) {
         console.error('CB一覧取得エラー:', err);
-        setError(err instanceof Error ? err.message : 'CB一覧の取得に失敗しました');
+        setError(err instanceof Error ? err.message : getTextSync('cb_list_fetch_failed'));
       } finally {
         setLoading(false);
       }
@@ -48,6 +81,15 @@ export function CbSidebar() {
 
     fetchCbs();
   }, [setCbs, setLoading, setError]);
+  
+  // languageKeyが変更された時に再レンダリングを確実にする
+  // languageKeyはコンポーネントのstateなので、変更されると自動的に再レンダリングされる
+  // このuseEffectは、languageKeyの変更を明示的に処理するためのもの
+  useEffect(() => {
+    // languageKeyが変更された時、コンポーネントが再レンダリングされ、
+    // getTextSyncが再実行されるため、新しい言語が反映される
+    // このuseEffectは、言語変更を確実に検知するためのもの
+  }, [languageKey]);
 
   const handleCreateCb = () => {
     setIsCreateModalOpen(true);
@@ -61,7 +103,7 @@ export function CbSidebar() {
 
   const handleCreateCbSubmit = async () => {
     if (!cbName.trim()) {
-      alert('CB名を入力してください');
+      alert(getTextSync('cb_name_required'));
       return;
     }
 
@@ -74,7 +116,7 @@ export function CbSidebar() {
       setCbDescription('');
     } catch (err) {
       console.error('CB作成エラー:', err);
-      alert('CBの作成に失敗しました');
+      alert(getTextSync('cb_create_failed'));
     } finally {
       setIsCreating(false);
     }
@@ -103,7 +145,7 @@ export function CbSidebar() {
         <Group display="flex" justify="start" align="center" gap="0">
           <IconBookmark size={24}/>
           <Title order={3} size="h4">
-            カスタムブックマーク
+            {getTextSync('custom_bookmark')}
           </Title>
         </Group>
         
@@ -117,7 +159,7 @@ export function CbSidebar() {
             fullWidth
             onClick={() => window.location.reload()}
           >
-            再読み込み
+            {getTextSync('reload')}
           </Button>
         </Box>
       </Stack>
@@ -131,7 +173,7 @@ export function CbSidebar() {
         <Group display="flex" justify="start" align="center" gap="0">
           <IconBookmark size={24}/>
           <Title order={3} size="h4">
-            カスタムブックマーク
+            {getTextSync('custom_bookmark')}
           </Title>
         </Group>
 
@@ -141,7 +183,7 @@ export function CbSidebar() {
             {totalCbs} CB
           </Badge>
           <Badge variant="light" color="rgb(29, 155, 240)" size="sm">
-            {totalTweets} ツイート
+            {getTextSync('tweets_count', { count: totalTweets.toString() })}
           </Badge>
         </Group>
 
@@ -149,7 +191,7 @@ export function CbSidebar() {
 
         {/* 検索 */}
         <TextInput
-          placeholder="CBを検索..."
+          placeholder={getTextSync('search_cb_placeholder')}
           leftSection={<IconSearch size={14} />}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.currentTarget.value)}
@@ -173,19 +215,19 @@ export function CbSidebar() {
               <Box py="xl">
                 {searchQuery ? (
                   <Text size="sm" c="dimmed" ta="center">
-                    「{searchQuery}」に一致するCBが見つかりません
+                    {getTextSync('no_cb_found_for_query', { query: searchQuery })}
                   </Text>
                 ) : (
                   <Stack gap="sm" align="center">
                     <IconBookmark size={32} color="var(--mantine-color-blue-6)" />
                     <Text size="sm" c="dimmed" ta="center">
-                      CBがありませんよ
+                      {getTextSync('no_cb_available')}
                     </Text>
                     <Text size="xs" c="dimmed" ta="center">
-                      新規作成ボタンからCBを作成してください
+                      {getTextSync('create_cb_from_button')}
                     </Text>
                     <Text size="xs" c="dimmed" ta="center">
-                      最終更新時刻:{new Date().toLocaleTimeString('ja-JP', {
+                      {getTextSync('last_updated_time')}{new Date().toLocaleTimeString('ja-JP', {
                         hour: '2-digit',
                         minute: '2-digit',
                         second: '2-digit',
@@ -227,7 +269,7 @@ export function CbSidebar() {
             onClick={handleCreateCb}
           >
             <IconPencilPlus size={32} />
-            <Text size="xl" fw="bold">新規作成</Text>
+            <Text size="xl" fw="bold">{getTextSync('create_new')}</Text>
           </Box>
 
           {/* 設定 */}
@@ -256,7 +298,7 @@ export function CbSidebar() {
             }}
           >
             <IconSettings size={32} />
-            <Text size="xl" fw="bold">設定</Text>
+            <Text size="xl" fw="bold">{getTextSync('settings')}</Text>
           </Box>
         </Stack>
       
@@ -292,15 +334,15 @@ export function CbSidebar() {
           >
             <Stack gap="md">
               <Text size="lg" fw={600}>
-                CBを作成
+                {getTextSync('create_cb')}
               </Text>
 
               <Stack gap="xs">
                 <Text size="sm" fw={500}>
-                  CB名 *
+                  {getTextSync('cb_name_label')}
                 </Text>
                 <TextInput
-                  placeholder="CB名を入力"
+                  placeholder={getTextSync('cb_name_placeholder')}
                   value={cbName}
                   onChange={(e) => setCbName(e.currentTarget.value)}
                   size="sm"
@@ -313,10 +355,10 @@ export function CbSidebar() {
 
               <Stack gap="xs">
                 <Text size="sm" fw={500}>
-                  説明（任意）
+                  {getTextSync('description_optional')}
                 </Text>
                 <Textarea
-                  placeholder="CBの説明を入力"
+                  placeholder={getTextSync('cb_description_placeholder')}
                   value={cbDescription}
                   onChange={(e) => setCbDescription(e.currentTarget.value)}
                   size="sm"
@@ -340,7 +382,7 @@ export function CbSidebar() {
                     borderRadius: '20px',
                   }}
                 >
-                  キャンセル
+                  {getTextSync('cancel')}
                 </Button>
                 <Button
                   size="sm"
@@ -353,7 +395,7 @@ export function CbSidebar() {
                     borderRadius: '20px',
                   }}
                 >
-                  作成
+                  {getTextSync('create')}
                 </Button>
               </Group>
             </Stack>

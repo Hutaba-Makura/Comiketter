@@ -217,6 +217,78 @@
   },
   "actions_completed_partial_failure": {
     "message": "{{actions}}しました（一部失敗しました）"
+  },
+  "reload": {
+    "message": "再読み込み"
+  },
+  "tweets_count": {
+    "message": "{{count}} ツイート"
+  },
+  "search_cb_placeholder": {
+    "message": "CBを検索..."
+  },
+  "no_cb_found_for_query": {
+    "message": "「{{query}}」に一致するCBが見つかりません"
+  },
+  "no_cb_available": {
+    "message": "CBがありませんよ"
+  },
+  "create_cb_from_button": {
+    "message": "新規作成ボタンからCBを作成してください"
+  },
+  "last_updated_time": {
+    "message": "最終更新時刻:"
+  },
+  "create_new": {
+    "message": "新規作成"
+  },
+  "settings": {
+    "message": "設定"
+  },
+  "create_cb": {
+    "message": "CBを作成"
+  },
+  "cb_name_label": {
+    "message": "CB名 *"
+  },
+  "cb_name_placeholder": {
+    "message": "CB名を入力"
+  },
+  "cb_description_placeholder": {
+    "message": "CBの説明を入力"
+  },
+  "cb_name_required": {
+    "message": "CB名を入力してください"
+  },
+  "cb_create_failed": {
+    "message": "CBの作成に失敗しました"
+  },
+  "cb_list_fetch_failed": {
+    "message": "CB一覧の取得に失敗しました"
+  },
+  "tweet_count": {
+    "message": "{{count}}件のツイート"
+  },
+  "edit": {
+    "message": "編集"
+  },
+  "copy": {
+    "message": "コピー"
+  },
+  "confirm_delete_cb": {
+    "message": "カスタムブックマークを削除しますか？"
+  },
+  "cannot_undo": {
+    "message": "この操作は取り消せません"
+  },
+  "cb_delete_failed": {
+    "message": "CBの削除に失敗しました"
+  },
+  "cb_copy_failed": {
+    "message": "CBのコピーに失敗しました"
+  },
+  "app_init_failed": {
+    "message": "アプリの初期化に失敗しました"
   }
 }
 

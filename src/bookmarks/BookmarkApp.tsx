@@ -5,6 +5,7 @@ import '@mantine/notifications/styles.css';
 import { BookmarkLayout } from './layout/BookmarkLayout';
 import { cbService } from './services/cbService';
 import { useCbStore } from './state/cbStore';
+import { getTextSync } from './utils/i18n';
 
 /**
  * ブックマークアプリのメインコンポーネント
@@ -27,7 +28,7 @@ export default function BookmarkApp() {
         setCbs(cbList);
       } catch (err) {
         console.error('アプリ初期化エラー:', err);
-        setError(err instanceof Error ? err.message : 'アプリの初期化に失敗しました');
+        setError(err instanceof Error ? err.message : getTextSync('app_init_failed'));
       } finally {
         setLoading(false);
       }
