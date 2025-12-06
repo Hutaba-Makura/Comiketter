@@ -4,21 +4,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  * 
  * Comiketter: i18n utility for contentScript
- * HTMLのlang属性から言語を検出し、Chrome拡張機能のi18n APIを使用
- * MAINワールドでも動作するように、翻訳テーブルを直接埋め込む
+ * 
+ * 注意: このファイルはMAIN worldとISOLATED worldの両方で使用される可能性があります。
+ * - ISOLATED world: chrome.i18n APIが利用可能
+ * - MAIN world: chrome.i18n APIは利用不可（翻訳テーブルを直接使用）
+ * 
+ * 実装方針:
+ * - 翻訳テーブルを直接importして使用（MAIN worldでも動作するように）
+ * - chrome.i18n APIは使用しない（MAIN worldとの互換性のため）
+ * - 常に翻訳テーブルから直接取得（一貫性と互換性のため）
  */
 
 // 翻訳テーブルを直接import（main worldでも動作するように）
 import jaMessages from '../_locales/ja/messages.json';
 import enMessages from '../_locales/en/messages.json';
-
-// chrome.i18nの型定義（isolated worldで使用可能な場合）
-declare const chrome: {
-  i18n?: {
-    getMessage: (messageName: string, substitutions?: string | string[]) => string;
-    getUILanguage: () => string;
-  };
-};
 
 /**
  * HTMLのlang属性から言語を取得
@@ -30,19 +29,6 @@ function getLanguageFromHTML(): 'ja' | 'en' {
     return 'ja';
   }
   return 'en';
-}
-
-/**
- * chrome.i18nが利用可能かどうかを判定
- * isolated world（content script）では利用可能、main worldでは利用不可
- * @returns chrome.i18nが利用可能な場合true
- */
-function isChromeI18nAvailable(): boolean {
-  return (
-    typeof chrome !== 'undefined' &&
-    chrome.i18n !== undefined &&
-    typeof chrome.i18n.getMessage === 'function'
-  );
 }
 
 /**
@@ -141,6 +127,12 @@ function makeMessageKey(text: string, context?: string): string {
 
 /**
  * メッセージを取得
+ * 
+ * 実装方針:
+ * - MAIN worldでは常に翻訳テーブルを使用（chrome.i18n APIは利用不可）
+ * - ISOLATED worldでは翻訳テーブルを優先的に使用（一貫性のため）
+ * - chrome.i18n APIは使用しない（MAIN worldとの互換性のため）
+ * 
  * @param text テキスト
  * @param context コンテキスト（オプション）
  * @param placeholders プレースホルダー（オプション）
@@ -154,30 +146,10 @@ export function getText(
   const lang = getLanguageFromHTML();
   const messageKey = makeMessageKey(text, context);
   
-  let message = text; // デフォルトは元のテキスト
-  
-  // chrome.i18nが利用可能な場合（isolated world）はそれを使用
-  if (isChromeI18nAvailable()) {
-    try {
-      const i18nMessage = chrome.i18n!.getMessage(messageKey);
-      if (i18nMessage) {
-        message = i18nMessage;
-      }
-    } catch (error) {
-      // i18n APIが使えない場合は翻訳テーブルにフォールバック
-      console.debug('Comiketter: chrome.i18n.getMessage failed, using table:', error);
-      const tableMessage = getMessageFromTable(messageKey, lang);
-      if (tableMessage) {
-        message = tableMessage;
-      }
-    }
-  } else {
-    // main worldでは翻訳テーブルから直接取得
-    const tableMessage = getMessageFromTable(messageKey, lang);
-    if (tableMessage) {
-      message = tableMessage;
-    }
-  }
+  // 常に翻訳テーブルから取得（MAIN worldとISOLATED worldの両方で動作）
+  // 注意: MAIN worldではchrome.i18n APIは利用できないため、
+  // 翻訳テーブルを直接使用する実装が必須
+  let message = getMessageFromTable(messageKey, lang) || text;
   
   // プレースホルダーを置換
   if (placeholders) {
