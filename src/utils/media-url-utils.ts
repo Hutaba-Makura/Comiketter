@@ -6,6 +6,54 @@
  */
 
 /**
+ * URL調整のフォールバック実装（文字列操作を使用）これいらなくね？
+ */
+function adjustMediaUrlFallback(
+  url: string,
+  format?: 'jpg' | 'png' | 'webp',
+  name?: 'small' | 'medium' | 'large' | '360x360' | '4096x4096'
+): string {
+  try {
+    // URLをベースURLとクエリパラメータに分割
+    const [baseUrl, existingQuery] = url.split('?');
+    
+    // 既存のクエリパラメータを解析
+    const params = new Map<string, string>();
+    if (existingQuery) {
+      existingQuery.split('&').forEach(param => {
+        const [key, value] = param.split('=');
+        if (key && value) {
+          params.set(key, decodeURIComponent(value));
+        }
+      });
+    }
+    
+    // formatとnameパラメータを削除
+    params.delete('format');
+    params.delete('name');
+    
+    // 新しいパラメータを設定
+    if (format) {
+      params.set('format', format);
+    }
+    if (name) {
+      params.set('name', name);
+    }
+    
+    // クエリパラメータを再構築
+    const queryString = Array.from(params.entries())
+      .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+      .join('&');
+    
+    return queryString ? `${baseUrl}?${queryString}` : baseUrl;
+  } catch (error) {
+    console.error('Comiketter: URL調整フォールバックエラー:', error);
+    // エラーが発生した場合は元のURLを返す
+    return url;
+  }
+}
+
+/**
  * URLクエリパラメータを調整する
  * @param url 元のURL（パラメータがあってもなくてもOK）
  * @param format 画像形式（jpg, png, webp）
@@ -23,6 +71,15 @@ export function adjustMediaUrl(
   }
 
   try {
+    // URLオブジェクトを使用してクエリパラメータを操作
+    // Service Worker環境でも動作するように、グローバルなURLコンストラクタを使用
+    // URLは標準APIなので、通常は利用可能
+    if (typeof URL === 'undefined') {
+      console.warn('Comiketter: URL constructor is not available, using fallback');
+      // フォールバック: 文字列操作でクエリパラメータを調整
+      return adjustMediaUrlFallback(url, format, name);
+    }
+    
     const urlObj = new URL(url);
     
     // 既存のformatとnameパラメータを削除
@@ -40,8 +97,8 @@ export function adjustMediaUrl(
     return urlObj.toString();
   } catch (error) {
     console.error('Comiketter: URL調整エラー:', error);
-    // エラーが発生した場合は元のURLを返す
-    return url;
+    // エラーが発生した場合はフォールバックを使用
+    return adjustMediaUrlFallback(url, format, name);
   }
 }
 

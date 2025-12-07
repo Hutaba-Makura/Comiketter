@@ -101,7 +101,6 @@ export const OptionsApp: React.FC = () => {
       <Container size="md" py="xl">
         <Stack gap="lg">
           <Title order={1}><IconSettings size={32} />&nbsp;Comiketter 設定</Title>
-        </Stack>
         
         {/*
         <Stack gap="md">
@@ -290,6 +289,7 @@ export const OptionsApp: React.FC = () => {
               </Box>
             </Stack>
           </Paper>
+        </Stack>
         </Stack>
 
       </Container>

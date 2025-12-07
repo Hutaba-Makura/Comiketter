@@ -13,6 +13,7 @@ import { PatternToken, AggregationToken } from '../types';
 import { ApiCacheManager } from '../utils/api-cache';
 import { FilenameGenerator } from '../utils/filenameGenerator';
 import { StorageManager } from '../utils/storage';
+import { adjustUrlForDownload } from '../utils/media-url-utils';
 
 /**
  * メディアダウンロード要求
@@ -363,7 +364,6 @@ export class MediaDownloader {
         
         // URLをダウンロード用に調整（formatとname=4096x4096を設定）
         if (mediaUrl) {
-          const { adjustUrlForDownload } = await import('@/utils/media-url-utils');
           // 設定から画像形式を取得（saveFormatが'png'|'jpg'|'webp'の場合）
           const format = (settings.saveFormat as any) === 'png' || (settings.saveFormat as any) === 'jpg' || (settings.saveFormat as any) === 'webp'
             ? (settings.saveFormat as 'png' | 'jpg' | 'webp')
