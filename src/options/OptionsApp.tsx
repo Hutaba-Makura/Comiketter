@@ -194,15 +194,13 @@ export const OptionsApp: React.FC = () => {
                 </Text>
                 <Select
                   label="ファイル形式"
-                  value={settings.saveFormat}
-                  onChange={(value) => updateSettings({ saveFormat: value as 'url' | 'blob' | 'mixed' })}
-                  data={[
-                    { value: 'png', label: 'png' },
-                    { value: 'jpg', label: 'jpg' },
-                    { value: 'webp', label: 'webp' },
-                  ]}
+                  value={settings.saveFormat || 'png'}
+                  onChange={(value) => updateSettings({ saveFormat: value as 'png' | 'jpg' | 'webp' | undefined })}
+                  data={['png', 'jpg', 'webp'].map(format => ({ value: format, label: format }))}
                 />
               </Box>
+
+              <Divider />
 
               {/* 自動ダウンロード条件設定 */}
               <Box>
