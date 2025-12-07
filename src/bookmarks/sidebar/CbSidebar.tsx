@@ -17,7 +17,7 @@ import { IconPencilPlus, IconSearch, IconBookmark, IconSettings} from '@tabler/i
 import { useCbStore } from '../state/cbStore';
 import { CbSidebarItem } from './CbSidebarItem';
 import { cbService } from '../services/cbService';
-import { getTextSync, clearLanguageCache, getLanguage } from '../utils/i18n';
+import { getTextSync, useI18n } from '../utils/i18n';
 
 /**
  * CBサイドバーコンポーネント
@@ -29,38 +29,9 @@ export function CbSidebar() {
   const [cbName, setCbName] = useState('');
   const [cbDescription, setCbDescription] = useState('');
   const [isCreating, setIsCreating] = useState(false);
-  const [languageReady, setLanguageReady] = useState(false);
-  const [languageKey, setLanguageKey] = useState(0); // 言語変更時に再レンダリングをトリガー
-
-  // 言語設定を取得してキャッシュに保存
-  useEffect(() => {
-    const initLanguage = async () => {
-      await getLanguage();
-      setLanguageReady(true);
-    };
-    initLanguage();
-  }, []);
-
-  // ストレージ変更を監視して言語設定の変更を検知
-  useEffect(() => {
-    const handleStorageChange = (changes: { [key: string]: chrome.storage.StorageChange }, areaName: string) => {
-      if (areaName === 'local' && changes.comiketter_settings) {
-        // 言語設定が変更された場合、キャッシュをクリアして再取得
-        clearLanguageCache();
-        getLanguage().then(() => {
-          // 強制的に再レンダリング（言語キーを変更）
-          setLanguageKey(prev => prev + 1);
-        });
-      }
-    };
-
-    // ストレージ変更イベントをリッスン
-    chrome.storage.onChanged.addListener(handleStorageChange);
-
-    return () => {
-      chrome.storage.onChanged.removeListener(handleStorageChange);
-    };
-  }, []);
+  
+  // i18n機能を一元管理（言語設定の初期化、ストレージ変更の監視、再レンダリングのトリガー）
+  useI18n();
 
   // CB一覧を取得
   useEffect(() => {
@@ -81,15 +52,6 @@ export function CbSidebar() {
 
     fetchCbs();
   }, [setCbs, setLoading, setError]);
-  
-  // languageKeyが変更された時に再レンダリングを確実にする
-  // languageKeyはコンポーネントのstateなので、変更されると自動的に再レンダリングされる
-  // このuseEffectは、languageKeyの変更を明示的に処理するためのもの
-  useEffect(() => {
-    // languageKeyが変更された時、コンポーネントが再レンダリングされ、
-    // getTextSyncが再実行されるため、新しい言語が反映される
-    // このuseEffectは、言語変更を確実に検知するためのもの
-  }, [languageKey]);
 
   const handleCreateCb = () => {
     setIsCreateModalOpen(true);

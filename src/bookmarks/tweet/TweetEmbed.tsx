@@ -3,7 +3,7 @@ import { Box, Text } from '@mantine/core';
 import { Tweet } from 'react-tweet';
 import { useThemeBridge } from '../hooks/useThemeBridge';
 import { TweetEmbedFallback } from './TweetEmbedFallback';
-import { getTextSync, getLanguage, clearLanguageCache } from '../utils/i18n';
+import { getTextSync, useI18n } from '../utils/i18n';
 
 interface TweetEmbedProps {
   id: string;
@@ -16,43 +16,10 @@ interface TweetEmbedProps {
 export function TweetEmbed({ id }: TweetEmbedProps) {
   const [hasError, setHasError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [languageKey, setLanguageKey] = useState(0); // 言語変更時に再レンダリングをトリガー
   const { themeValue } = useThemeBridge();
 
-  // 言語設定を取得してキャッシュに保存
-  useEffect(() => {
-    const initLanguage = async () => {
-      await getLanguage();
-    };
-    initLanguage();
-  }, []);
-
-  // ストレージ変更を監視して言語設定の変更を検知
-  useEffect(() => {
-    const handleStorageChange = (changes: { [key: string]: chrome.storage.StorageChange }, areaName: string) => {
-      if (areaName === 'local' && changes.comiketter_settings) {
-        // 言語設定が変更された場合、キャッシュをクリアして再取得
-        clearLanguageCache();
-        getLanguage().then(() => {
-          // 強制的に再レンダリング（言語キーを変更）
-          setLanguageKey(prev => prev + 1);
-        });
-      }
-    };
-
-    // ストレージ変更イベントをリッスン
-    chrome.storage.onChanged.addListener(handleStorageChange);
-
-    return () => {
-      chrome.storage.onChanged.removeListener(handleStorageChange);
-    };
-  }, []);
-
-  // languageKeyが変更された時に再レンダリングを確実にする
-  useEffect(() => {
-    // languageKeyが変更された時、コンポーネントが再レンダリングされ、
-    // getTextSyncが再実行されるため、新しい言語が反映される
-  }, [languageKey]);
+  // i18n機能を一元管理（言語設定の初期化、ストレージ変更の監視、再レンダリングのトリガー）
+  useI18n();
 
   // エラーハンドラー（レンダリング中の状態更新を避ける）
   const handleError = useCallback(() => {
