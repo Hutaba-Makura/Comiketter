@@ -1,6 +1,6 @@
 // Options App component for Comiketter
 import React, { useState, useEffect } from 'react';
-import { Container, Title, Text, Switch, Select, Button, Stack, Group, Divider, ActionIcon, Tooltip, Box } from '@mantine/core';
+import { Container, Title, Text, Switch, Select, Button, Stack, Group, Divider, ActionIcon, Tooltip, Box, Paper } from '@mantine/core';
 import { StorageManager } from '@/utils/storage';
 import { FilenameSettings } from '@/components/FilenameSettings';
 import { BookmarkManager } from '@/components/BookmarkManager';
@@ -101,6 +101,7 @@ export const OptionsApp: React.FC = () => {
       <Container size="md" py="xl">
         <Stack gap="lg">
           <Title order={1}><IconSettings size={32} />&nbsp;Comiketter 設定</Title>
+        </Stack>
         
         {/*
         <Stack gap="md">
@@ -179,81 +180,110 @@ export const OptionsApp: React.FC = () => {
             ]}
           />
         </Stack>
-        
-        <Stack gap="md">
-          <Title order={3} size="h4">自動ダウンロード条件（未実装、更新をお待ちください）</Title>
-          <Switch
-            label="リツイート時に自動ダウンロード"
-            checked={settings.autoDownloadConditions.retweet}
-            onChange={(event) => updateSettings({
-              autoDownloadConditions: {
-                ...settings.autoDownloadConditions,
-                retweet: event.currentTarget.checked
-              }
-            })}
-          />
-          <Switch
-            label="いいね時に自動ダウンロード"
-            checked={settings.autoDownloadConditions.like}
-            onChange={(event) => updateSettings({
-              autoDownloadConditions: {
-                ...settings.autoDownloadConditions,
-                like: event.currentTarget.checked
-              }
-            })}
-          />
-          <Switch
-            label="両方の条件を満たした時のみダウンロード"
-            checked={settings.autoDownloadConditions.both}
-            onChange={(event) => updateSettings({
-              autoDownloadConditions: {
-                ...settings.autoDownloadConditions,
-                both: event.currentTarget.checked
-              }
-            })}
-          />
-        </Stack>
-        
+
         <Divider />
         
         <Stack gap="md">
-          <Title order={3} size="h4">メディアダウンロード設定（未実装、更新をお待ちください）</Title>
-          <Text size="sm" c="dimmed">
-            動画サムネイルやプロフィール画像の除外設定ができます。現在は動画のみがダウンロードされます。
-          </Text>
-          <Switch
-            label="動画サムネイルを含める"
-            checked={settings.mediaDownloadSettings.includeVideoThumbnail}
-            onChange={(event) => updateSettings({
-              mediaDownloadSettings: {
-                ...settings.mediaDownloadSettings,
-                includeVideoThumbnail: event.currentTarget.checked
-              }
-            })}
-          />
-          <Switch
-            label="プロフィール画像を除外"
-            checked={settings.mediaDownloadSettings.excludeProfileImages}
-            onChange={(event) => updateSettings({
-              mediaDownloadSettings: {
-                ...settings.mediaDownloadSettings,
-                excludeProfileImages: event.currentTarget.checked
-              }
-            })}
-          />
-          <Switch
-            label="バナー画像を除外"
-            checked={settings.mediaDownloadSettings.excludeBannerImages}
-            onChange={(event) => updateSettings({
-              mediaDownloadSettings: {
-                ...settings.mediaDownloadSettings,
-                excludeBannerImages: event.currentTarget.checked
-              }
-            })}
-          />
+          <Title order={3} size="h4">ダウンロード設定</Title>
+          <Paper p="md" withBorder>
+            <Stack gap="md">
+              {/* ファイル形式 */}
+              <Box>
+                <Text size="sm" fw={500} mb="xs">
+                  ファイル形式
+                </Text>
+                <Select
+                  label="ファイル形式"
+                  value={settings.saveFormat}
+                  onChange={(value) => updateSettings({ saveFormat: value as 'url' | 'blob' | 'mixed' })}
+                  data={[
+                    { value: 'png', label: 'png' },
+                    { value: 'jpg', label: 'jpg' },
+                    { value: 'webp', label: 'webp' },
+                  ]}
+                />
+              </Box>
+
+              {/* 自動ダウンロード条件設定 */}
+              <Box>
+                <Text size="sm" fw={500} mb="xs">
+                  自動ダウンロード条件（未実装、更新をお待ちください）
+                </Text>
+                <Switch
+                  label="リツイート時に自動ダウンロード"
+                  checked={settings.autoDownloadConditions.retweet}
+                  onChange={(event) => updateSettings({
+                    autoDownloadConditions: {
+                      ...settings.autoDownloadConditions,
+                      retweet: event.currentTarget.checked
+                    }
+                  })}
+                />
+                <Switch
+                  label="いいね時に自動ダウンロード"
+                  checked={settings.autoDownloadConditions.like}
+                  onChange={(event) => updateSettings({
+                    autoDownloadConditions: {
+                      ...settings.autoDownloadConditions,
+                      like: event.currentTarget.checked
+                    }
+                  })}
+                />
+                <Switch
+                  label="両方の条件を満たした時のみダウンロード"
+                  checked={settings.autoDownloadConditions.both}
+                  onChange={(event) => updateSettings({
+                    autoDownloadConditions: {
+                      ...settings.autoDownloadConditions,
+                      both: event.currentTarget.checked
+                    }
+                  })}
+                />
+              </Box>
+
+              <Divider />
+
+              {/* メディアダウンロード設定 */}
+              <Box>
+                <Text size="sm" fw={500} mb="xs">
+                  メディアダウンロード設定（未実装、更新をお待ちください）
+                </Text>
+                <Switch
+                  label="動画サムネイルを含める"
+                  checked={settings.mediaDownloadSettings.includeVideoThumbnail}
+                  onChange={(event) => updateSettings({
+                    mediaDownloadSettings: {
+                      ...settings.mediaDownloadSettings,
+                      includeVideoThumbnail: event.currentTarget.checked
+                    }
+                  })}
+                />
+                <Switch
+                  label="プロフィール画像を除外"
+                  checked={settings.mediaDownloadSettings.excludeProfileImages}
+                  onChange={(event) => updateSettings({
+                    mediaDownloadSettings: {
+                      ...settings.mediaDownloadSettings,
+                      excludeProfileImages: event.currentTarget.checked
+                    }
+                  })}
+                />
+                <Switch
+                  label="バナー画像を除外"
+                  checked={settings.mediaDownloadSettings.excludeBannerImages}
+                  onChange={(event) => updateSettings({
+                    mediaDownloadSettings: {
+                      ...settings.mediaDownloadSettings,
+                      excludeBannerImages: event.currentTarget.checked
+                    }
+                  })}
+                />
+              </Box>
+            </Stack>
+          </Paper>
         </Stack>
-      </Stack>
-    </Container>
+
+      </Container>
     </>
   );
 }; 
