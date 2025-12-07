@@ -78,33 +78,39 @@ const ApiTypes = {
   // useUpsellTrackingMutation: 'useUpsellTrackingMutation', // 画面縦横比変更追跡はコメントアウト
 } as const;
 
-// API種類を日本語で表示するマッピング
-const ApiTypeLabels: Record<string, string> = {
-  [ApiTypes.HomeTimeline]: 'ホームタイムライン',
-  [ApiTypes.HomeLatestTimeline]: 'ホーム最新タイムライン',
-  [ApiTypes.TweetDetail]: 'ツイート詳細',
-  [ApiTypes.TweetResultByRestId]: 'ツイート結果（ID指定）',
-  [ApiTypes.ListLatestTweetsTimeline]: 'リスト最新ツイートタイムライン',
-  [ApiTypes.SearchTimeline]: '検索タイムライン',
-  [ApiTypes.CommunityTweetsTimeline]: 'コミュニティタイムライン',
-  [ApiTypes.CommunityTweetSearchModuleQuery]: 'コミュニティ検索タイムライン',
-  [ApiTypes.Bookmarks]: 'ブックマークタイムライン',
-  [ApiTypes.BookmarkSearchTimeline]: 'ブックマーク検索タイムライン',
-  [ApiTypes.UserTweets]: 'ユーザーツイート',
-  [ApiTypes.UserTweetsAndReplies]: 'ユーザー返信',
-  [ApiTypes.Likes]: 'ユーザーいいね',
-  [ApiTypes.UserHighlightsTweets]: 'ユーザーハイライトツイート',
-  [ApiTypes.CreateBookmarks]: 'ブックマーク作成',
-  [ApiTypes.DeleteBookmark]: 'ブックマーク削除',
-  [ApiTypes.FavoriteTweet]: 'ツイートいいね',
-  [ApiTypes.UnfavoriteTweet]: 'ツイートいいね解除',
-  [ApiTypes.CreateRetweet]: 'リツイート作成',
-  [ApiTypes.DeleteRetweet]: 'リツイート削除',
-  [ApiTypes.CreateTweet]: 'ツイート作成',
-  [ApiTypes.UserMedia]: 'ユーザーメディア',
-  [ApiTypes.NotificationsTimeline]: '通知タイムライン',
-  // [ApiTypes.useUpsellTrackingMutation]: '画面縦横比変更追跡', // コメントアウト
-};
+import { getText } from './i18n';
+
+// API種類を日本語で表示するマッピング（遅延初期化）
+// MAINワールドで実行されるため、関数内で取得する
+function getApiTypeLabel(apiType: string): string {
+  const labels: Record<string, string> = {
+    [ApiTypes.HomeTimeline]: getText('ホームタイムライン'),
+    [ApiTypes.HomeLatestTimeline]: getText('ホーム最新タイムライン'),
+    [ApiTypes.TweetDetail]: getText('ツイート詳細'),
+    [ApiTypes.TweetResultByRestId]: getText('ツイート結果（ID指定）'),
+    [ApiTypes.ListLatestTweetsTimeline]: getText('リスト最新ツイートタイムライン'),
+    [ApiTypes.SearchTimeline]: getText('検索タイムライン'),
+    [ApiTypes.CommunityTweetsTimeline]: getText('コミュニティタイムライン'),
+    [ApiTypes.CommunityTweetSearchModuleQuery]: getText('コミュニティ検索タイムライン'),
+    [ApiTypes.Bookmarks]: getText('ブックマークタイムライン'),
+    [ApiTypes.BookmarkSearchTimeline]: getText('ブックマーク検索タイムライン'),
+    [ApiTypes.UserTweets]: getText('ユーザーツイート'),
+    [ApiTypes.UserTweetsAndReplies]: getText('ユーザー返信'),
+    [ApiTypes.Likes]: getText('ユーザーいいね'),
+    [ApiTypes.UserHighlightsTweets]: getText('ユーザーハイライトツイート'),
+    [ApiTypes.CreateBookmarks]: getText('ブックマーク作成'),
+    [ApiTypes.DeleteBookmark]: getText('ブックマーク削除'),
+    [ApiTypes.FavoriteTweet]: getText('ツイートいいね'),
+    [ApiTypes.UnfavoriteTweet]: getText('ツイートいいね解除'),
+    [ApiTypes.CreateRetweet]: getText('リツイート作成'),
+    [ApiTypes.DeleteRetweet]: getText('リツイート削除'),
+    [ApiTypes.CreateTweet]: getText('ツイート作成'),
+    [ApiTypes.UserMedia]: getText('ユーザーメディア'),
+    [ApiTypes.NotificationsTimeline]: getText('通知タイムライン'),
+    // [ApiTypes.useUpsellTrackingMutation]: '画面縦横比変更追跡', // コメントアウト
+  };
+  return labels[apiType] || apiType;
+}
 
 const enum ComiketterEvent {
   ApiResponse = 'comiketter:api-response',
@@ -147,7 +153,7 @@ XMLHttpRequest.prototype.open = new Proxy(XMLHttpRequest.prototype.open, {
       const matchedUrl = validUrl.pathname.match(Pattern.tweetRelated);
       if (validUrl && matchedUrl) {
         const apiType = extractApiType(validUrl.pathname);
-        const apiLabel = ApiTypeLabels[apiType] || apiType;
+        const apiLabel = getApiTypeLabel(apiType);
         console.log(`🔍 Comiketter: XMLHttpRequest傍受 - ${apiLabel} (${method} ${url})`);
         
         // 重複リスナー登録を防ぐため、既に登録されているかチェック
@@ -177,7 +183,7 @@ function captureResponse(this: XMLHttpRequest, _ev: ProgressEvent) {
     try {
       const url = new URL(this.responseURL);
       const apiType = extractApiType(url.pathname);
-      const apiLabel = ApiTypeLabels[apiType] || apiType;
+      const apiLabel = getApiTypeLabel(apiType);
       
       console.log(`📡 Comiketter: XMLHttpRequestレスポンス受信 - ${apiLabel} (ステータス: ${this.status})`);
       
@@ -366,7 +372,7 @@ window.fetch = new Proxy(originalFetch, {
         const matchedUrl = validUrl.pathname.match(Pattern.tweetRelated);
         if (validUrl && matchedUrl) {
           const apiType = extractApiType(validUrl.pathname);
-          const apiLabel = ApiTypeLabels[apiType] || apiType;
+          const apiLabel = getApiTypeLabel(apiType);
           
           // 古いリクエスト記録をクリーンアップ
           cleanupOldFetchRequests();
@@ -482,7 +488,7 @@ export class ApiInterceptor {
   private handleApiResponse(detail: Comiketter.ApiResponseDetail): void {
     try {
       const apiType = extractApiType(detail.path);
-      const apiLabel = ApiTypeLabels[apiType] || apiType;
+      const apiLabel = getApiTypeLabel(apiType);
       
       console.log(`🔄 Comiketter: APIレスポンス処理開始 - ${apiLabel} (ステータス: ${detail.status})`);
       
@@ -525,7 +531,7 @@ export class ApiInterceptor {
       }
 
       const apiType = extractApiType(path);
-      const apiLabel = ApiTypeLabels[apiType] || apiType;
+      const apiLabel = getApiTypeLabel(apiType);
       
       console.log(`📤 Comiketter: ${apiLabel} をバックグラウンドスクリプトに送信中...`);
       
@@ -595,7 +601,7 @@ export class ApiInterceptor {
     try {
       return searchForVideoInfo(data);
     } catch (error) {
-      console.warn('Comiketter: 動画情報チェック中にエラーが発生しました:', error);
+      console.warn(`Comiketter: ${getText('動画情報チェック中にエラーが発生しました')}:`, error);
       return false;
     }
   }

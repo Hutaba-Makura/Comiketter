@@ -3,6 +3,7 @@ import { Box, Text } from '@mantine/core';
 import { Tweet } from 'react-tweet';
 import { useThemeBridge } from '../hooks/useThemeBridge';
 import { TweetEmbedFallback } from './TweetEmbedFallback';
+import { getTextSync, useI18n } from '../utils/i18n';
 
 interface TweetEmbedProps {
   id: string;
@@ -16,6 +17,9 @@ export function TweetEmbed({ id }: TweetEmbedProps) {
   const [hasError, setHasError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const { themeValue } = useThemeBridge();
+
+  // i18n機能を一元管理（言語設定の初期化、ストレージ変更の監視、再レンダリングのトリガー）
+  useI18n();
 
   // エラーハンドラー（レンダリング中の状態更新を避ける）
   const handleError = useCallback(() => {
@@ -76,7 +80,7 @@ export function TweetEmbed({ id }: TweetEmbedProps) {
             zIndex: 1,
           }}
         >
-          <Text size="sm" c="dimmed">読み込み中...</Text>
+          <Text size="sm" c="dimmed">{getTextSync('loading')}</Text>
         </Box>
       )}
       

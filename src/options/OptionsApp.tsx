@@ -157,14 +157,25 @@ export const OptionsApp: React.FC = () => {
         <Divider />
         
         <Stack gap="md">
-          <Title order={3} size="h4">言語設定（未実装、更新をお待ちください）</Title>
+          <Title order={3} size="h4">言語設定</Title>
           <Select
             label="言語"
-            value={settings.language}
-            onChange={(value) => updateSettings({ language: value as 'ja' | 'en' })}
+            value={settings.language || 'ja'}
+            onChange={async (value) => {
+              const newLanguage = (value as 'ja' | 'en') || 'ja';
+              updateSettings({ language: newLanguage });
+              // 設定を即座に保存
+              try {
+                await StorageManager.saveSettings({ language: newLanguage });
+                // 他のページ（bookmarks等）に通知するため、ストレージ変更イベントを発火
+                // ストレージ変更は自動的に検知されるため、明示的な通知は不要
+              } catch (error) {
+                console.error('Failed to save language setting:', error);
+              }
+            }}
             data={[
-              { value: 'ja', label: '日本語' },
-              { value: 'en', label: '英語' },
+              { value: 'ja', label: '日本語 -Japanese' },
+              { value: 'en', label: '英語 -English' },
             ]}
           />
         </Stack>

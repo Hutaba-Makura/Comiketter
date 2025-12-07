@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Paper, 
   Text, 
@@ -23,6 +23,7 @@ import { Cb } from '../types/cb';
 import { useCbStore } from '../state/cbStore';
 import { formatCount } from '../utils/format';
 import { cbService } from '../services/cbService';
+import { getTextSync, useI18n } from '../utils/i18n';
 
 interface CbSidebarItemProps {
   cb: Cb;
@@ -37,6 +38,9 @@ export function CbSidebarItem({ cb }: CbSidebarItemProps) {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const isSelected = selectedCbId === cb.id;
+
+  // i18n機能を一元管理（言語設定の初期化、ストレージ変更の監視、再レンダリングのトリガー）
+  useI18n();
 
   const handleSelect = () => {
     selectCb(cb.id);
@@ -54,7 +58,7 @@ export function CbSidebarItem({ cb }: CbSidebarItemProps) {
       setIsDeleteModalOpen(false);
     } catch (error) {
       console.error('CB削除エラー:', error);
-      alert('CBの削除に失敗しました');
+      alert(getTextSync('cb_delete_failed'));
     } finally {
       setIsDeleting(false);
     }
@@ -82,7 +86,7 @@ export function CbSidebarItem({ cb }: CbSidebarItemProps) {
       console.log('CBコピー完了:', newCb.id);
     } catch (error) {
       console.error('CBコピーエラー:', error);
-      alert('CBのコピーに失敗しました');
+      alert(getTextSync('cb_copy_failed'));
     }
   };
 
@@ -161,7 +165,7 @@ export function CbSidebarItem({ cb }: CbSidebarItemProps) {
             </Group>
 
             <Group gap="xs" align="center">
-              <Tooltip label={`${cb.tweetCount}件のツイート`}>
+              <Tooltip label={getTextSync('tweet_count', { count: cb.tweetCount.toString() })}>
                 <Badge 
                   size="xs" 
                   variant={isSelected ? "filled" : "light"}
@@ -189,13 +193,13 @@ export function CbSidebarItem({ cb }: CbSidebarItemProps) {
                         leftSection={<IconEdit size={14} />}
                         onClick={handleEdit}
                       >
-                        編集
+                        {getTextSync('edit')}
                       </Menu.Item>
                       <Menu.Item
                         leftSection={<IconCopy size={14} />}
                         onClick={handleCopy}
                       >
-                        コピー
+                        {getTextSync('copy')}
                       </Menu.Item>
                       <Menu.Divider />
                       <Menu.Item
@@ -203,7 +207,7 @@ export function CbSidebarItem({ cb }: CbSidebarItemProps) {
                         color="red"
                         onClick={handleDelete}
                       >
-                        削除
+                        {getTextSync('delete_bookmark')}
                       </Menu.Item>
                     </Menu.Dropdown>
                   </Menu>
@@ -250,7 +254,7 @@ export function CbSidebarItem({ cb }: CbSidebarItemProps) {
                 marginBottom: '8px',
               }}
             >
-              カスタムブックマークを削除しますか？
+              {getTextSync('confirm_delete_cb')}
             </Text>
             <Text
               style={{
@@ -259,7 +263,7 @@ export function CbSidebarItem({ cb }: CbSidebarItemProps) {
                 fontSize: '15px',
               }}
             >
-              この操作は取り消せません
+              {getTextSync('cannot_undo')}
             </Text>
             <Stack gap="xs">
               <Button
@@ -273,7 +277,7 @@ export function CbSidebarItem({ cb }: CbSidebarItemProps) {
                   borderColor: 'rgb(207, 217, 222)',
                 }}
               >
-                削除
+                {getTextSync('delete_bookmark')}
               </Button>
               <Button
                 variant="default"
@@ -288,7 +292,7 @@ export function CbSidebarItem({ cb }: CbSidebarItemProps) {
                   borderColor: 'rgb(207, 217, 222)',
                 }}
               >
-                キャンセル
+                {getTextSync('cancel')}
               </Button>
             </Stack>
           </Box>

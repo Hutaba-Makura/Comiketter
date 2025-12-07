@@ -1,0 +1,462 @@
+{
+  "custom_bookmark": {
+    "message": "カスタムブックマーク"
+  },
+  "sidebar_button_init_error": {
+    "message": "サイドバーボタン初期化エラー"
+  },
+  "button_already_exists_skip": {
+    "message": "既にボタンが存在するため、初期化をスキップ"
+  },
+  "button_add_condition_not_met_skip": {
+    "message": "ボタン追加条件を満たさないため、スキップ"
+  },
+  "navigation_element_not_found_skip": {
+    "message": "ナビゲーション要素が見つからないため、スキップ"
+  },
+  "valid_navigation_element_not_found": {
+    "message": "有効なナビゲーション要素が見つかりません"
+  },
+  "sample_element_not_found": {
+    "message": "サンプル要素が見つかりません"
+  },
+  "icon_load_error": {
+    "message": "アイコン読み込みエラー"
+  },
+  "sidebar_button_create_error": {
+    "message": "サイドバーボタン作成エラー"
+  },
+  "bookmark_page_open_failed": {
+    "message": "ブックマークページを開けませんでした。手動でブックマークページにアクセスしてください。"
+  },
+  "button_creation_in_progress_skip": {
+    "message": "ボタン作成処理中のため、作成をスキップ"
+  },
+  "button_already_exists_create_skip": {
+    "message": "既にボタンが存在するため、作成をスキップ"
+  },
+  "navigation_element_not_found": {
+    "message": "ナビゲーション要素が見つかりません"
+  },
+  "sample_element_not_found_abort": {
+    "message": "サンプル要素が見つかりません。ボタン作成を中止"
+  },
+  "insert_target_not_found": {
+    "message": "挿入先が見つかりません"
+  },
+  "bookmark_link_not_found_alternative": {
+    "message": "ブックマークリンクが見つからないため、代替手段を試行"
+  },
+  "navigation_element_selected_as_insert_target": {
+    "message": "ナビゲーション要素を挿入先として選択"
+  },
+  "tab_element_parent_selected_as_insert_target": {
+    "message": "タブ要素の親を挿入先として選択"
+  },
+  "extension_context_invalid_fallback": {
+    "message": "拡張機能コンテキストが無効です。フォールバック処理を実行"
+  },
+  "sidebar_button_click_error": {
+    "message": "サイドバーボタンクリックエラー"
+  },
+  "bookmark_page_open_failed_log": {
+    "message": "ブックマークページを開けませんでした"
+  },
+  "fallback_bookmark_page_opened": {
+    "message": "フォールバック処理でブックマークページを開きました"
+  },
+  "fallback_also_failed": {
+    "message": "フォールバック処理も失敗しました"
+  },
+  "manual_button_recreate": {
+    "message": "手動でボタンを再作成"
+  },
+  "sidebar_selected_as_insert_target": {
+    "message": "サイドバー自体を挿入先として選択"
+  },
+  "icon_previous_element_not_found": {
+    "message": "アイコンの前の要素が見つかりません"
+  },
+  "home_timeline": {
+    "message": "ホームタイムライン"
+  },
+  "home_latest_timeline": {
+    "message": "ホーム最新タイムライン"
+  },
+  "tweet_detail": {
+    "message": "ツイート詳細"
+  },
+  "tweet_result_by_rest_id": {
+    "message": "ツイート結果（ID指定）"
+  },
+  "list_latest_tweets_timeline": {
+    "message": "リスト最新ツイートタイムライン"
+  },
+  "search_timeline": {
+    "message": "検索タイムライン"
+  },
+  "community_tweets_timeline": {
+    "message": "コミュニティタイムライン"
+  },
+  "community_tweet_search_module_query": {
+    "message": "コミュニティ検索タイムライン"
+  },
+  "bookmarks": {
+    "message": "ブックマークタイムライン"
+  },
+  "bookmark_search_timeline": {
+    "message": "ブックマーク検索タイムライン"
+  },
+  "user_tweets": {
+    "message": "ユーザーツイート"
+  },
+  "user_tweets_and_replies": {
+    "message": "ユーザー返信"
+  },
+  "likes": {
+    "message": "ユーザーいいね"
+  },
+  "user_highlights_tweets": {
+    "message": "ユーザーハイライトツイート"
+  },
+  "create_bookmarks": {
+    "message": "ブックマーク作成"
+  },
+  "delete_bookmark": {
+    "message": "削除"
+  },
+  "favorite_tweet": {
+    "message": "ツイートいいね"
+  },
+  "unfavorite_tweet": {
+    "message": "ツイートいいね解除"
+  },
+  "create_retweet": {
+    "message": "リツイート作成"
+  },
+  "delete_retweet": {
+    "message": "リツイート削除"
+  },
+  "create_tweet": {
+    "message": "ツイート作成"
+  },
+  "user_media": {
+    "message": "ユーザーメディア"
+  },
+  "notifications_timeline": {
+    "message": "通知タイムライン"
+  },
+  "quote": {
+    "message": "引用"
+  },
+  "no_bookmarks_create_new": {
+    "message": "ブックマークがありません。新しいブックマークを作成してください。"
+  },
+  "add_to_bookmark": {
+    "message": "ブックマークに追加"
+  },
+  "create_new_bookmark": {
+    "message": "新しいブックマークを作成"
+  },
+  "bookmark_name_label": {
+    "message": "ブックマーク名 *"
+  },
+  "bookmark_name_placeholder": {
+    "message": "ブックマーク名を入力"
+  },
+  "bookmark_description_placeholder": {
+    "message": "ブックマークの説明を入力"
+  },
+  "bookmark_name_required": {
+    "message": "ブックマーク名を入力してください"
+  },
+  "bookmark_created_success": {
+    "message": "ブックマークを作成しました"
+  },
+  "bookmark_create_failed": {
+    "message": "ブックマークの作成に失敗しました"
+  },
+  "bookmark_save_failed": {
+    "message": "ブックマークの保存に失敗しました"
+  },
+  "downloadable_media_not_found": {
+    "message": "ダウンロード可能なメディアが見つかりません"
+  },
+  "bookmark_button_click_error": {
+    "message": "ブックマークボタンクリック処理でエラー発生"
+  },
+  "video_info_check_error": {
+    "message": "動画情報チェック中にエラーが発生しました"
+  },
+  "save": {
+    "message": "保存"
+  },
+  "cancel": {
+    "message": "キャンセル"
+  },
+  "create": {
+    "message": "作成"
+  },
+  "description_optional": {
+    "message": "説明（任意）"
+  },
+  "bookmarks_removed": {
+    "message": "{{count}}個のブックマークから削除"
+  },
+  "bookmarks_added": {
+    "message": "{{count}}個のブックマークに追加"
+  },
+  "info_updated": {
+    "message": "{{count}}件の情報を更新"
+  },
+  "info_updated_complete": {
+    "message": "{{count}}件の情報を更新しました"
+  },
+  "actions_completed": {
+    "message": "{{actions}}しました"
+  },
+  "actions_completed_partial_failure": {
+    "message": "{{actions}}しました（一部失敗しました）"
+  },
+  "reload": {
+    "message": "再読み込み"
+  },
+  "tweets_count": {
+    "message": "{{count}} ツイート"
+  },
+  "search_cb_placeholder": {
+    "message": "CBを検索..."
+  },
+  "no_cb_found_for_query": {
+    "message": "「{{query}}」に一致するCBが見つかりません"
+  },
+  "no_cb_available": {
+    "message": "CBがありませんよ"
+  },
+  "create_cb_from_button": {
+    "message": "新規作成ボタンからCBを作成してください"
+  },
+  "last_updated_time": {
+    "message": "最終更新時刻:"
+  },
+  "create_new": {
+    "message": "新規作成"
+  },
+  "settings": {
+    "message": "設定"
+  },
+  "create_cb": {
+    "message": "CBを作成"
+  },
+  "cb_name_label": {
+    "message": "CB名 *"
+  },
+  "cb_name_placeholder": {
+    "message": "CB名を入力"
+  },
+  "cb_description_placeholder": {
+    "message": "CBの説明を入力"
+  },
+  "cb_name_required": {
+    "message": "CB名を入力してください"
+  },
+  "cb_create_failed": {
+    "message": "CBの作成に失敗しました"
+  },
+  "cb_list_fetch_failed": {
+    "message": "CB一覧の取得に失敗しました"
+  },
+  "tweet_count": {
+    "message": "{{count}}件のツイート"
+  },
+  "edit": {
+    "message": "編集"
+  },
+  "copy": {
+    "message": "コピー"
+  },
+  "confirm_delete_cb": {
+    "message": "カスタムブックマークを削除しますか？"
+  },
+  "cannot_undo": {
+    "message": "この操作は取り消せません"
+  },
+  "cb_delete_failed": {
+    "message": "CBの削除に失敗しました"
+  },
+  "cb_copy_failed": {
+    "message": "CBのコピーに失敗しました"
+  },
+  "app_init_failed": {
+    "message": "アプリの初期化に失敗しました"
+  },
+  "loading": {
+    "message": "読み込み中..."
+  },
+  "error": {
+    "message": "エラー"
+  },
+  "success": {
+    "message": "成功"
+  },
+  "cb_not_selected": {
+    "message": "CBが選択されていません"
+  },
+  "tweet_deleted": {
+    "message": "ツイートを削除しました"
+  },
+  "tweet_delete_failed": {
+    "message": "ツイートの削除に失敗しました"
+  },
+  "user_info_fetch_failed": {
+    "message": "ユーザー情報が取得できませんでした"
+  },
+  "cb_removed_from": {
+    "message": "{{count}}個のCBから削除"
+  },
+  "cb_added_to": {
+    "message": "{{count}}個のCBに追加"
+  },
+  "cb_update_failed": {
+    "message": "CBの更新に失敗しました"
+  },
+  "link_copied": {
+    "message": "リンクをコピーしました"
+  },
+  "link_copy_failed": {
+    "message": "リンクのコピーに失敗しました"
+  },
+  "media": {
+    "message": "メディア"
+  },
+  "close": {
+    "message": "閉じる"
+  },
+  "previous_image": {
+    "message": "前の画像"
+  },
+  "next_image": {
+    "message": "次の画像"
+  },
+  "add_to_cb": {
+    "message": "CBに追加"
+  },
+  "select_cb": {
+    "message": "CBを選択"
+  },
+  "no_cb_available": {
+    "message": "CBがありません"
+  },
+  "delete_tweet_confirm": {
+    "message": "ツイートを削除しますか？"
+  },
+  "tweet_fetch_failed": {
+    "message": "ツイートの取得に失敗しました"
+  },
+  "tweet_load_failed": {
+    "message": "ツイートの読み込みに失敗しました"
+  },
+  "tweet_id": {
+    "message": "ツイートID"
+  },
+  "tweet_cannot_display": {
+    "message": "このツイートを表示できませんでした。以下の原因が考えられます："
+  },
+  "tweet_deleted_reason": {
+    "message": "ツイートが削除されている"
+  },
+  "private_account_reason": {
+    "message": "プライベートアカウントのツイート"
+  },
+  "network_issue_reason": {
+    "message": "ネットワーク接続の問題"
+  },
+  "api_limit_reason": {
+    "message": "Twitter APIの制限"
+  },
+  "retry": {
+    "message": "再試行"
+  },
+  "check_on_twitter": {
+    "message": "Twitterで確認"
+  },
+  "select_cb_prompt": {
+    "message": "CBを選択してください"
+  },
+  "select_cb_from_sidebar": {
+    "message": "左側のサイドバーから表示したいCBを選択してください"
+  },
+  "error_occurred": {
+    "message": "エラーが発生しました"
+  },
+  "tweets_count": {
+    "message": "{{count}} ツイート"
+  },
+  "update": {
+    "message": "更新"
+  },
+  "search_tweets": {
+    "message": "ツイートを検索..."
+  },
+  "sort_newest_registered": {
+    "message": "登録が新しい順"
+  },
+  "sort_oldest_registered": {
+    "message": "登録が古い順"
+  },
+  "sort_newest_posted": {
+    "message": "投稿が新しい順"
+  },
+  "sort_oldest_posted": {
+    "message": "投稿が古い順"
+  },
+  "virtualization": {
+    "message": "仮想化"
+  },
+  "search_results_count": {
+    "message": "{{count}}件の結果"
+  },
+  "no_search_results": {
+    "message": "検索結果がありません"
+  },
+  "no_tweets": {
+    "message": "ツイートがありません"
+  },
+  "no_tweets_in_cb": {
+    "message": "このCBにはまだツイートが追加されていません"
+  },
+  "clear_search": {
+    "message": "検索をクリア"
+  },
+  "cb_name": {
+    "message": "CB名"
+  },
+  "cb_description": {
+    "message": "CBの説明"
+  },
+  "cb_description_placeholder": {
+    "message": "CBの説明（クリックして編集）"
+  },
+  "copy_link": {
+    "message": "リンクをコピー"
+  },
+  "app_description": {
+    "message": "コミックマーケット参加者向けX（旧Twitter）専用拡張機能"
+  },
+  "bookmark_list": {
+    "message": "ブックマーク一覧"
+  },
+  "settings": {
+    "message": "設定"
+  },
+  "author_wishlist": {
+    "message": "制作者の欲しいものリスト"
+  },
+  "author_wishlist_note": {
+    "message": "制作の励みになります"
+  },
+  "version": {
+    "message": "バージョン"
+  }
+}
+
