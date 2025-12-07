@@ -4,51 +4,17 @@ import { Container, Title, Text, Button, Stack, Group } from '@mantine/core';
 import { StorageManager } from '@/utils/storage';
 import type { CustomBookmark } from '@/types';
 import { IconSettings, IconBookmark, IconBrandAmazon } from '@tabler/icons-react';
-import { getTextSync, getLanguage, clearLanguageCache } from '../bookmarks/utils/i18n';
+import { getTextSync, useI18n } from '../bookmarks/utils/i18n';
 
 export const PopupApp: React.FC = () => {
   const [bookmarks, setBookmarks] = useState<CustomBookmark[]>([]);
   const [loading, setLoading] = useState(true);
-  const [languageKey, setLanguageKey] = useState(0); // 言語変更時に再レンダリングをトリガー
+
+  useI18n();
 
   useEffect(() => {
     loadData();
   }, []);
-
-  // 言語設定を取得してキャッシュに保存
-  useEffect(() => {
-    const initLanguage = async () => {
-      await getLanguage();
-    };
-    initLanguage();
-  }, []);
-
-  // ストレージ変更を監視して言語設定の変更を検知
-  useEffect(() => {
-    const handleStorageChange = (changes: { [key: string]: chrome.storage.StorageChange }, areaName: string) => {
-      if (areaName === 'local' && changes.comiketter_settings) {
-        // 言語設定が変更された場合、キャッシュをクリアして再取得
-        clearLanguageCache();
-        getLanguage().then(() => {
-          // 強制的に再レンダリング（言語キーを変更）
-          setLanguageKey(prev => prev + 1);
-        });
-      }
-    };
-
-    // ストレージ変更イベントをリッスン
-    chrome.storage.onChanged.addListener(handleStorageChange);
-
-    return () => {
-      chrome.storage.onChanged.removeListener(handleStorageChange);
-    };
-  }, []);
-
-  // languageKeyが変更された時に再レンダリングを確実にする
-  useEffect(() => {
-    // languageKeyが変更された時、コンポーネントが再レンダリングされ、
-    // getTextSyncが再実行されるため、新しい言語が反映される
-  }, [languageKey]);
 
   const loadData = async () => {
     try {
