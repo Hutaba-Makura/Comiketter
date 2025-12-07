@@ -576,7 +576,7 @@ export function TimelineView() {
                     {getTextSync('no_search_results')}
                   </Text>
                   <Text size="sm" c="dimmed" ta="center">
-                    「{searchQuery}」{getTextSync('no_search_results')}
+                    {getTextSync('no_tweets_found_for_query', { query: searchQuery })}
                   </Text>
                   <Button 
                     variant="light" 

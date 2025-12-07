@@ -78,37 +78,12 @@ const ApiTypes = {
   // useUpsellTrackingMutation: 'useUpsellTrackingMutation', // 画面縦横比変更追跡はコメントアウト
 } as const;
 
-import { getText } from './i18n';
+import { getTextObject } from './i18n';
 
-// API種類を日本語で表示するマッピング（遅延初期化）
-// MAINワールドで実行されるため、関数内で取得する
+// API種類を日本語で表示するマッピング
+// messages.jsonのapi_type_labelsから一度の呼び出しで取得
 function getApiTypeLabel(apiType: string): string {
-  const labels: Record<string, string> = {
-    [ApiTypes.HomeTimeline]: getText('ホームタイムライン'),
-    [ApiTypes.HomeLatestTimeline]: getText('ホーム最新タイムライン'),
-    [ApiTypes.TweetDetail]: getText('ツイート詳細'),
-    [ApiTypes.TweetResultByRestId]: getText('ツイート結果（ID指定）'),
-    [ApiTypes.ListLatestTweetsTimeline]: getText('リスト最新ツイートタイムライン'),
-    [ApiTypes.SearchTimeline]: getText('検索タイムライン'),
-    [ApiTypes.CommunityTweetsTimeline]: getText('コミュニティタイムライン'),
-    [ApiTypes.CommunityTweetSearchModuleQuery]: getText('コミュニティ検索タイムライン'),
-    [ApiTypes.Bookmarks]: getText('ブックマークタイムライン'),
-    [ApiTypes.BookmarkSearchTimeline]: getText('ブックマーク検索タイムライン'),
-    [ApiTypes.UserTweets]: getText('ユーザーツイート'),
-    [ApiTypes.UserTweetsAndReplies]: getText('ユーザー返信'),
-    [ApiTypes.Likes]: getText('ユーザーいいね'),
-    [ApiTypes.UserHighlightsTweets]: getText('ユーザーハイライトツイート'),
-    [ApiTypes.CreateBookmarks]: getText('ブックマーク作成'),
-    [ApiTypes.DeleteBookmark]: getText('ブックマーク削除'),
-    [ApiTypes.FavoriteTweet]: getText('ツイートいいね'),
-    [ApiTypes.UnfavoriteTweet]: getText('ツイートいいね解除'),
-    [ApiTypes.CreateRetweet]: getText('リツイート作成'),
-    [ApiTypes.DeleteRetweet]: getText('リツイート削除'),
-    [ApiTypes.CreateTweet]: getText('ツイート作成'),
-    [ApiTypes.UserMedia]: getText('ユーザーメディア'),
-    [ApiTypes.NotificationsTimeline]: getText('通知タイムライン'),
-    // [ApiTypes.useUpsellTrackingMutation]: '画面縦横比変更追跡', // コメントアウト
-  };
+  const labels = getTextObject<Record<string, string>>('api_type_labels');
   return labels[apiType] || apiType;
 }
 

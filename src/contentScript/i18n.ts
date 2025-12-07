@@ -192,3 +192,22 @@ export function getTextPlural(
   return getText(targetText, context, { ...placeholders, count: count.toString() });
 }
 
+/**
+ * オブジェクト形式のメッセージを取得（JSON文字列として格納されたオブジェクトをパース）
+ * @param messageKey メッセージキー
+ * @returns パースされたオブジェクト、見つからない場合は空オブジェクト
+ */
+export function getTextObject<T = Record<string, string>>(messageKey: string): T {
+  const lang = getLanguageFromHTML();
+  const message = getMessageFromTable(messageKey, lang);
+  if (!message) {
+    return {} as T;
+  }
+  try {
+    return JSON.parse(message) as T;
+  } catch (error) {
+    console.error(`Failed to parse message object for key "${messageKey}":`, error);
+    return {} as T;
+  }
+}
+
