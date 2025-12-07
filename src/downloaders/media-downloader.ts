@@ -360,6 +360,18 @@ export class MediaDownloader {
         mediaUrl = this.getBestImageUrl(media);
         mediaType = 'image';
         fileExt = this.getImageFileExtension(mediaUrl || '');
+        
+        // URLをダウンロード用に調整（formatとname=4096x4096を設定）
+        if (mediaUrl) {
+          const { adjustUrlForDownload } = await import('@/utils/media-url-utils');
+          // 設定から画像形式を取得（saveFormatが'png'|'jpg'|'webp'の場合）
+          const format = (settings.saveFormat as any) === 'png' || (settings.saveFormat as any) === 'jpg' || (settings.saveFormat as any) === 'webp'
+            ? (settings.saveFormat as 'png' | 'jpg' | 'webp')
+            : 'png'; // デフォルトはpng
+          mediaUrl = adjustUrlForDownload(mediaUrl, format);
+          // 拡張子も設定に合わせて更新
+          fileExt = format;
+        }
       } else if (media.type === 'video' || media.type === 'animated_gif') {
         mediaUrl = this.getBestVideoUrl(media);
         mediaType = 'video';

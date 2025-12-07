@@ -48,6 +48,7 @@ import { cbService } from '../services/cbService';
 import { Cb } from '../types/cb';
 import { showNotification } from '@mantine/notifications';
 import { getTextSync, useI18n } from '../utils/i18n';
+import { adjustUrlForDisplay, adjustUrlForLightbox } from '../../utils/media-url-utils';
 
 /**
  * 本番用ツイート表示コンポーネント
@@ -428,7 +429,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
   const handlePreviousImage = () => {
     if (currentImageIndex === null || currentImageIndex <= 0) return;
     const prevIndex = currentImageIndex - 1;
-    setLightboxSrc(media[prevIndex].url);
+    setLightboxSrc(adjustUrlForLightbox(media[prevIndex].url));
     setCurrentImageIndex(prevIndex);
     // アニメーションのため一旦リセットして再開
     setLightboxStage('enter');
@@ -440,7 +441,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
   const handleNextImage = () => {
     if (currentImageIndex === null || currentImageIndex >= media.length - 1) return;
     const nextIndex = currentImageIndex + 1;
-    setLightboxSrc(media[nextIndex].url);
+    setLightboxSrc(adjustUrlForLightbox(media[nextIndex].url));
     setCurrentImageIndex(nextIndex);
     // アニメーションのため一旦リセットして再開
     setLightboxStage('enter');
@@ -488,7 +489,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
         // 前の画像に切り替え
         if (currentImageIndex !== null && currentImageIndex > 0) {
           const prevIndex = currentImageIndex - 1;
-          setLightboxSrc(media[prevIndex].url);
+          setLightboxSrc(adjustUrlForLightbox(media[prevIndex].url));
           setCurrentImageIndex(prevIndex);
           setLightboxStage('enter');
           setLightboxOrigin({ x: window.innerWidth / 4, y: window.innerHeight / 2 });
@@ -499,7 +500,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
         // 次の画像に切り替え
         if (currentImageIndex !== null && currentImageIndex < media.length - 1) {
           const nextIndex = currentImageIndex + 1;
-          setLightboxSrc(media[nextIndex].url);
+          setLightboxSrc(adjustUrlForLightbox(media[nextIndex].url));
           setCurrentImageIndex(nextIndex);
           setLightboxStage('enter');
           setLightboxOrigin({ x: (window.innerWidth / 4) * 3, y: window.innerHeight / 2 });
@@ -892,7 +893,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
                       }}
                     >
                       <img
-                        src={media[0].previewUrl}
+                        src={adjustUrlForDisplay(media[0].previewUrl, media.length, 0)}
                         alt={media[0].altText || getTextSync('media')}
                         style={{ 
                           width: '100%', 
@@ -904,7 +905,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
                           display: 'block',
                           cursor: 'pointer'
                         }}
-                        onClick={(e) => handleImageClick(e, media[0].url, 0)}
+                        onClick={(e) => handleImageClick(e, adjustUrlForLightbox(media[0].url), 0)}
                       />
                       <Badge
                         size="xs"
@@ -964,7 +965,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
                           }}
                         >
                           <img
-                            src={item.previewUrl}
+                            src={adjustUrlForDisplay(item.previewUrl, media.length, index)}
                             alt={item.altText || getTextSync('media')}
                             style={{ 
                               width: '100%', 
@@ -973,7 +974,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
                               display: 'block',
                               cursor: 'pointer'
                             }}
-                            onClick={(e) => handleImageClick(e, item.url, index)}
+                            onClick={(e) => handleImageClick(e, adjustUrlForLightbox(item.url), index)}
                           />
                           <Badge
                             size="xs"
@@ -1042,7 +1043,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
                         }}
                       >
                         <img
-                          src={media[0].previewUrl}
+                          src={adjustUrlForDisplay(media[0].previewUrl, media.length, 0)}
                           alt={media[0].altText || getTextSync('media')}
                           style={{ 
                             borderRadius: borderRadiusMap3[0],
@@ -1053,7 +1054,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
                             display: 'block',
                             cursor: 'pointer'
                           }}
-                          onClick={(e) => handleImageClick(e, media[0].url, 0)}
+                          onClick={(e) => handleImageClick(e, adjustUrlForLightbox(media[0].url), 0)}
                         />
                         <Badge
                           size="xs"
@@ -1093,7 +1094,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
                         }}
                       >
                         <img
-                          src={media[1].previewUrl}
+                          src={adjustUrlForDisplay(media[1].previewUrl, media.length, 1)}
                           alt={media[1].altText || 'メディア'}
                           style={{ 
                             borderRadius: borderRadiusMap3[1],
@@ -1103,7 +1104,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
                             display: 'block',
                             cursor: 'pointer'
                           }}
-                          onClick={(e) => handleImageClick(e, media[1].url, 1)}
+                          onClick={(e) => handleImageClick(e, adjustUrlForLightbox(media[1].url), 1)}
                         />
                         <Badge
                           size="xs"
@@ -1143,7 +1144,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
                         }}
                       >
                         <img
-                          src={media[2].previewUrl}
+                          src={adjustUrlForDisplay(media[2].previewUrl, media.length, 2)}
                           alt={media[2].altText || 'メディア'}
                           style={{ 
                             borderRadius: borderRadiusMap3[2],
@@ -1153,7 +1154,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
                             display: 'block',
                             cursor: 'pointer'
                           }}
-                          onClick={(e) => handleImageClick(e, media[2].url, 2)}
+                          onClick={(e) => handleImageClick(e, adjustUrlForLightbox(media[2].url), 2)}
                         />
                         <Badge
                           size="xs"
@@ -1222,7 +1223,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
                           }}
                         >
                           <img
-                            src={item.previewUrl}
+                            src={adjustUrlForDisplay(item.previewUrl, media.length, index)}
                             alt={item.altText || getTextSync('media')}
                             style={{ 
                               borderRadius: borderRadiusMap4[index % 4],
@@ -1232,7 +1233,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
                               display: 'block',
                               cursor: 'pointer'
                             }}
-                            onClick={(e) => handleImageClick(e, item.url, index)}
+                            onClick={(e) => handleImageClick(e, adjustUrlForLightbox(item.url), index)}
                           />
                           <Badge
                             size="xs"

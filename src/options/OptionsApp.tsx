@@ -195,7 +195,18 @@ export const OptionsApp: React.FC = () => {
                 <Select
                   label="ファイル形式"
                   value={settings.saveFormat || 'png'}
-                  onChange={(value) => updateSettings({ saveFormat: value as 'png' | 'jpg' | 'webp' | undefined })}
+                  onChange={async (value) => {
+                    const newFormat = (value as 'png' | 'jpg' | 'webp' | undefined) || 'png';
+                    updateSettings({ saveFormat: newFormat as any });
+                    // 設定を即座に保存
+                    try {
+                      await StorageManager.saveSettings({ saveFormat: newFormat as any });
+                      // 他のページ（bookmarks等）に通知するため、ストレージ変更イベントを発火
+                      // ストレージ変更は自動的に検知されるため、明示的な通知は不要
+                    } catch (error) {
+                      console.error('Failed to save file format setting:', error);
+                    }
+                  }}
                   data={['png', 'jpg', 'webp'].map(format => ({ value: format, label: format }))}
                 />
               </Box>
