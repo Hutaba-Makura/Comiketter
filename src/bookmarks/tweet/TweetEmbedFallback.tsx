@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Alert, Text, Button, Box } from '@mantine/core';
 import { IconAlertCircle, IconRefresh, IconExternalLink } from '@tabler/icons-react';
 import { formatTweetId } from '../utils/format';
+import { getTextSync, getLanguage, clearLanguageCache } from '../utils/i18n';
 
 interface TweetEmbedFallbackProps {
   id: string;
@@ -13,6 +14,43 @@ interface TweetEmbedFallbackProps {
  * エラー状態を表示し、再試行やTwitterでの確認を促す
  */
 export function TweetEmbedFallback({ id, onRetry }: TweetEmbedFallbackProps) {
+  const [languageKey, setLanguageKey] = useState(0); // 言語変更時に再レンダリングをトリガー
+
+  // 言語設定を取得してキャッシュに保存
+  useEffect(() => {
+    const initLanguage = async () => {
+      await getLanguage();
+    };
+    initLanguage();
+  }, []);
+
+  // ストレージ変更を監視して言語設定の変更を検知
+  useEffect(() => {
+    const handleStorageChange = (changes: { [key: string]: chrome.storage.StorageChange }, areaName: string) => {
+      if (areaName === 'local' && changes.comiketter_settings) {
+        // 言語設定が変更された場合、キャッシュをクリアして再取得
+        clearLanguageCache();
+        getLanguage().then(() => {
+          // 強制的に再レンダリング（言語キーを変更）
+          setLanguageKey(prev => prev + 1);
+        });
+      }
+    };
+
+    // ストレージ変更イベントをリッスン
+    chrome.storage.onChanged.addListener(handleStorageChange);
+
+    return () => {
+      chrome.storage.onChanged.removeListener(handleStorageChange);
+    };
+  }, []);
+
+  // languageKeyが変更された時に再レンダリングを確実にする
+  useEffect(() => {
+    // languageKeyが変更された時、コンポーネントが再レンダリングされ、
+    // getTextSyncが再実行されるため、新しい言語が反映される
+  }, [languageKey]);
+
   const handleRetry = () => {
     if (onRetry) {
       onRetry();
@@ -38,31 +76,31 @@ export function TweetEmbedFallback({ id, onRetry }: TweetEmbedFallbackProps) {
     >
       <Alert
         icon={<IconAlertCircle size={20} />}
-        title="ツイートの読み込みに失敗しました"
+        title={getTextSync('tweet_load_failed')}
         color="red"
         variant="light"
         style={{ border: 'none', borderRadius: 0 }}
       >
         <Text size="sm" mb="md" c="dimmed">
-          ツイートID: {formatTweetId(id)}
+          {getTextSync('tweet_id')}: {formatTweetId(id)}
         </Text>
         
         <Text size="sm" mb="md">
-          このツイートを表示できませんでした。以下の原因が考えられます：
+          {getTextSync('tweet_cannot_display')}
         </Text>
         
         <Box component="ul" style={{ margin: 0, paddingLeft: '20px' }}>
           <Text size="sm" component="li" mb="xs">
-            ツイートが削除されている
+            {getTextSync('tweet_deleted_reason')}
           </Text>
           <Text size="sm" component="li" mb="xs">
-            プライベートアカウントのツイート
+            {getTextSync('private_account_reason')}
           </Text>
           <Text size="sm" component="li" mb="xs">
-            ネットワーク接続の問題
+            {getTextSync('network_issue_reason')}
           </Text>
           <Text size="sm" component="li" mb="md">
-            Twitter APIの制限
+            {getTextSync('api_limit_reason')}
           </Text>
         </Box>
 
@@ -73,7 +111,7 @@ export function TweetEmbedFallback({ id, onRetry }: TweetEmbedFallbackProps) {
             leftSection={<IconRefresh size={14} />}
             onClick={handleRetry}
           >
-            再試行
+            {getTextSync('retry')}
           </Button>
           
           <Button 
@@ -82,7 +120,7 @@ export function TweetEmbedFallback({ id, onRetry }: TweetEmbedFallbackProps) {
             leftSection={<IconExternalLink size={14} />}
             onClick={handleOpenTwitter}
           >
-            Twitterで確認
+            {getTextSync('check_on_twitter')}
           </Button>
         </Box>
       </Alert>

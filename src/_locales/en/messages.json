@@ -123,7 +123,7 @@
     "message": "Create Bookmarks"
   },
   "delete_bookmark": {
-    "message": "Delete Bookmark"
+    "message": "Delete"
   },
   "favorite_tweet": {
     "message": "Favorite Tweet"
@@ -289,6 +289,174 @@
   },
   "app_init_failed": {
     "message": "Failed to initialize app"
+  },
+  "loading": {
+    "message": "Loading..."
+  },
+  "error": {
+    "message": "Error"
+  },
+  "success": {
+    "message": "Success"
+  },
+  "cb_not_selected": {
+    "message": "CB is not selected"
+  },
+  "tweet_deleted": {
+    "message": "Tweet deleted"
+  },
+  "tweet_delete_failed": {
+    "message": "Failed to delete tweet"
+  },
+  "user_info_fetch_failed": {
+    "message": "Failed to fetch user information"
+  },
+  "cb_removed_from": {
+    "message": "Removed from {{count}} CB(s)"
+  },
+  "cb_added_to": {
+    "message": "Added to {{count}} CB(s)"
+  },
+  "cb_update_failed": {
+    "message": "Failed to update CB"
+  },
+  "link_copied": {
+    "message": "Link copied"
+  },
+  "link_copy_failed": {
+    "message": "Failed to copy link"
+  },
+  "media": {
+    "message": "Media"
+  },
+  "close": {
+    "message": "Close"
+  },
+  "previous_image": {
+    "message": "Previous image"
+  },
+  "next_image": {
+    "message": "Next image"
+  },
+  "add_to_cb": {
+    "message": "Add to CB"
+  },
+  "select_cb": {
+    "message": "Select CB"
+  },
+  "no_cb_available": {
+    "message": "No CB available"
+  },
+  "delete_tweet_confirm": {
+    "message": "Delete this tweet?"
+  },
+  "tweet_fetch_failed": {
+    "message": "Failed to fetch tweet"
+  },
+  "tweet_load_failed": {
+    "message": "Failed to load tweet"
+  },
+  "tweet_id": {
+    "message": "Tweet ID"
+  },
+  "tweet_cannot_display": {
+    "message": "This tweet could not be displayed. Possible reasons:"
+  },
+  "tweet_deleted_reason": {
+    "message": "Tweet has been deleted"
+  },
+  "private_account_reason": {
+    "message": "Private account tweet"
+  },
+  "network_issue_reason": {
+    "message": "Network connection issue"
+  },
+  "api_limit_reason": {
+    "message": "Twitter API limit"
+  },
+  "retry": {
+    "message": "Retry"
+  },
+  "check_on_twitter": {
+    "message": "Check on Twitter"
+  },
+  "select_cb_prompt": {
+    "message": "Please select a CB"
+  },
+  "select_cb_from_sidebar": {
+    "message": "Please select a CB from the sidebar on the left"
+  },
+  "error_occurred": {
+    "message": "An error occurred"
+  },
+  "tweets_count": {
+    "message": "{{count}} Tweets"
+  },
+  "update": {
+    "message": "Update"
+  },
+  "search_tweets": {
+    "message": "Search tweets..."
+  },
+  "sort_newest_registered": {
+    "message": "Newest registered"
+  },
+  "sort_oldest_registered": {
+    "message": "Oldest registered"
+  },
+  "sort_newest_posted": {
+    "message": "Newest posted"
+  },
+  "sort_oldest_posted": {
+    "message": "Oldest posted"
+  },
+  "virtualization": {
+    "message": "Virtualization"
+  },
+  "search_results_count": {
+    "message": "{{count}} results"
+  },
+  "no_search_results": {
+    "message": "No search results"
+  },
+  "no_tweets": {
+    "message": "No tweets"
+  },
+  "no_tweets_in_cb": {
+    "message": "No tweets have been added to this CB yet"
+  },
+  "clear_search": {
+    "message": "Clear search"
+  },
+  "cb_name": {
+    "message": "CB Name"
+  },
+  "cb_description": {
+    "message": "CB Description"
+  },
+  "cb_description_placeholder": {
+    "message": "CB description (click to edit)"
+  },
+  "copy_link": {
+    "message": "Copy link"
+  },
+  "app_description": {
+    "message": "Chrome extension for X (formerly Twitter) users participating in Comic Market"
+  },
+  "bookmark_list": {
+    "message": "Bookmark List"
+  },
+  "settings": {
+    "message": "Settings"
+  },
+  "author_wishlist": {
+    "message": "Author's Wishlist"
+  },
+  "author_wishlist_note": {
+    "message": "Your support encourages development"
+  },
+  "version": {
+    "message": "Version"
   }
 }
 

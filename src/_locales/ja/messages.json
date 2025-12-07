@@ -123,7 +123,7 @@
     "message": "ブックマーク作成"
   },
   "delete_bookmark": {
-    "message": "ブックマーク削除"
+    "message": "削除"
   },
   "favorite_tweet": {
     "message": "ツイートいいね"
@@ -289,6 +289,174 @@
   },
   "app_init_failed": {
     "message": "アプリの初期化に失敗しました"
+  },
+  "loading": {
+    "message": "読み込み中..."
+  },
+  "error": {
+    "message": "エラー"
+  },
+  "success": {
+    "message": "成功"
+  },
+  "cb_not_selected": {
+    "message": "CBが選択されていません"
+  },
+  "tweet_deleted": {
+    "message": "ツイートを削除しました"
+  },
+  "tweet_delete_failed": {
+    "message": "ツイートの削除に失敗しました"
+  },
+  "user_info_fetch_failed": {
+    "message": "ユーザー情報が取得できませんでした"
+  },
+  "cb_removed_from": {
+    "message": "{{count}}個のCBから削除"
+  },
+  "cb_added_to": {
+    "message": "{{count}}個のCBに追加"
+  },
+  "cb_update_failed": {
+    "message": "CBの更新に失敗しました"
+  },
+  "link_copied": {
+    "message": "リンクをコピーしました"
+  },
+  "link_copy_failed": {
+    "message": "リンクのコピーに失敗しました"
+  },
+  "media": {
+    "message": "メディア"
+  },
+  "close": {
+    "message": "閉じる"
+  },
+  "previous_image": {
+    "message": "前の画像"
+  },
+  "next_image": {
+    "message": "次の画像"
+  },
+  "add_to_cb": {
+    "message": "CBに追加"
+  },
+  "select_cb": {
+    "message": "CBを選択"
+  },
+  "no_cb_available": {
+    "message": "CBがありません"
+  },
+  "delete_tweet_confirm": {
+    "message": "ツイートを削除しますか？"
+  },
+  "tweet_fetch_failed": {
+    "message": "ツイートの取得に失敗しました"
+  },
+  "tweet_load_failed": {
+    "message": "ツイートの読み込みに失敗しました"
+  },
+  "tweet_id": {
+    "message": "ツイートID"
+  },
+  "tweet_cannot_display": {
+    "message": "このツイートを表示できませんでした。以下の原因が考えられます："
+  },
+  "tweet_deleted_reason": {
+    "message": "ツイートが削除されている"
+  },
+  "private_account_reason": {
+    "message": "プライベートアカウントのツイート"
+  },
+  "network_issue_reason": {
+    "message": "ネットワーク接続の問題"
+  },
+  "api_limit_reason": {
+    "message": "Twitter APIの制限"
+  },
+  "retry": {
+    "message": "再試行"
+  },
+  "check_on_twitter": {
+    "message": "Twitterで確認"
+  },
+  "select_cb_prompt": {
+    "message": "CBを選択してください"
+  },
+  "select_cb_from_sidebar": {
+    "message": "左側のサイドバーから表示したいCBを選択してください"
+  },
+  "error_occurred": {
+    "message": "エラーが発生しました"
+  },
+  "tweets_count": {
+    "message": "{{count}} ツイート"
+  },
+  "update": {
+    "message": "更新"
+  },
+  "search_tweets": {
+    "message": "ツイートを検索..."
+  },
+  "sort_newest_registered": {
+    "message": "登録が新しい順"
+  },
+  "sort_oldest_registered": {
+    "message": "登録が古い順"
+  },
+  "sort_newest_posted": {
+    "message": "投稿が新しい順"
+  },
+  "sort_oldest_posted": {
+    "message": "投稿が古い順"
+  },
+  "virtualization": {
+    "message": "仮想化"
+  },
+  "search_results_count": {
+    "message": "{{count}}件の結果"
+  },
+  "no_search_results": {
+    "message": "検索結果がありません"
+  },
+  "no_tweets": {
+    "message": "ツイートがありません"
+  },
+  "no_tweets_in_cb": {
+    "message": "このCBにはまだツイートが追加されていません"
+  },
+  "clear_search": {
+    "message": "検索をクリア"
+  },
+  "cb_name": {
+    "message": "CB名"
+  },
+  "cb_description": {
+    "message": "CBの説明"
+  },
+  "cb_description_placeholder": {
+    "message": "CBの説明（クリックして編集）"
+  },
+  "copy_link": {
+    "message": "リンクをコピー"
+  },
+  "app_description": {
+    "message": "コミックマーケット参加者向けX（旧Twitter）専用拡張機能"
+  },
+  "bookmark_list": {
+    "message": "ブックマーク一覧"
+  },
+  "settings": {
+    "message": "設定"
+  },
+  "author_wishlist": {
+    "message": "制作者の欲しいものリスト"
+  },
+  "author_wishlist_note": {
+    "message": "制作の励みになります"
+  },
+  "version": {
+    "message": "バージョン"
   }
 }
 

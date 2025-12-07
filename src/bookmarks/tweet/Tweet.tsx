@@ -47,6 +47,7 @@ import { useCbStore } from '../state/cbStore';
 import { cbService } from '../services/cbService';
 import { Cb } from '../types/cb';
 import { showNotification } from '@mantine/notifications';
+import { getTextSync, getLanguage, clearLanguageCache } from '../utils/i18n';
 
 /**
  * 本番用ツイート表示コンポーネント
@@ -77,6 +78,42 @@ export function Tweet({ id, onDelete }: TweetProps) {
   const [initialCbIds, setInitialCbIds] = useState<Set<string>>(new Set());
   const [isLoadingCbs, setIsLoadingCbs] = useState(false);
   const [isSavingCbs, setIsSavingCbs] = useState(false);
+  const [languageKey, setLanguageKey] = useState(0); // 言語変更時に再レンダリングをトリガー
+
+  // 言語設定を取得してキャッシュに保存
+  useEffect(() => {
+    const initLanguage = async () => {
+      await getLanguage();
+    };
+    initLanguage();
+  }, []);
+
+  // ストレージ変更を監視して言語設定の変更を検知
+  useEffect(() => {
+    const handleStorageChange = (changes: { [key: string]: chrome.storage.StorageChange }, areaName: string) => {
+      if (areaName === 'local' && changes.comiketter_settings) {
+        // 言語設定が変更された場合、キャッシュをクリアして再取得
+        clearLanguageCache();
+        getLanguage().then(() => {
+          // 強制的に再レンダリング（言語キーを変更）
+          setLanguageKey(prev => prev + 1);
+        });
+      }
+    };
+
+    // ストレージ変更イベントをリッスン
+    chrome.storage.onChanged.addListener(handleStorageChange);
+
+    return () => {
+      chrome.storage.onChanged.removeListener(handleStorageChange);
+    };
+  }, []);
+
+  // languageKeyが変更された時に再レンダリングを確実にする
+  useEffect(() => {
+    // languageKeyが変更された時、コンポーネントが再レンダリングされ、
+    // getTextSyncが再実行されるため、新しい言語が反映される
+  }, [languageKey]);
 
   // BookmarkDBからツイート情報を取得
   useEffect(() => {
@@ -147,8 +184,8 @@ export function Tweet({ id, onDelete }: TweetProps) {
   const handleConfirmDelete = async () => {
     if (!selectedCbId) {
       showNotification({
-        title: 'エラー',
-        message: 'CBが選択されていません',
+        title: getTextSync('error'),
+        message: getTextSync('cb_not_selected'),
         color: 'red',
       });
       return;
@@ -161,15 +198,15 @@ export function Tweet({ id, onDelete }: TweetProps) {
       // 親コンポーネントのrefetchを呼び出してタイムラインを更新
       onDelete?.();
       showNotification({
-        title: '成功',
-        message: 'ツイートを削除しました',
+        title: getTextSync('success'),
+        message: getTextSync('tweet_deleted'),
         color: 'rgb(29, 155, 240)',
       });
     } catch (error) {
       console.error('ツイート削除エラー:', error);
       showNotification({
-        title: 'エラー',
-        message: 'ツイートの削除に失敗しました',
+        title: getTextSync('error'),
+        message: getTextSync('tweet_delete_failed'),
         color: 'red',
       });
     } finally {
@@ -239,8 +276,8 @@ export function Tweet({ id, onDelete }: TweetProps) {
   const handleSaveCbs = async () => {
     if (!author) {
       showNotification({
-        title: 'エラー',
-        message: 'ユーザー情報が取得できませんでした',
+        title: getTextSync('error'),
+        message: getTextSync('user_info_fetch_failed'),
         color: 'red',
       });
       return;
@@ -307,15 +344,15 @@ export function Tweet({ id, onDelete }: TweetProps) {
       // 成功メッセージ
       const actionMessages: string[] = [];
       if (toRemove.size > 0) {
-        actionMessages.push(`${toRemove.size}個のCBから削除`);
+        actionMessages.push(getTextSync('cb_removed_from', { count: toRemove.size.toString() }));
       }
       if (toAdd.size > 0) {
-        actionMessages.push(`${toAdd.size}個のCBに追加`);
+        actionMessages.push(getTextSync('cb_added_to', { count: toAdd.size.toString() }));
       }
       
       if (actionMessages.length > 0) {
         showNotification({
-          title: '成功',
+          title: getTextSync('success'),
           message: actionMessages.join('、'),
           color: 'rgb(29, 155, 240)',
         });
@@ -323,8 +360,8 @@ export function Tweet({ id, onDelete }: TweetProps) {
     } catch (error) {
       console.error('CBの更新エラー:', error);
       showNotification({
-        title: 'エラー',
-        message: 'CBの更新に失敗しました',
+        title: getTextSync('error'),
+        message: getTextSync('cb_update_failed'),
         color: 'red',
       });
     } finally {
@@ -336,8 +373,8 @@ export function Tweet({ id, onDelete }: TweetProps) {
   const handleCopyLink = async () => {
     if (!author) {
       showNotification({
-        title: 'エラー',
-        message: 'ユーザー情報が取得できませんでした',
+        title: getTextSync('error'),
+        message: getTextSync('user_info_fetch_failed'),
         color: 'red',
       });
       return;
@@ -347,15 +384,15 @@ export function Tweet({ id, onDelete }: TweetProps) {
       const url = `https://x.com/${author.username}/status/${id}`;
       await navigator.clipboard.writeText(url);
       showNotification({
-        title: '成功',
-        message: 'リンクをコピーしました',
+        title: getTextSync('success'),
+        message: getTextSync('link_copied'),
         color: 'rgb(29, 155, 240)',
       });
     } catch (error) {
       console.error('リンクのコピーに失敗しました:', error);
       showNotification({
-        title: 'エラー',
-        message: 'リンクのコピーに失敗しました',
+        title: getTextSync('error'),
+        message: getTextSync('link_copy_failed'),
         color: 'red',
       });
     }
@@ -529,7 +566,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
         <Box style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px' }}>
           <Loader size="sm" />
           <Text size="sm" c="dimmed" ml="md">
-            読み込み中...
+            {getTextSync('loading')}
           </Text>
         </Box>
       </Paper>
@@ -579,7 +616,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
                   setLoading(false);
                 }
               } catch (err) {
-                setError(err instanceof Error ? err.message : 'ツイートの取得に失敗しました');
+                setError(err instanceof Error ? err.message : getTextSync('tweet_fetch_failed'));
                 setUseEmbedTweet(true);
                 setLoading(false);
               }
@@ -731,7 +768,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
                         closeMenuOnClick={false}
                         style={{ fontSize: '15px', fontWeight: '600'}}
                       >
-                        CBに追加
+                        {getTextSync('add_to_cb')}
                       </Menu.Item>
                       {isCbMenuOpen && (
                         <Menu.Item
@@ -742,7 +779,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
                           <Box style={{ width: '100%', maxWidth: 300 }} onClick={(e) => e.stopPropagation()}>
                             <Box p="xs" style={{ borderBottom: '1px solid #e1e8ed' }}>
                               <Text size="sm" fw={600} style={{ padding: '8px 12px', fontSize: '15px'}}>
-                                CBを選択
+                                {getTextSync('select_cb')}
                               </Text>
                             </Box>
                             <ScrollArea h={200} type="scroll">
@@ -753,7 +790,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
                               ) : cbs.length === 0 ? (
                                 <Box p="md">
                                   <Text size="sm" c="dimmed" ta="center" style={{ fontSize: '15px' }}>
-                                    CBがありません
+                                    {getTextSync('no_cb_available')}
                                   </Text>
                                 </Box>
                               ) : (
@@ -821,7 +858,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
                                 }}
                                 disabled={isSavingCbs}
                               >
-                                キャンセル
+                                {getTextSync('cancel')}
                               </Button>
                               <Button
                                 size="xs"
@@ -835,7 +872,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
                                 loading={isSavingCbs}
                                 disabled={selectedCbIds.size === 0}
                               >
-                                保存
+                                {getTextSync('save')}
                               </Button>
                             </Box>
                           </Box>
@@ -848,7 +885,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
                         onClick={handleDelete}
                         style={{ fontSize: '15px', fontWeight: '600'}}
                       >
-                        削除
+                        {getTextSync('delete')}
                       </Menu.Item>
                     </Menu.Dropdown>
                   </Menu>
@@ -889,7 +926,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
                     >
                       <img
                         src={media[0].previewUrl}
-                        alt={media[0].altText || 'メディア'}
+                        alt={media[0].altText || getTextSync('media')}
                         style={{ 
                           width: '100%', 
                           minWidth: '300px', 
@@ -961,7 +998,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
                         >
                           <img
                             src={item.previewUrl}
-                            alt={item.altText || 'メディア'}
+                            alt={item.altText || getTextSync('media')}
                             style={{ 
                               width: '100%', 
                               height: '100%',
@@ -1039,7 +1076,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
                       >
                         <img
                           src={media[0].previewUrl}
-                          alt={media[0].altText || 'メディア'}
+                          alt={media[0].altText || getTextSync('media')}
                           style={{ 
                             borderRadius: borderRadiusMap3[0],
                             width: '100%', 
@@ -1219,7 +1256,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
                         >
                           <img
                             src={item.previewUrl}
-                            alt={item.altText || 'メディア'}
+                            alt={item.altText || getTextSync('media')}
                             style={{ 
                               borderRadius: borderRadiusMap4[index % 4],
                               width: '100%', 
@@ -1329,7 +1366,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
                         onClick={handleCopyLink}
                         style={{ fontSize: '15px', fontWeight: '600'}}
                       >
-                        リンクをコピー
+                        {getTextSync('copy_link')}
                       </Menu.Item>
                     </Menu.Dropdown>
                   </Menu>
@@ -1375,7 +1412,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
               justifyContent: 'center',
               zIndex: 10002,
             }}
-            aria-label="閉じる"
+            aria-label={getTextSync('close')}
           >
             <IconX size={24} />
           </ActionIcon>
@@ -1406,7 +1443,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
                 justifyContent: 'center',
                 zIndex: 10002
               }}
-              aria-label="前の画像"
+              aria-label={getTextSync('previous_image')}
             >
               <IconChevronLeft size={24} />
             </ActionIcon>
@@ -1438,7 +1475,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
                 justifyContent: 'center',
                 zIndex: 10002
               }}
-              aria-label="次の画像"
+              aria-label={getTextSync('next_image')}
             >
               <IconChevronRight size={24} />
             </ActionIcon>
@@ -1524,7 +1561,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
                 marginBottom: '8px',
               }}
             >
-              ツイートを削除しますか？
+              {getTextSync('delete_tweet_confirm')}
             </Text>
             <Text
               style={{
@@ -1533,7 +1570,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
                 fontSize: '15px',
               }}
             >
-              この操作は取り消せません
+              {getTextSync('cannot_undo')}
             </Text>
             <Stack gap="xs">
               <Button
@@ -1547,7 +1584,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
                   borderColor: 'rgb(207, 217, 222)',
                 }}
               >
-                削除
+                {getTextSync('delete')}
               </Button>
               <Button
                 variant="default"
@@ -1562,7 +1599,7 @@ export function Tweet({ id, onDelete }: TweetProps) {
                   borderColor: 'rgb(207, 217, 222)',
                 }}
               >
-                キャンセル
+                {getTextSync('cancel')}
               </Button>
             </Stack>
           </Box>

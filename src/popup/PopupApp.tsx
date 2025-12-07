@@ -4,14 +4,51 @@ import { Container, Title, Text, Button, Stack, Group } from '@mantine/core';
 import { StorageManager } from '@/utils/storage';
 import type { CustomBookmark } from '@/types';
 import { IconSettings, IconBookmark, IconBrandAmazon } from '@tabler/icons-react';
+import { getTextSync, getLanguage, clearLanguageCache } from '../bookmarks/utils/i18n';
 
 export const PopupApp: React.FC = () => {
   const [bookmarks, setBookmarks] = useState<CustomBookmark[]>([]);
   const [loading, setLoading] = useState(true);
+  const [languageKey, setLanguageKey] = useState(0); // 言語変更時に再レンダリングをトリガー
 
   useEffect(() => {
     loadData();
   }, []);
+
+  // 言語設定を取得してキャッシュに保存
+  useEffect(() => {
+    const initLanguage = async () => {
+      await getLanguage();
+    };
+    initLanguage();
+  }, []);
+
+  // ストレージ変更を監視して言語設定の変更を検知
+  useEffect(() => {
+    const handleStorageChange = (changes: { [key: string]: chrome.storage.StorageChange }, areaName: string) => {
+      if (areaName === 'local' && changes.comiketter_settings) {
+        // 言語設定が変更された場合、キャッシュをクリアして再取得
+        clearLanguageCache();
+        getLanguage().then(() => {
+          // 強制的に再レンダリング（言語キーを変更）
+          setLanguageKey(prev => prev + 1);
+        });
+      }
+    };
+
+    // ストレージ変更イベントをリッスン
+    chrome.storage.onChanged.addListener(handleStorageChange);
+
+    return () => {
+      chrome.storage.onChanged.removeListener(handleStorageChange);
+    };
+  }, []);
+
+  // languageKeyが変更された時に再レンダリングを確実にする
+  useEffect(() => {
+    // languageKeyが変更された時、コンポーネントが再レンダリングされ、
+    // getTextSyncが再実行されるため、新しい言語が反映される
+  }, [languageKey]);
 
   const loadData = async () => {
     try {
@@ -39,7 +76,7 @@ export const PopupApp: React.FC = () => {
   if (loading) {
     return (
       <Container size="sm" py="md">
-        <Text>読み込み中...</Text>
+        <Text>{getTextSync('loading')}</Text>
       </Container>
     );
   }
@@ -50,29 +87,29 @@ export const PopupApp: React.FC = () => {
         <Title order={2} size="h3">Comiketter</Title>
         
         <Text size="sm" color="dimmed">
-          コミックマーケット参加者向けX（旧Twitter）専用拡張機能
+          {getTextSync('app_description')}
         </Text>
 
         <Group>
           <Button onClick={openBookmarks} variant="light" leftSection={<IconBookmark size={16} />}>
-            ブックマーク一覧 ({bookmarks.length})
+            {getTextSync('bookmark_list')} ({bookmarks.length})
           </Button>
           <Button onClick={openOptions} variant="outline" leftSection={<IconSettings size={16} />}>
-            設定
+            {getTextSync('settings')}
           </Button>
         </Group>
 
         <Group gap={0}>
           <Button onClick={openAuthorWishList} variant="outline" leftSection={<IconBrandAmazon size={16} />}>
-            制作者の欲しいものリスト
+            {getTextSync('author_wishlist')}
           </Button>
           <Text size="xs" color="dimmed">
-            制作の励みになります
+            {getTextSync('author_wishlist_note')}
           </Text>
         </Group>
 
         <Text size="xs" color="dimmed">
-          バージョン: 1.0.0
+          {getTextSync('version')}: 1.0.0
         </Text>
       </Stack>
     </Container>

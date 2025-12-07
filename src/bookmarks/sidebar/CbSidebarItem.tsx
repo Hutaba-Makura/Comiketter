@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Paper, 
   Text, 
@@ -23,7 +23,7 @@ import { Cb } from '../types/cb';
 import { useCbStore } from '../state/cbStore';
 import { formatCount } from '../utils/format';
 import { cbService } from '../services/cbService';
-import { getTextSync } from '../utils/i18n';
+import { getTextSync, getLanguage, clearLanguageCache } from '../utils/i18n';
 
 interface CbSidebarItemProps {
   cb: Cb;
@@ -37,7 +37,43 @@ export function CbSidebarItem({ cb }: CbSidebarItemProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [languageKey, setLanguageKey] = useState(0); // 言語変更時に再レンダリングをトリガー
   const isSelected = selectedCbId === cb.id;
+
+  // 言語設定を取得してキャッシュに保存
+  useEffect(() => {
+    const initLanguage = async () => {
+      await getLanguage();
+    };
+    initLanguage();
+  }, []);
+
+  // ストレージ変更を監視して言語設定の変更を検知
+  useEffect(() => {
+    const handleStorageChange = (changes: { [key: string]: chrome.storage.StorageChange }, areaName: string) => {
+      if (areaName === 'local' && changes.comiketter_settings) {
+        // 言語設定が変更された場合、キャッシュをクリアして再取得
+        clearLanguageCache();
+        getLanguage().then(() => {
+          // 強制的に再レンダリング（言語キーを変更）
+          setLanguageKey(prev => prev + 1);
+        });
+      }
+    };
+
+    // ストレージ変更イベントをリッスン
+    chrome.storage.onChanged.addListener(handleStorageChange);
+
+    return () => {
+      chrome.storage.onChanged.removeListener(handleStorageChange);
+    };
+  }, []);
+
+  // languageKeyが変更された時に再レンダリングを確実にする
+  useEffect(() => {
+    // languageKeyが変更された時、コンポーネントが再レンダリングされ、
+    // getTextSyncが再実行されるため、新しい言語が反映される
+  }, [languageKey]);
 
   const handleSelect = () => {
     selectCb(cb.id);
