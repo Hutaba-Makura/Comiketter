@@ -42,7 +42,7 @@ export default function BookmarkApp() {
 
   return (
     <>
-      <ColorSchemeScript />
+      <ColorSchemeScript defaultColorScheme="auto"/>
       <MantineProvider defaultColorScheme="auto">
         <Notifications position="top-right" zIndex={10000} />
         <BookmarkLayout />

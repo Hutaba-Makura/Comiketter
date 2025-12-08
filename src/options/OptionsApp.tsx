@@ -189,9 +189,10 @@ export const OptionsApp: React.FC = () => {
               {/* ファイル形式 */}
               <Box>
                 <Text size="sm" fw={500} mb="xs">
-                  ファイル形式
+                  ファイル形式設定
                 </Text>
                 <Select
+                  withAlignedLabels
                   label="ファイル形式"
                   value={settings.saveFormat || 'png'}
                   onChange={async (value) => {
@@ -217,7 +218,7 @@ export const OptionsApp: React.FC = () => {
                 <Text size="sm" fw={500} mb="xs">
                   自動ダウンロード条件（未実装、更新をお待ちください）
                 </Text>
-                <Stack gap="xs">
+                <Stack gap="sm">
                   <Switch
                     label="リツイート時に自動ダウンロード"
                     checked={settings.autoDownloadConditions.retweet}
@@ -258,7 +259,7 @@ export const OptionsApp: React.FC = () => {
                 <Text size="sm" fw={500} mb="xs">
                   メディアダウンロード設定（未実装、更新をお待ちください）
                 </Text>
-                <Stack gap="xs">
+                <Stack gap="sm">
                   <Switch
                     label="動画サムネイルを含める"
                     checked={settings.mediaDownloadSettings.includeVideoThumbnail}
