@@ -1,4 +1,4 @@
-![Comiketter](Introduction images/Group 8.png)
+![Comiketter](IntroductionImages/Group%208.png)
 
 Comiketterはコミケなどの同人イベントに参加するユーザーの為に開発しているTwitter用機能追加拡張機能です。
 
