@@ -192,7 +192,6 @@ export const OptionsApp: React.FC = () => {
                   ファイル形式設定
                 </Text>
                 <Select
-                  withAlignedLabels
                   label="ファイル形式"
                   value={settings.saveFormat || 'png'}
                   onChange={async (value) => {
