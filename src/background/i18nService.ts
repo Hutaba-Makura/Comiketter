@@ -5,6 +5,8 @@
  * 
  * Comiketter: i18n service for background script
  * chrome.i18n APIを使用して翻訳テーブルを管理
+ * 現在のi18nに関する実装はi18n.tsに移行したため、このファイルは使用されていない
+ * このファイルはコンソールメッセージをi18n化する際に有用だが、将来削除予定
  */
 
 // 翻訳テーブルを直接import（background scriptでも使用可能）

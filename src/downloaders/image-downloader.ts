@@ -438,7 +438,7 @@ export interface ImageDownloadResult {
         return {
           tlAutoUpdateDisabled: false,
           downloadMethod: 'chrome_downloads',
-          saveFormat: 'url',
+          saveFormat: 'png',
           saveDirectory: '',
           autoDownloadConditions: {
             retweet: false,
