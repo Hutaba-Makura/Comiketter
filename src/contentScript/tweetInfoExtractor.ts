@@ -287,12 +287,13 @@ function extractCreatedAt(article: HTMLElement): string | null {
 function getQuotedTweetContainers(article: HTMLElement): HTMLElement[] {
   const containers: HTMLElement[] = [];
   
+  // i18n対応: 引用テキストを一度だけ取得（ループ外で実行）
+  const quoteText = getText('引用');
+  
   // "引用"というテキストを持つspan要素をすべて検索
   const allSpans = article.querySelectorAll('span');
   allSpans.forEach(span => {
     const text = (span.textContent || '').trim();
-    // i18n対応: 引用テキストをチェック
-    const quoteText = getText('引用');
     if (text === quoteText) {
       // 親要素（P）を取得
       const parentP = span.parentElement;
