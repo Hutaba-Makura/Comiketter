@@ -78,7 +78,7 @@ const ApiTypes = {
   // useUpsellTrackingMutation: 'useUpsellTrackingMutation', // 画面縦横比変更追跡はコメントアウト
 } as const;
 
-import { getTextObject } from './i18n';
+import { getText, getTextObject } from './i18n';
 
 // API種類を日本語で表示するマッピング
 // messages.jsonのapi_type_labelsから一度の呼び出しで取得
