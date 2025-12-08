@@ -75,7 +75,7 @@ export const PopupApp: React.FC = () => {
         </Group>
 
         <Text size="xs" color="dimmed">
-          {getTextSync('version')}: 1.0.0
+          {getTextSync('version')}: {chrome.runtime.getManifest().version}
         </Text>
       </Stack>
     </Container>
