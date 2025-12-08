@@ -196,10 +196,10 @@ export const OptionsApp: React.FC = () => {
                   value={settings.saveFormat || 'png'}
                   onChange={async (value) => {
                     const newFormat = (value as 'png' | 'jpg' | 'webp' | undefined) || 'png';
-                    updateSettings({ saveFormat: newFormat as any });
+                    updateSettings({ saveFormat: newFormat });
                     // 設定を即座に保存
                     try {
-                      await StorageManager.saveSettings({ saveFormat: newFormat as any });
+                      await StorageManager.saveSettings({ saveFormat: newFormat });
                       // 他のページ（bookmarks等）に通知するため、ストレージ変更イベントを発火
                       // ストレージ変更は自動的に検知されるため、明示的な通知は不要
                     } catch (error) {
@@ -217,36 +217,38 @@ export const OptionsApp: React.FC = () => {
                 <Text size="sm" fw={500} mb="xs">
                   自動ダウンロード条件（未実装、更新をお待ちください）
                 </Text>
-                <Switch
-                  label="リツイート時に自動ダウンロード"
-                  checked={settings.autoDownloadConditions.retweet}
-                  onChange={(event) => updateSettings({
-                    autoDownloadConditions: {
-                      ...settings.autoDownloadConditions,
-                      retweet: event.currentTarget.checked
-                    }
-                  })}
-                />
-                <Switch
-                  label="いいね時に自動ダウンロード"
-                  checked={settings.autoDownloadConditions.like}
-                  onChange={(event) => updateSettings({
-                    autoDownloadConditions: {
-                      ...settings.autoDownloadConditions,
-                      like: event.currentTarget.checked
-                    }
-                  })}
-                />
-                <Switch
-                  label="両方の条件を満たした時のみダウンロード"
-                  checked={settings.autoDownloadConditions.both}
-                  onChange={(event) => updateSettings({
-                    autoDownloadConditions: {
-                      ...settings.autoDownloadConditions,
-                      both: event.currentTarget.checked
-                    }
-                  })}
-                />
+                <Stack gap="xs">
+                  <Switch
+                    label="リツイート時に自動ダウンロード"
+                    checked={settings.autoDownloadConditions.retweet}
+                    onChange={(event) => updateSettings({
+                      autoDownloadConditions: {
+                        ...settings.autoDownloadConditions,
+                        retweet: event.currentTarget.checked
+                      }
+                    })}
+                  />
+                  <Switch
+                    label="いいね時に自動ダウンロード"
+                    checked={settings.autoDownloadConditions.like}
+                    onChange={(event) => updateSettings({
+                      autoDownloadConditions: {
+                        ...settings.autoDownloadConditions,
+                        like: event.currentTarget.checked
+                      }
+                    })}
+                  />
+                  <Switch
+                    label="両方の条件を満たした時のみダウンロード"
+                    checked={settings.autoDownloadConditions.both}
+                    onChange={(event) => updateSettings({
+                      autoDownloadConditions: {
+                        ...settings.autoDownloadConditions,
+                        both: event.currentTarget.checked
+                      }
+                    })}
+                  />
+                </Stack>
               </Box>
 
               <Divider />
@@ -256,36 +258,38 @@ export const OptionsApp: React.FC = () => {
                 <Text size="sm" fw={500} mb="xs">
                   メディアダウンロード設定（未実装、更新をお待ちください）
                 </Text>
-                <Switch
-                  label="動画サムネイルを含める"
-                  checked={settings.mediaDownloadSettings.includeVideoThumbnail}
-                  onChange={(event) => updateSettings({
-                    mediaDownloadSettings: {
-                      ...settings.mediaDownloadSettings,
-                      includeVideoThumbnail: event.currentTarget.checked
-                    }
-                  })}
-                />
-                <Switch
-                  label="プロフィール画像を除外"
-                  checked={settings.mediaDownloadSettings.excludeProfileImages}
-                  onChange={(event) => updateSettings({
-                    mediaDownloadSettings: {
-                      ...settings.mediaDownloadSettings,
-                      excludeProfileImages: event.currentTarget.checked
-                    }
-                  })}
-                />
-                <Switch
-                  label="バナー画像を除外"
-                  checked={settings.mediaDownloadSettings.excludeBannerImages}
-                  onChange={(event) => updateSettings({
-                    mediaDownloadSettings: {
-                      ...settings.mediaDownloadSettings,
-                      excludeBannerImages: event.currentTarget.checked
-                    }
-                  })}
-                />
+                <Stack gap="xs">
+                  <Switch
+                    label="動画サムネイルを含める"
+                    checked={settings.mediaDownloadSettings.includeVideoThumbnail}
+                    onChange={(event) => updateSettings({
+                      mediaDownloadSettings: {
+                        ...settings.mediaDownloadSettings,
+                        includeVideoThumbnail: event.currentTarget.checked
+                      }
+                    })}
+                  />
+                  <Switch
+                    label="プロフィール画像を除外"
+                    checked={settings.mediaDownloadSettings.excludeProfileImages}
+                    onChange={(event) => updateSettings({
+                      mediaDownloadSettings: {
+                        ...settings.mediaDownloadSettings,
+                        excludeProfileImages: event.currentTarget.checked
+                      }
+                    })}
+                  />
+                  <Switch
+                    label="バナー画像を除外"
+                    checked={settings.mediaDownloadSettings.excludeBannerImages}
+                    onChange={(event) => updateSettings({
+                      mediaDownloadSettings: {
+                        ...settings.mediaDownloadSettings,
+                        excludeBannerImages: event.currentTarget.checked
+                      }
+                    })}
+                  />
+                </Stack>
               </Box>
             </Stack>
           </Paper>
