@@ -191,6 +191,9 @@
   "save": {
     "message": "Save"
   },
+  "delete": {
+    "message": "Delete"
+  },
   "cancel": {
     "message": "Cancel"
   },
