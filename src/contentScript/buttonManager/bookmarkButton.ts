@@ -402,7 +402,12 @@ export class BookmarkButton extends BaseButton {
    * @returns 統計情報（取得できなかった項目はundefined）
    */
   private extractStatsFromHTML(article: HTMLElement | null): TweetStatsFromHTML {
-    const stats: TweetStatsFromHTML = {};
+    // デフォルト値を0に設定
+    const stats: TweetStatsFromHTML = {
+      favoriteCount: 0,
+      retweetCount: 0,
+      replyCount: 0,
+    };
     
     if (!article) {
       console.warn('Comiketter: [HTML解析] article要素がnullのため、統計情報を取得できませんでした');
@@ -416,10 +421,12 @@ export class BookmarkButton extends BaseButton {
       if (count !== null) {
         stats.favoriteCount = count;
       } else {
-        console.warn('Comiketter: [HTML解析] いいね数を取得できませんでした');
+        // console.warn('Comiketter: [HTML解析] いいね数を取得できませんでした');
+        stats.favoriteCount = 0;
       }
     } else {
       console.warn('Comiketter: [HTML解析] data-testid="like"または"unlike"要素が見つかりませんでした');
+      stats.favoriteCount = 0;
     }
     
     // RT数を取得
@@ -429,10 +436,12 @@ export class BookmarkButton extends BaseButton {
       if (count !== null) {
         stats.retweetCount = count;
       } else {
-        console.warn('Comiketter: [HTML解析] RT数を取得できませんでした');
+        // console.warn('Comiketter: [HTML解析] RT数を取得できませんでした');
+        stats.retweetCount = 0;
       }
     } else {
       console.warn('Comiketter: [HTML解析] data-testid="retweet"または"unretweet"要素が見つかりませんでした');
+      stats.retweetCount = 0;
     }
     
     // リプライ数を取得
@@ -442,10 +451,12 @@ export class BookmarkButton extends BaseButton {
       if (count !== null) {
         stats.replyCount = count;
       } else {
-        console.warn('Comiketter: [HTML解析] リプライ数を取得できませんでした');
+        // console.warn('Comiketter: [HTML解析] リプライ数を取得できませんでした');
+        stats.replyCount = 0;
       }
     } else {
       console.warn('Comiketter: [HTML解析] data-testid="reply"要素が見つかりませんでした');
+      stats.replyCount = 0;
     }
     
     // アイコン画像URLを取得
