@@ -1,0 +1,471 @@
+{
+  "custom_bookmark": {
+    "message": "Custom Bookmarks"
+  },
+  "sidebar_button_init_error": {
+    "message": "Sidebar button initialization error"
+  },
+  "button_already_exists_skip": {
+    "message": "Button already exists, skipping initialization"
+  },
+  "button_add_condition_not_met_skip": {
+    "message": "Button add condition not met, skipping"
+  },
+  "navigation_element_not_found_skip": {
+    "message": "Navigation element not found, skipping"
+  },
+  "valid_navigation_element_not_found": {
+    "message": "Valid navigation element not found"
+  },
+  "sample_element_not_found": {
+    "message": "Sample element not found"
+  },
+  "icon_load_error": {
+    "message": "Icon load error"
+  },
+  "sidebar_button_create_error": {
+    "message": "Sidebar button creation error"
+  },
+  "bookmark_page_open_failed": {
+    "message": "Failed to open bookmark page. Please access the bookmark page manually."
+  },
+  "button_creation_in_progress_skip": {
+    "message": "Button creation in progress, skipping"
+  },
+  "button_already_exists_create_skip": {
+    "message": "Button already exists, skipping creation"
+  },
+  "navigation_element_not_found": {
+    "message": "Navigation element not found"
+  },
+  "sample_element_not_found_abort": {
+    "message": "Sample element not found. Aborting button creation"
+  },
+  "insert_target_not_found": {
+    "message": "Insert target not found"
+  },
+  "bookmark_link_not_found_alternative": {
+    "message": "Bookmark link not found, trying alternative method"
+  },
+  "navigation_element_selected_as_insert_target": {
+    "message": "Navigation element selected as insert target"
+  },
+  "tab_element_parent_selected_as_insert_target": {
+    "message": "Tab element parent selected as insert target"
+  },
+  "extension_context_invalid_fallback": {
+    "message": "Extension context invalid. Executing fallback"
+  },
+  "sidebar_button_click_error": {
+    "message": "Sidebar button click error"
+  },
+  "bookmark_page_open_failed_log": {
+    "message": "Failed to open bookmark page"
+  },
+  "fallback_bookmark_page_opened": {
+    "message": "Bookmark page opened via fallback"
+  },
+  "fallback_also_failed": {
+    "message": "Fallback also failed"
+  },
+  "manual_button_recreate": {
+    "message": "Manually recreating button"
+  },
+  "sidebar_selected_as_insert_target": {
+    "message": "Sidebar selected as insert target"
+  },
+  "icon_previous_element_not_found": {
+    "message": "Icon previous element not found"
+  },
+  "home_timeline": {
+    "message": "Home Timeline"
+  },
+  "home_latest_timeline": {
+    "message": "Home Latest Timeline"
+  },
+  "tweet_detail": {
+    "message": "Tweet Detail"
+  },
+  "tweet_result_by_rest_id": {
+    "message": "Tweet Result (by ID)"
+  },
+  "list_latest_tweets_timeline": {
+    "message": "List Latest Tweets Timeline"
+  },
+  "search_timeline": {
+    "message": "Search Timeline"
+  },
+  "community_tweets_timeline": {
+    "message": "Community Timeline"
+  },
+  "community_tweet_search_module_query": {
+    "message": "Community Search Timeline"
+  },
+  "bookmarks": {
+    "message": "Bookmarks Timeline"
+  },
+  "bookmark_search_timeline": {
+    "message": "Bookmark Search Timeline"
+  },
+  "user_tweets": {
+    "message": "User Tweets"
+  },
+  "user_tweets_and_replies": {
+    "message": "User Replies"
+  },
+  "likes": {
+    "message": "User Likes"
+  },
+  "user_highlights_tweets": {
+    "message": "User Highlights Tweets"
+  },
+  "create_bookmarks": {
+    "message": "Create Bookmarks"
+  },
+  "delete_bookmark": {
+    "message": "Delete"
+  },
+  "favorite_tweet": {
+    "message": "Favorite Tweet"
+  },
+  "unfavorite_tweet": {
+    "message": "Unfavorite Tweet"
+  },
+  "create_retweet": {
+    "message": "Create Retweet"
+  },
+  "delete_retweet": {
+    "message": "Delete Retweet"
+  },
+  "create_tweet": {
+    "message": "Create Tweet"
+  },
+  "user_media": {
+    "message": "User Media"
+  },
+  "notifications_timeline": {
+    "message": "Notifications Timeline"
+  },
+  "quote": {
+    "message": "Quote"
+  },
+  "no_bookmarks_create_new": {
+    "message": "No bookmarks. Please create a new bookmark."
+  },
+  "add_to_bookmark": {
+    "message": "Add to Bookmark"
+  },
+  "create_new_bookmark": {
+    "message": "Create New Bookmark"
+  },
+  "bookmark_name_label": {
+    "message": "Bookmark Name *"
+  },
+  "bookmark_name_placeholder": {
+    "message": "Enter bookmark name"
+  },
+  "bookmark_description_placeholder": {
+    "message": "Enter bookmark description"
+  },
+  "bookmark_name_required": {
+    "message": "Please enter bookmark name"
+  },
+  "bookmark_created_success": {
+    "message": "Bookmark created"
+  },
+  "bookmark_create_failed": {
+    "message": "Failed to create bookmark"
+  },
+  "bookmark_save_failed": {
+    "message": "Failed to save bookmark"
+  },
+  "downloadable_media_not_found": {
+    "message": "Downloadable media not found"
+  },
+  "bookmark_button_click_error": {
+    "message": "Bookmark button click error"
+  },
+  "video_info_check_error": {
+    "message": "Error occurred while checking video info"
+  },
+  "save": {
+    "message": "Save"
+  },
+  "delete": {
+    "message": "Delete"
+  },
+  "cancel": {
+    "message": "Cancel"
+  },
+  "create": {
+    "message": "Create"
+  },
+  "description_optional": {
+    "message": "Description (Optional)"
+  },
+  "bookmarks_removed": {
+    "message": "Removed from {{count}} bookmarks"
+  },
+  "bookmarks_added": {
+    "message": "Added to {{count}} bookmarks"
+  },
+  "info_updated": {
+    "message": "Updated {{count}} items"
+  },
+  "info_updated_complete": {
+    "message": "Updated {{count}} items"
+  },
+  "actions_completed": {
+    "message": "{{actions}} completed"
+  },
+  "actions_completed_partial_failure": {
+    "message": "{{actions}} completed (some failed)"
+  },
+  "reload": {
+    "message": "Reload"
+  },
+  "tweets_count": {
+    "message": "{{count}} Tweets"
+  },
+  "search_cb_placeholder": {
+    "message": "Search CBs..."
+  },
+  "no_cb_found_for_query": {
+    "message": "No CBs found matching \"{{query}}\""
+  },
+  "no_cb_available": {
+    "message": "No CBs available"
+  },
+  "create_cb_from_button": {
+    "message": "Please create a CB from the create button"
+  },
+  "last_updated_time": {
+    "message": "Last updated:"
+  },
+  "create_new": {
+    "message": "Create New"
+  },
+  "settings": {
+    "message": "Settings"
+  },
+  "create_cb": {
+    "message": "Create CB"
+  },
+  "cb_name_label": {
+    "message": "CB Name *"
+  },
+  "cb_name_placeholder": {
+    "message": "Enter CB name"
+  },
+  "cb_description_placeholder": {
+    "message": "Enter CB description"
+  },
+  "cb_name_required": {
+    "message": "Please enter CB name"
+  },
+  "cb_create_failed": {
+    "message": "Failed to create CB"
+  },
+  "cb_list_fetch_failed": {
+    "message": "Failed to fetch CB list"
+  },
+  "tweet_count": {
+    "message": "{{count}} tweets"
+  },
+  "edit": {
+    "message": "Edit"
+  },
+  "copy": {
+    "message": "Copy"
+  },
+  "confirm_delete_cb": {
+    "message": "Delete custom bookmark?"
+  },
+  "cannot_undo": {
+    "message": "This action cannot be undone"
+  },
+  "cb_delete_failed": {
+    "message": "Failed to delete CB"
+  },
+  "cb_copy_failed": {
+    "message": "Failed to copy CB"
+  },
+  "app_init_failed": {
+    "message": "Failed to initialize app"
+  },
+  "loading": {
+    "message": "Loading..."
+  },
+  "error": {
+    "message": "Error"
+  },
+  "success": {
+    "message": "Success"
+  },
+  "cb_not_selected": {
+    "message": "CB is not selected"
+  },
+  "tweet_deleted": {
+    "message": "Tweet deleted"
+  },
+  "tweet_delete_failed": {
+    "message": "Failed to delete tweet"
+  },
+  "user_info_fetch_failed": {
+    "message": "Failed to fetch user information"
+  },
+  "cb_removed_from": {
+    "message": "Removed from {{count}} CB(s)"
+  },
+  "cb_added_to": {
+    "message": "Added to {{count}} CB(s)"
+  },
+  "cb_update_failed": {
+    "message": "Failed to update CB"
+  },
+  "link_copied": {
+    "message": "Link copied"
+  },
+  "link_copy_failed": {
+    "message": "Failed to copy link"
+  },
+  "media": {
+    "message": "Media"
+  },
+  "close": {
+    "message": "Close"
+  },
+  "previous_image": {
+    "message": "Previous image"
+  },
+  "next_image": {
+    "message": "Next image"
+  },
+  "add_to_cb": {
+    "message": "Add to CB"
+  },
+  "select_cb": {
+    "message": "Select CB"
+  },
+  "no_cb_available": {
+    "message": "No CB available"
+  },
+  "delete_tweet_confirm": {
+    "message": "Delete this tweet?"
+  },
+  "tweet_fetch_failed": {
+    "message": "Failed to fetch tweet"
+  },
+  "tweet_load_failed": {
+    "message": "Failed to load tweet"
+  },
+  "tweet_id": {
+    "message": "Tweet ID"
+  },
+  "tweet_cannot_display": {
+    "message": "This tweet could not be displayed. Possible reasons:"
+  },
+  "tweet_deleted_reason": {
+    "message": "Tweet has been deleted"
+  },
+  "private_account_reason": {
+    "message": "Private account tweet"
+  },
+  "network_issue_reason": {
+    "message": "Network connection issue"
+  },
+  "api_limit_reason": {
+    "message": "Twitter API limit"
+  },
+  "retry": {
+    "message": "Retry"
+  },
+  "check_on_twitter": {
+    "message": "Check on Twitter"
+  },
+  "select_cb_prompt": {
+    "message": "Please select a CB"
+  },
+  "select_cb_from_sidebar": {
+    "message": "Please select a CB from the sidebar on the left"
+  },
+  "error_occurred": {
+    "message": "An error occurred"
+  },
+  "tweets_count": {
+    "message": "{{count}} Tweets"
+  },
+  "update": {
+    "message": "Update"
+  },
+  "search_tweets": {
+    "message": "Search tweets..."
+  },
+  "sort_newest_registered": {
+    "message": "Newest registered"
+  },
+  "sort_oldest_registered": {
+    "message": "Oldest registered"
+  },
+  "sort_newest_posted": {
+    "message": "Newest posted"
+  },
+  "sort_oldest_posted": {
+    "message": "Oldest posted"
+  },
+  "virtualization": {
+    "message": "Virtualization"
+  },
+  "search_results_count": {
+    "message": "{{count}} results"
+  },
+  "no_search_results": {
+    "message": "No search results"
+  },
+  "no_tweets_found_for_query": {
+    "message": "No tweets found matching \"{{query}}\""
+  },
+  "no_tweets": {
+    "message": "No tweets"
+  },
+  "no_tweets_in_cb": {
+    "message": "No tweets have been added to this CB yet"
+  },
+  "clear_search": {
+    "message": "Clear search"
+  },
+  "cb_name": {
+    "message": "CB Name"
+  },
+  "cb_description": {
+    "message": "CB Description"
+  },
+  "cb_description_placeholder": {
+    "message": "CB description (click to edit)"
+  },
+  "copy_link": {
+    "message": "Copy link"
+  },
+  "app_description": {
+    "message": "Chrome extension for X (formerly Twitter) users participating in Comic Market"
+  },
+  "bookmark_list": {
+    "message": "Bookmark List"
+  },
+  "settings": {
+    "message": "Settings"
+  },
+  "author_wishlist": {
+    "message": "Author's Wishlist"
+  },
+  "author_wishlist_note": {
+    "message": "Your support encourages development"
+  },
+  "version": {
+    "message": "Version"
+  },
+  "api_type_labels": {
+    "message": "{\"HomeTimeline\":\"Home Timeline\",\"HomeLatestTimeline\":\"Home Latest Timeline\",\"TweetDetail\":\"Tweet Detail\",\"TweetResultByRestId\":\"Tweet Result (by ID)\",\"ListLatestTweetsTimeline\":\"List Latest Tweets Timeline\",\"SearchTimeline\":\"Search Timeline\",\"CommunityTweetsTimeline\":\"Community Timeline\",\"CommunityTweetSearchModuleQuery\":\"Community Search Timeline\",\"Bookmarks\":\"Bookmarks Timeline\",\"BookmarkSearchTimeline\":\"Bookmark Search Timeline\",\"UserTweets\":\"User Tweets\",\"UserTweetsAndReplies\":\"User Replies\",\"Likes\":\"User Likes\",\"UserHighlightsTweets\":\"User Highlights Tweets\",\"CreateBookmarks\":\"Create Bookmarks\",\"DeleteBookmark\":\"Delete Bookmark\",\"FavoriteTweet\":\"Favorite Tweet\",\"UnfavoriteTweet\":\"Unfavorite Tweet\",\"CreateRetweet\":\"Create Retweet\",\"DeleteRetweet\":\"Delete Retweet\",\"CreateTweet\":\"Create Tweet\",\"UserMedia\":\"User Media\",\"NotificationsTimeline\":\"Notifications Timeline\"}"
+  }
+}
+

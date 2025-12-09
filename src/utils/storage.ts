@@ -17,7 +17,7 @@ const STORAGE_KEYS = {
 const DEFAULT_SETTINGS: AppSettings = {
   tlAutoUpdateDisabled: false,
   downloadMethod: 'chrome_downloads',
-  saveFormat: 'url',
+  saveFormat: 'png',
   saveDirectory: 'comiketter',
   autoDownloadConditions: {
     retweet: false,

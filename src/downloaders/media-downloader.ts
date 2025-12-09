@@ -13,6 +13,7 @@ import { PatternToken, AggregationToken } from '../types';
 import { ApiCacheManager } from '../utils/api-cache';
 import { FilenameGenerator } from '../utils/filenameGenerator';
 import { StorageManager } from '../utils/storage';
+import { adjustUrlForDownload } from '../utils/media-url-utils';
 
 /**
  * メディアダウンロード要求
@@ -360,6 +361,18 @@ export class MediaDownloader {
         mediaUrl = this.getBestImageUrl(media);
         mediaType = 'image';
         fileExt = this.getImageFileExtension(mediaUrl || '');
+        
+        // URLをダウンロード用に調整（formatとname=4096x4096を設定）
+        if (mediaUrl) {
+          // 設定から画像形式を取得
+          const format: 'png' | 'jpg' | 'webp' = 
+            settings.saveFormat === 'png' || settings.saveFormat === 'jpg' || settings.saveFormat === 'webp'
+              ? settings.saveFormat
+              : 'png'; // デフォルトはpng
+          mediaUrl = adjustUrlForDownload(mediaUrl, format);
+          // 拡張子も設定に合わせて更新
+          fileExt = format;
+        }
       } else if (media.type === 'video' || media.type === 'animated_gif') {
         mediaUrl = this.getBestVideoUrl(media);
         mediaType = 'video';
@@ -473,7 +486,7 @@ export class MediaDownloader {
         return {
           tlAutoUpdateDisabled: false,
           downloadMethod: 'chrome_downloads',
-          saveFormat: 'url',
+          saveFormat: 'png',
           saveDirectory: '',
           autoDownloadConditions: {
             retweet: false,

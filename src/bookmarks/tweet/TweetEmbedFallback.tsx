@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Alert, Text, Button, Box } from '@mantine/core';
 import { IconAlertCircle, IconRefresh, IconExternalLink } from '@tabler/icons-react';
 import { formatTweetId } from '../utils/format';
+import { getTextSync, useI18n } from '../utils/i18n';
 
 interface TweetEmbedFallbackProps {
   id: string;
@@ -13,6 +14,9 @@ interface TweetEmbedFallbackProps {
  * エラー状態を表示し、再試行やTwitterでの確認を促す
  */
 export function TweetEmbedFallback({ id, onRetry }: TweetEmbedFallbackProps) {
+  // i18n機能を一元管理（言語設定の初期化、ストレージ変更の監視、再レンダリングのトリガー）
+  useI18n();
+
   const handleRetry = () => {
     if (onRetry) {
       onRetry();
@@ -38,31 +42,31 @@ export function TweetEmbedFallback({ id, onRetry }: TweetEmbedFallbackProps) {
     >
       <Alert
         icon={<IconAlertCircle size={20} />}
-        title="ツイートの読み込みに失敗しました"
+        title={getTextSync('tweet_load_failed')}
         color="red"
         variant="light"
         style={{ border: 'none', borderRadius: 0 }}
       >
         <Text size="sm" mb="md" c="dimmed">
-          ツイートID: {formatTweetId(id)}
+          {getTextSync('tweet_id')}: {formatTweetId(id)}
         </Text>
         
         <Text size="sm" mb="md">
-          このツイートを表示できませんでした。以下の原因が考えられます：
+          {getTextSync('tweet_cannot_display')}
         </Text>
         
         <Box component="ul" style={{ margin: 0, paddingLeft: '20px' }}>
           <Text size="sm" component="li" mb="xs">
-            ツイートが削除されている
+            {getTextSync('tweet_deleted_reason')}
           </Text>
           <Text size="sm" component="li" mb="xs">
-            プライベートアカウントのツイート
+            {getTextSync('private_account_reason')}
           </Text>
           <Text size="sm" component="li" mb="xs">
-            ネットワーク接続の問題
+            {getTextSync('network_issue_reason')}
           </Text>
           <Text size="sm" component="li" mb="md">
-            Twitter APIの制限
+            {getTextSync('api_limit_reason')}
           </Text>
         </Box>
 
@@ -73,7 +77,7 @@ export function TweetEmbedFallback({ id, onRetry }: TweetEmbedFallbackProps) {
             leftSection={<IconRefresh size={14} />}
             onClick={handleRetry}
           >
-            再試行
+            {getTextSync('retry')}
           </Button>
           
           <Button 
@@ -82,7 +86,7 @@ export function TweetEmbedFallback({ id, onRetry }: TweetEmbedFallbackProps) {
             leftSection={<IconExternalLink size={14} />}
             onClick={handleOpenTwitter}
           >
-            Twitterで確認
+            {getTextSync('check_on_twitter')}
           </Button>
         </Box>
       </Alert>

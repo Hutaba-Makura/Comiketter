@@ -12,11 +12,13 @@ import { ApiProcessor } from '../api-processor/api-processor';
 import { MediaDownloader, type MediaDownloadRequest } from '../downloaders/media-downloader';
 import type { ApiResponseMessage } from '../api-processor/types';
 import { cbService } from '../bookmarks/services/cbService';
+import { I18nService } from './i18nService';
 
 export class MessageHandler {
   private downloadManager: DownloadManager;
   private apiProcessor: ApiProcessor;
   private mediaDownloader: MediaDownloader;
+  private i18nService: I18nService;
   private recentApiCalls: Map<string, number> = new Map(); // API重複防止用
   private readonly API_CALL_COOLDOWN = 1000; // 1秒間のクールダウン
 
@@ -24,7 +26,12 @@ export class MessageHandler {
     this.downloadManager = new DownloadManager();
     this.apiProcessor = new ApiProcessor();
     this.mediaDownloader = new MediaDownloader();
+    this.i18nService = I18nService.getInstance();
     this.setupMessageListeners();
+    // i18nサービスを初期化
+    this.i18nService.initialize().catch((error) => {
+      console.error('Comiketter: Failed to initialize i18n service:', error);
+    });
   }
 
   /**
@@ -151,6 +158,14 @@ export class MessageHandler {
 
         case 'OPEN_BOOKMARK_PAGE':
           await this.handleOpenBookmarkPage(sendResponse);
+          break;
+
+        case 'GET_I18N_MESSAGE':
+          await this.handleGetI18nMessage(message.payload, sendResponse);
+          break;
+
+        case 'GET_I18N_TABLE':
+          await this.handleGetI18nTable(message.payload, sendResponse);
           break;
 
         default:
@@ -712,6 +727,46 @@ export class MessageHandler {
       sendResponse({ 
         success: false, 
         error: error instanceof Error ? error.message : 'Failed to open bookmark page' 
+      });
+    }
+  }
+
+  /**
+   * i18nメッセージ取得要求を処理
+   */
+  private async handleGetI18nMessage(
+    payload: { messageKey: string; lang?: string },
+    sendResponse: (response: any) => void
+  ): Promise<void> {
+    try {
+      const { messageKey, lang } = payload;
+      const message = this.i18nService.getMessage(messageKey, lang);
+      sendResponse({ success: true, data: message });
+    } catch (error) {
+      console.error('Comiketter: Failed to get i18n message:', error);
+      sendResponse({ 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to get i18n message' 
+      });
+    }
+  }
+
+  /**
+   * i18n翻訳テーブル取得要求を処理
+   */
+  private async handleGetI18nTable(
+    payload: { lang: string },
+    sendResponse: (response: any) => void
+  ): Promise<void> {
+    try {
+      const { lang } = payload;
+      const table = this.i18nService.getTranslationTable(lang);
+      sendResponse({ success: true, data: table });
+    } catch (error) {
+      console.error('Comiketter: Failed to get i18n table:', error);
+      sendResponse({ 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to get i18n table' 
       });
     }
   }

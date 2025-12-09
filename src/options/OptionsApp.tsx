@@ -1,6 +1,6 @@
 // Options App component for Comiketter
 import React, { useState, useEffect } from 'react';
-import { Container, Title, Text, Switch, Select, Button, Stack, Group, Divider, ActionIcon, Tooltip, Box } from '@mantine/core';
+import { Container, Title, Text, Switch, Select, Button, Stack, Group, Divider, ActionIcon, Tooltip, Box, Paper } from '@mantine/core';
 import { StorageManager } from '@/utils/storage';
 import { FilenameSettings } from '@/components/FilenameSettings';
 import { BookmarkManager } from '@/components/BookmarkManager';
@@ -157,92 +157,146 @@ export const OptionsApp: React.FC = () => {
         <Divider />
         
         <Stack gap="md">
-          <Title order={3} size="h4">言語設定（未実装、更新をお待ちください）</Title>
+          <Title order={3} size="h4">言語設定</Title>
           <Select
             label="言語"
-            value={settings.language}
-            onChange={(value) => updateSettings({ language: value as 'ja' | 'en' })}
+            value={settings.language || 'ja'}
+            onChange={async (value) => {
+              const newLanguage = (value as 'ja' | 'en') || 'ja';
+              updateSettings({ language: newLanguage });
+              // 設定を即座に保存
+              try {
+                await StorageManager.saveSettings({ language: newLanguage });
+                // 他のページ（bookmarks等）に通知するため、ストレージ変更イベントを発火
+                // ストレージ変更は自動的に検知されるため、明示的な通知は不要
+              } catch (error) {
+                console.error('Failed to save language setting:', error);
+              }
+            }}
             data={[
-              { value: 'ja', label: '日本語' },
-              { value: 'en', label: '英語' },
+              { value: 'ja', label: '日本語 -Japanese' },
+              { value: 'en', label: '英語 -English' },
             ]}
           />
         </Stack>
-        
-        <Stack gap="md">
-          <Title order={3} size="h4">自動ダウンロード条件（未実装、更新をお待ちください）</Title>
-          <Switch
-            label="リツイート時に自動ダウンロード"
-            checked={settings.autoDownloadConditions.retweet}
-            onChange={(event) => updateSettings({
-              autoDownloadConditions: {
-                ...settings.autoDownloadConditions,
-                retweet: event.currentTarget.checked
-              }
-            })}
-          />
-          <Switch
-            label="いいね時に自動ダウンロード"
-            checked={settings.autoDownloadConditions.like}
-            onChange={(event) => updateSettings({
-              autoDownloadConditions: {
-                ...settings.autoDownloadConditions,
-                like: event.currentTarget.checked
-              }
-            })}
-          />
-          <Switch
-            label="両方の条件を満たした時のみダウンロード"
-            checked={settings.autoDownloadConditions.both}
-            onChange={(event) => updateSettings({
-              autoDownloadConditions: {
-                ...settings.autoDownloadConditions,
-                both: event.currentTarget.checked
-              }
-            })}
-          />
-        </Stack>
-        
+
         <Divider />
         
         <Stack gap="md">
-          <Title order={3} size="h4">メディアダウンロード設定（未実装、更新をお待ちください）</Title>
-          <Text size="sm" c="dimmed">
-            動画サムネイルやプロフィール画像の除外設定ができます。現在は動画のみがダウンロードされます。
-          </Text>
-          <Switch
-            label="動画サムネイルを含める"
-            checked={settings.mediaDownloadSettings.includeVideoThumbnail}
-            onChange={(event) => updateSettings({
-              mediaDownloadSettings: {
-                ...settings.mediaDownloadSettings,
-                includeVideoThumbnail: event.currentTarget.checked
-              }
-            })}
-          />
-          <Switch
-            label="プロフィール画像を除外"
-            checked={settings.mediaDownloadSettings.excludeProfileImages}
-            onChange={(event) => updateSettings({
-              mediaDownloadSettings: {
-                ...settings.mediaDownloadSettings,
-                excludeProfileImages: event.currentTarget.checked
-              }
-            })}
-          />
-          <Switch
-            label="バナー画像を除外"
-            checked={settings.mediaDownloadSettings.excludeBannerImages}
-            onChange={(event) => updateSettings({
-              mediaDownloadSettings: {
-                ...settings.mediaDownloadSettings,
-                excludeBannerImages: event.currentTarget.checked
-              }
-            })}
-          />
+          <Title order={3} size="h4">ダウンロード設定</Title>
+          <Paper p="md" withBorder>
+            <Stack gap="md">
+              {/* ファイル形式 */}
+              <Box>
+                <Text size="sm" fw={500} mb="xs">
+                  ファイル形式設定
+                </Text>
+                <Select
+                  label="ファイル形式"
+                  value={settings.saveFormat || 'png'}
+                  onChange={async (value) => {
+                    const newFormat = (value as 'png' | 'jpg' | 'webp' | undefined) || 'png';
+                    updateSettings({ saveFormat: newFormat });
+                    // 設定を即座に保存
+                    try {
+                      await StorageManager.saveSettings({ saveFormat: newFormat });
+                      // 他のページ（bookmarks等）に通知するため、ストレージ変更イベントを発火
+                      // ストレージ変更は自動的に検知されるため、明示的な通知は不要
+                    } catch (error) {
+                      console.error('Failed to save file format setting:', error);
+                    }
+                  }}
+                  data={['png', 'jpg', 'webp'].map(format => ({ value: format, label: format }))}
+                />
+              </Box>
+
+              <Divider />
+
+              {/* 自動ダウンロード条件設定 */}
+              <Box>
+                <Text size="sm" fw={500} mb="xs">
+                  自動ダウンロード条件（未実装、更新をお待ちください）
+                </Text>
+                <Stack gap="sm">
+                  <Switch
+                    label="リツイート時に自動ダウンロード"
+                    checked={settings.autoDownloadConditions.retweet}
+                    onChange={(event) => updateSettings({
+                      autoDownloadConditions: {
+                        ...settings.autoDownloadConditions,
+                        retweet: event.currentTarget.checked
+                      }
+                    })}
+                  />
+                  <Switch
+                    label="いいね時に自動ダウンロード"
+                    checked={settings.autoDownloadConditions.like}
+                    onChange={(event) => updateSettings({
+                      autoDownloadConditions: {
+                        ...settings.autoDownloadConditions,
+                        like: event.currentTarget.checked
+                      }
+                    })}
+                  />
+                  <Switch
+                    label="両方の条件を満たした時のみダウンロード"
+                    checked={settings.autoDownloadConditions.both}
+                    onChange={(event) => updateSettings({
+                      autoDownloadConditions: {
+                        ...settings.autoDownloadConditions,
+                        both: event.currentTarget.checked
+                      }
+                    })}
+                  />
+                </Stack>
+              </Box>
+
+              <Divider />
+
+              {/* メディアダウンロード設定 */}
+              <Box>
+                <Text size="sm" fw={500} mb="xs">
+                  メディアダウンロード設定（未実装、更新をお待ちください）
+                </Text>
+                <Stack gap="sm">
+                  <Switch
+                    label="動画サムネイルを含める"
+                    checked={settings.mediaDownloadSettings.includeVideoThumbnail}
+                    onChange={(event) => updateSettings({
+                      mediaDownloadSettings: {
+                        ...settings.mediaDownloadSettings,
+                        includeVideoThumbnail: event.currentTarget.checked
+                      }
+                    })}
+                  />
+                  <Switch
+                    label="プロフィール画像を除外"
+                    checked={settings.mediaDownloadSettings.excludeProfileImages}
+                    onChange={(event) => updateSettings({
+                      mediaDownloadSettings: {
+                        ...settings.mediaDownloadSettings,
+                        excludeProfileImages: event.currentTarget.checked
+                      }
+                    })}
+                  />
+                  <Switch
+                    label="バナー画像を除外"
+                    checked={settings.mediaDownloadSettings.excludeBannerImages}
+                    onChange={(event) => updateSettings({
+                      mediaDownloadSettings: {
+                        ...settings.mediaDownloadSettings,
+                        excludeBannerImages: event.currentTarget.checked
+                      }
+                    })}
+                  />
+                </Stack>
+              </Box>
+            </Stack>
+          </Paper>
         </Stack>
-      </Stack>
-    </Container>
+        </Stack>
+
+      </Container>
     </>
   );
 }; 

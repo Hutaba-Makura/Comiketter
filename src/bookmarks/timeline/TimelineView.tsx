@@ -31,6 +31,7 @@ import { TimelineSkeleton } from './TimelineSkeleton';
 import { VirtualizedTimeline } from './VirtualizedTimeline';
 import { cbService } from '../services/cbService';
 import { bookmarkDB } from '../../utils/bookmarkDB';
+import { getTextSync, useI18n } from '../utils/i18n';
 
 /**
  * タイムライン表示コンポーネント
@@ -47,6 +48,9 @@ export function TimelineView() {
     authorUsername: string;
     content: string;
   }>>(new Map());
+  
+  // i18n機能を一元管理（言語設定の初期化、ストレージ変更の監視、再レンダリングのトリガー）
+  useI18n();
   
   // 編集モードの状態管理
   const [editingName, setEditingName] = useState(false);
@@ -349,10 +353,10 @@ export function TimelineView() {
         <Center h={400}>
           <Stack align="center" gap="md">
             <Text size="xl" c="dimmed" fw={500}>
-              CBを選択してください
+              {getTextSync('select_cb_prompt')}
             </Text>
             <Text size="sm" c="dimmed" ta="center" maw={300}>
-              左側のサイドバーから表示したいCBを選択してください
+              {getTextSync('select_cb_from_sidebar')}
             </Text>
           </Stack>
         </Center>
@@ -376,7 +380,7 @@ export function TimelineView() {
         <Center h={400}>
           <Alert
             icon={<IconAlertCircle size={16} />}
-            title="エラーが発生しました"
+            title={getTextSync('error_occurred')}
             color="red"
             variant="light"
             style={{ maxWidth: 500 }}
@@ -388,7 +392,7 @@ export function TimelineView() {
               leftSection={<IconRefresh size={14} />}
               onClick={refetch}
             >
-              再試行
+              {getTextSync('retry')}
             </Button>
           </Alert>
         </Center>
@@ -448,7 +452,7 @@ export function TimelineView() {
                 }}
                 onClick={handleNameClick}
               >
-                {selectedCb?.name || 'CB名'}
+                {selectedCb?.name || getTextSync('cb_name')}
               </Text>
             )}
             {editingDescription ? (
@@ -459,7 +463,7 @@ export function TimelineView() {
                 onBlur={handleDescriptionSave}
                 onKeyDown={handleDescriptionKeyDown}
                 size="sm"
-                placeholder="CBの説明"
+                placeholder={getTextSync('cb_description')}
                 disabled={isSaving}
                 autoFocus
               />
@@ -482,15 +486,15 @@ export function TimelineView() {
                 }}
                 onClick={handleDescriptionClick}
               >
-                {selectedCb?.description || 'CBの説明（クリックして編集）'}
+                {selectedCb?.description || getTextSync('cb_description_placeholder')}
               </Text>
             )}
           </Stack>
           <Group gap="xs">
             <Badge variant="light" color="rgb(29, 155, 240)" size="lg">
-              {filteredAndSortedTweetIds.length} ツイート
+              {getTextSync('tweets_count', { count: filteredAndSortedTweetIds.length.toString() })}
             </Badge>
-            <Tooltip label="更新">
+            <Tooltip label={getTextSync('update')}>
               <ActionIcon variant="subtle" color="rgb(29, 155, 240)" size="lg" onClick={refetch} loading={loading}>
                 <IconRefresh size={20} />
               </ActionIcon>
@@ -509,7 +513,7 @@ export function TimelineView() {
         <Group gap="lg" align="center" mb="md" wrap="nowrap">
           {/* 検索バー */}
           <TextInput
-            placeholder="ツイートを検索..."
+            placeholder={getTextSync('search_tweets')}
             leftSection={<IconSearch size={14} />}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.currentTarget.value)}
@@ -522,10 +526,10 @@ export function TimelineView() {
             value={sortOrder}
             onChange={(value) => setSortOrder(value as 'newest_registered' | 'oldest_registered' | 'newest_posted' | 'oldest_posted')}
             data={[
-              { value: 'newest_registered', label: '登録が新しい順' },
-              { value: 'oldest_registered', label: '登録が古い順' },
-              { value: 'newest_posted', label: '投稿が新しい順' },
-              { value: 'oldest_posted', label: '投稿が古い順' }
+              { value: 'newest_registered', label: getTextSync('sort_newest_registered') },
+              { value: 'oldest_registered', label: getTextSync('sort_oldest_registered') },
+              { value: 'newest_posted', label: getTextSync('sort_newest_posted') },
+              { value: 'oldest_posted', label: getTextSync('sort_oldest_posted') }
             ]}
             size="sm"
             style={{ width: 180, flexShrink: 0 }}
@@ -540,7 +544,7 @@ export function TimelineView() {
           {filteredAndSortedTweetIds.length >= 100 && (
             <Group gap="xs" align="center" style={{ flexShrink: 0 }}>
               <Text size="sm" c="dimmed">
-                仮想化
+                {getTextSync('virtualization')}
               </Text>
               <Switch
                 checked={useVirtualization}
@@ -554,7 +558,7 @@ export function TimelineView() {
         {/* 検索結果表示 */}
         {searchQuery && (
           <Text size="sm" c="dimmed" mb="md">
-            {filteredAndSortedTweetIds.length}件の結果
+            {getTextSync('search_results_count', { count: filteredAndSortedTweetIds.length.toString() })}
           </Text>
         )}
         </Box>
@@ -569,26 +573,26 @@ export function TimelineView() {
                 <>
                   <IconSearch size={48} color="var(--mantine-color-gray-4)" />
                   <Text size="lg" c="dimmed" fw={500}>
-                    検索結果がありません
+                    {getTextSync('no_search_results')}
                   </Text>
                   <Text size="sm" c="dimmed" ta="center">
-                    「{searchQuery}」に一致するツイートが見つかりませんでした
+                    {getTextSync('no_tweets_found_for_query', { query: searchQuery })}
                   </Text>
                   <Button 
                     variant="light" 
                     size="sm"
                     onClick={() => setSearchQuery('')}
                   >
-                    検索をクリア
+                    {getTextSync('clear_search')}
                   </Button>
                 </>
               ) : (
                 <>
                   <Text size="lg" c="dimmed" fw={500}>
-                    ツイートがありません
+                    {getTextSync('no_tweets')}
                   </Text>
                   <Text size="sm" c="dimmed" ta="center">
-                    このCBにはまだツイートが追加されていません
+                    {getTextSync('no_tweets_in_cb')}
                   </Text>
                 </>
               )}

@@ -61,6 +61,12 @@ export default {
           from: 'icons',
           to: 'icons',
         },
+        // _localesフォルダをコピー（i18n用 - 統合方式）
+        // contentScriptとbookmarksのメッセージを統合した_localesフォルダ
+        {
+          from: 'src/_locales',
+          to: '_locales',
+        },
       ],
     }),
   ],

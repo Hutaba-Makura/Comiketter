@@ -206,7 +206,7 @@ export interface AppSettings {
   
   // ダウンロード設定
   downloadMethod: 'chrome_downloads' | 'native_messaging'
-  saveFormat: 'url' | 'blob' | 'mixed'
+  saveFormat: 'png' | 'jpg' | 'webp'
   saveDirectory: string
   
   // 自動ダウンロード条件

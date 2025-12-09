@@ -401,7 +401,7 @@ export class VideoDownloader {
         return {
           tlAutoUpdateDisabled: false,
           downloadMethod: 'chrome_downloads',
-          saveFormat: 'url',
+          saveFormat: 'png',
           saveDirectory: '',
           autoDownloadConditions: {
             retweet: false,

@@ -21,6 +21,7 @@ declare global {
 }
 
 import type { Tweet } from '../types';
+import { getText } from './i18n';
 
 /**
  * ツイート要素からツイート情報を抽出
@@ -286,11 +287,14 @@ function extractCreatedAt(article: HTMLElement): string | null {
 function getQuotedTweetContainers(article: HTMLElement): HTMLElement[] {
   const containers: HTMLElement[] = [];
   
+  // i18n対応: 引用テキストを一度だけ取得（ループ外で実行）
+  const quoteText = getText('引用');
+  
   // "引用"というテキストを持つspan要素をすべて検索
   const allSpans = article.querySelectorAll('span');
   allSpans.forEach(span => {
     const text = (span.textContent || '').trim();
-    if (text === '引用' || text === 'Quote') {
+    if (text === quoteText) {
       // 親要素（P）を取得
       const parentP = span.parentElement;
       if (parentP) {

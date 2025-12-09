@@ -8,6 +8,7 @@
  */
 
 import { showErrorToast } from '../utils/toast';
+import { getText } from './i18n';
 
 // ログ送信関数
 const sendLog = (message: string, data?: any) => {
@@ -81,7 +82,7 @@ export class SidebarButton {
       this.isInitialized = true;
       this.startObserving();
     } catch (error) {
-      sendLog('サイドバーボタン初期化エラー:', error);
+      sendLog(getText('サイドバーボタン初期化エラー'), error);
     }
   }
 
@@ -92,7 +93,7 @@ export class SidebarButton {
     // 既にボタンが存在する場合はスキップ
     const existingButton = document.querySelector('[data-testid="comiketter-sidebar-button"]');
     if (existingButton) {
-      sendLog('既にボタンが存在するため、初期化をスキップ');
+      sendLog(getText('既にボタンが存在するため、初期化をスキップ'));
       return;
     }
 
@@ -101,10 +102,10 @@ export class SidebarButton {
       if (this.shouldAddButton(sidebar)) {
         await this.createSidebarButton();
       } else {
-        sendLog('ボタン追加条件を満たさないため、スキップ');
+        sendLog(getText('ボタン追加条件を満たさないため、スキップ'));
       }
     } else {
-      sendLog('ナビゲーション要素が見つからないため、スキップ');
+      sendLog(getText('ナビゲーション要素が見つからないため、スキップ'));
     }
   }
 
@@ -209,7 +210,7 @@ export class SidebarButton {
         if (this.shouldAddButton(node)) {
           // 1回だけ実行して終了
           this.createSidebarButton().catch(error => {
-            sendLog('サイドバーボタン作成エラー:', error);
+            sendLog(getText('サイドバーボタン作成エラー'), error);
           });
         }
         return;
@@ -226,7 +227,7 @@ export class SidebarButton {
           const navigation = navigations[i] as HTMLElement;
           if (this.shouldAddButton(navigation)) {
             this.createSidebarButton().catch(error => {
-              sendLog('サイドバーボタン作成エラー:', error);
+              sendLog(getText('サイドバーボタン作成エラー'), error);
             });
             // 1回だけ実行して終了
             return;
@@ -276,7 +277,7 @@ export class SidebarButton {
       }
     }
 
-    sendLog('有効なナビゲーション要素が見つかりません');
+    sendLog(getText('有効なナビゲーション要素が見つかりません'));
     return null;
   }
 
@@ -346,7 +347,7 @@ export class SidebarButton {
       }
     }
 
-    sendLog('サンプル要素が見つかりません');
+    sendLog(getText('サンプル要素が見つかりません'));
     return null;
   }
 
@@ -372,7 +373,7 @@ export class SidebarButton {
       // 最初のspan要素を探して置き換え
       const firstSpan = textContainer.querySelector('span');
       if (firstSpan) {
-        firstSpan.textContent = 'カスタムブックマーク';
+        firstSpan.textContent = getText('カスタムブックマーク');
         // 2つ目以降のspan要素は削除
         const otherSpans = textContainer.querySelectorAll('span:not(:first-child)');
         otherSpans.forEach(span => span.remove());
@@ -381,7 +382,7 @@ export class SidebarButton {
       // フォールバック: すべてのspan要素を処理
       const textElements = button.querySelectorAll('span');
       if (textElements.length > 0) {
-        textElements[0].textContent = 'カスタムブックマーク';
+        textElements[0].textContent = getText('カスタムブックマーク');
         // 2つ目以降のspan要素は削除
         for (let i = 1; i < textElements.length; i++) {
           textElements[i].remove();
@@ -458,7 +459,7 @@ export class SidebarButton {
       }
       return await response.text();
     } catch (error) {
-      sendLog(`アイコン読み込みエラー: ${iconName}`, error);
+      sendLog(`${getText('アイコン読み込みエラー')}: ${iconName}`, error);
       // フォールバック用のデフォルトアイコン
       return this.getDefaultIcon(iconName);
     }
@@ -526,7 +527,7 @@ export class SidebarButton {
       previousSibling.classList.add('sidebarBG');
     } else {
       // デバッグ: アイコンの親要素の構造を確認
-      sendLog('アイコンの前の要素が見つかりません', {
+      sendLog(getText('アイコンの前の要素が見つかりません'), {
         icon,
         parent: icon.parentElement,
         parentChildren: icon.parentElement?.children,
@@ -541,7 +542,7 @@ export class SidebarButton {
     const wrapper = document.createElement('div');
     wrapper.className = 'comiketter-sidebar-button';
     wrapper.setAttribute('data-testid', 'comiketter-sidebar-button');
-    wrapper.setAttribute('aria-label', 'カスタムブックマーク');
+    wrapper.setAttribute('aria-label', getText('カスタムブックマーク'));
     wrapper.setAttribute('role', 'button');
     wrapper.setAttribute('tabindex', '0');
     
@@ -554,14 +555,14 @@ export class SidebarButton {
   private async createSidebarButton(): Promise<void> {
     // 既にボタン作成処理中の場合はスキップ（重複防止）
     if (this.isCreatingButton) {
-      sendLog('ボタン作成処理中のため、作成をスキップ');
+      sendLog(getText('ボタン作成処理中のため、作成をスキップ'));
       return;
     }
 
     // グローバルに既にボタンが存在する場合はスキップ（重複防止）
     const existingButton = document.querySelector('[data-testid="comiketter-sidebar-button"]');
     if (existingButton) {
-      sendLog('既にボタンが存在するため、作成をスキップ');
+      sendLog(getText('既にボタンが存在するため、作成をスキップ'));
       return;
     }
 
@@ -571,7 +572,7 @@ export class SidebarButton {
     try {
       const sidebar = this.findSidebar();
       if (!sidebar) {
-        sendLog('ナビゲーション要素が見つかりません');
+        sendLog(getText('ナビゲーション要素が見つかりません'));
         return;
       }
 
@@ -581,7 +582,7 @@ export class SidebarButton {
     // サンプル要素を取得
     const sampleElement = this.getSampleElement();
     if (!sampleElement) {
-      sendLog('サンプル要素が見つかりません。ボタン作成を中止');
+      sendLog(getText('サンプル要素が見つかりません。ボタン作成を中止'));
       return;
     }
 
@@ -660,7 +661,7 @@ export class SidebarButton {
       // 挿入先を決定
       const insertTarget = this.findInsertTarget(sidebar);
       if (!insertTarget) {
-        sendLog('挿入先が見つかりません');
+        sendLog(getText('挿入先が見つかりません'));
         return;
       }
       
@@ -679,13 +680,13 @@ export class SidebarButton {
       return sidebar; // 親要素を返して、後で挿入位置を調整
     }
     
-    sendLog('ブックマークリンクが見つからないため、代替手段を試行');
+    sendLog(getText('ブックマークリンクが見つからないため、代替手段を試行'));
     
     // 2. ナビゲーション要素を探す
     const navElements = sidebar.querySelectorAll('nav, [role="navigation"]');
     if (navElements.length > 0) {
       const nav = navElements[navElements.length - 1] as HTMLElement;
-      sendLog('ナビゲーション要素を挿入先として選択');
+      sendLog(getText('ナビゲーション要素を挿入先として選択'));
       return nav;
     }
     
@@ -695,7 +696,7 @@ export class SidebarButton {
       const lastTab = tabElements[tabElements.length - 1] as HTMLElement;
       const parent = lastTab.parentElement;
       if (parent) {
-        sendLog('タブ要素の親を挿入先として選択');
+        sendLog(getText('タブ要素の親を挿入先として選択'));
         return parent;
       }
     }
@@ -712,7 +713,7 @@ export class SidebarButton {
     }
     
     // 5. 直接サイドバーに挿入
-    sendLog('サイドバー自体を挿入先として選択');
+    sendLog(getText('サイドバー自体を挿入先として選択'));
     return sidebar;
   }
 
@@ -723,7 +724,7 @@ export class SidebarButton {
     try {
       // 拡張機能のコンテキストが有効かチェック
       if (!chrome?.runtime?.id) {
-        sendLog('拡張機能コンテキストが無効です。フォールバック処理を実行');
+        sendLog(getText('拡張機能コンテキストが無効です。フォールバック処理を実行'));
         this.openBookmarkPageFallback();
         return;
       }
@@ -732,12 +733,12 @@ export class SidebarButton {
       chrome.runtime.sendMessage({
         type: 'OPEN_BOOKMARK_PAGE',
       }).catch((error) => {
-        sendLog('ブックマークページを開けませんでした:', error);
+        sendLog(`${getText('ブックマークページを開けませんでした')}:`, error);
         // フォールバック: 新しいタブで開く
         this.openBookmarkPageFallback();
       });
     } catch (error) {
-      sendLog('サイドバーボタンクリックエラー:', error);
+      sendLog(getText('サイドバーボタンクリックエラー'), error);
       // エラーが発生した場合もフォールバック処理を実行
       this.openBookmarkPageFallback();
     }
@@ -751,11 +752,11 @@ export class SidebarButton {
       // 直接URLで開く
       const bookmarkUrl = chrome?.runtime?.getURL?.('bookmarks.html') || 'bookmarks.html';
       window.open(bookmarkUrl, '_blank');
-      sendLog('フォールバック処理でブックマークページを開きました');
+      sendLog(getText('フォールバック処理でブックマークページを開きました'));
     } catch (fallbackError) {
-      sendLog('フォールバック処理も失敗しました:', fallbackError);
+      sendLog(getText('フォールバック処理も失敗しました'), fallbackError);
       // 最後の手段: トースト通知でユーザーに通知
-      showErrorToast('ブックマークページを開けませんでした。手動でブックマークページにアクセスしてください。');
+      showErrorToast(getText('ブックマークページを開けませんでした。手動でブックマークページにアクセスしてください。'));
     }
   }
 
@@ -794,7 +795,7 @@ export class SidebarButton {
    * 手動でボタンを再作成（デバッグ用）
    */
   async forceRecreate(): Promise<void> {
-    sendLog('手動でボタンを再作成');
+    sendLog(getText('手動でボタンを再作成'));
     this.removeSidebarButton();
     await this.createSidebarButton();
   }
