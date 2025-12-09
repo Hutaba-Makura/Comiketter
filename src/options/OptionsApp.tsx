@@ -19,6 +19,12 @@ export const OptionsApp: React.FC = () => {
   const loadSettings = async () => {
     try {
       const settingsData = await StorageManager.getSettings();
+      // saveFormatが未設定の場合はデフォルト値'png'を設定
+      if (!settingsData.saveFormat || !['png', 'jpg', 'webp'].includes(settingsData.saveFormat)) {
+        settingsData.saveFormat = 'png';
+        // 初期値をストレージに保存
+        await StorageManager.saveSettings({ saveFormat: 'png' });
+      }
       setSettings(settingsData);
     } catch (error) {
       console.error('Failed to load settings:', error);
