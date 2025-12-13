@@ -223,6 +223,11 @@ export class BookmarkButton extends BaseButton {
         background: rgba(255, 255, 255, 0.1);
       }
       
+      /* セカンダリボタンのホバー効果 */
+      .comiketter-bookmark-button-secondary:hover {
+        background: rgba(15, 20, 25, 0.1) !important;
+      }
+      
       .comiketter-bookmark-button:hover .statusBG,
       .comiketter-bookmark-button:hover .streamBG {
         background: rgba(241, 185, 26, 0.1);
@@ -348,6 +353,10 @@ export class BookmarkButton extends BaseButton {
         background: #f7f9fa;
         color: #14171a;
       }
+      
+      .comiketter-bookmark-button-secondary:hover {
+        background: rgba(15, 20, 25, 0.1) !important;
+      }
 
       /* テーマ別スタイル */
       .comiketter-bookmark-selector[data-theme="light"] {
@@ -392,6 +401,10 @@ export class BookmarkButton extends BaseButton {
       .comiketter-bookmark-selector[data-theme="dark"] .comiketter-bookmark-button-secondary {
           background: #38444d;
         color: rgb(247, 249, 249);
+      }
+      
+      .comiketter-bookmark-selector[data-theme="dark"] .comiketter-bookmark-button-secondary:hover {
+        background: rgba(247, 249, 249, 0.1) !important;
       }
     `;
   }
@@ -817,7 +830,7 @@ export class BookmarkButton extends BaseButton {
     cancelButton.className = 'comiketter-bookmark-button-secondary';
     cancelButton.textContent = getText('キャンセル');
     cancelButton.style.cssText = `
-      background: #f7f9fa;
+      background: rgba(0, 0, 0, 0);
       color: #14171a;
       padding: 8px 16px;
       border-radius: 20px;
@@ -905,6 +918,9 @@ export class BookmarkButton extends BaseButton {
         checkbox.type = 'checkbox';
         checkbox.className = 'comiketter-bookmark-checkbox';
         checkbox.id = `bookmark-${bookmark.id}`;
+        checkbox.style.cssText = `
+          transform: scale(1.2);
+        `;
         
         // 現在のツイートが既にこのブックマークに登録されているかチェック
         if (currentTweetId) {
