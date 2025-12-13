@@ -16,7 +16,7 @@ import {
   ActionIcon,
   Menu
 } from '@mantine/core';
-import { IconPencilPlus, IconSearch, IconBookmark, IconSettings, IconDots, IconFolderUp} from '@tabler/icons-react';
+import { IconPencilPlus, IconSearch, IconBookmark, IconSettings, IconDots, IconFolderDown} from '@tabler/icons-react';
 import { useCbStore } from '../state/cbStore';
 import { CbSidebarItem } from './CbSidebarItem';
 import { cbService } from '../services/cbService';
@@ -87,6 +87,11 @@ export function CbSidebar() {
     } finally {
       setIsCreating(false);
     }
+  };
+
+  // 実装中
+  const handleImportCb = () => {
+    console.log('CBインポート');
   };
 
   // 検索フィルタリングとupdateAt順にソート
@@ -168,7 +173,7 @@ export function CbSidebar() {
 
                 <Menu.Dropdown>
                   <Menu.Item
-                    leftSection={<IconFolderUp size={14} />}
+                    leftSection={<IconFolderDown size={14} />}
                     onClick={handleImportCb}
                   >
                     {getTextSync('import_cb')}
