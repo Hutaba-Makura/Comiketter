@@ -17,7 +17,8 @@ import {
   IconDotsVertical, 
   IconTrash, 
   IconEdit, 
-  IconCopy
+  IconCopy,
+  IconFolderUp
 } from '@tabler/icons-react';
 import { Cb } from '../types/cb';
 import { useCbStore } from '../state/cbStore';
@@ -88,6 +89,11 @@ export function CbSidebarItem({ cb }: CbSidebarItemProps) {
       console.error('CBコピーエラー:', error);
       alert(getTextSync('cb_copy_failed'));
     }
+  };
+
+  // 実装中
+  const handleExport = () => {
+    console.log('CBエクスポート:', cb.id);
   };
 
   return (
@@ -200,6 +206,12 @@ export function CbSidebarItem({ cb }: CbSidebarItemProps) {
                         onClick={handleCopy}
                       >
                         {getTextSync('copy')}
+                      </Menu.Item>
+                      <Menu.Item
+                        leftSection={<IconFolderUp size={14} />}
+                        onClick={handleExport}
+                      >
+                        {getTextSync('export_cb')}
                       </Menu.Item>
                       <Menu.Divider />
                       <Menu.Item

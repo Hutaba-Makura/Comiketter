@@ -11,9 +11,12 @@ import {
   Divider,
   Badge,
   ScrollArea,
-  LoadingOverlay
+  LoadingOverlay,
+  Transition,
+  ActionIcon,
+  Menu
 } from '@mantine/core';
-import { IconPencilPlus, IconSearch, IconBookmark, IconSettings} from '@tabler/icons-react';
+import { IconPencilPlus, IconSearch, IconBookmark, IconSettings, IconDots, IconFolderUp} from '@tabler/icons-react';
 import { useCbStore } from '../state/cbStore';
 import { CbSidebarItem } from './CbSidebarItem';
 import { cbService } from '../services/cbService';
@@ -30,6 +33,7 @@ export function CbSidebar() {
   const [cbDescription, setCbDescription] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [isSettingsHovered, setIsSettingsHovered] = useState(false);
+  const [isHeaderHovered, setIsHeaderHovered] = useState(false);
   
   // i18n機能を一元管理（言語設定の初期化、ストレージ変更の監視、再レンダリングのトリガー）
   useI18n();
@@ -133,11 +137,46 @@ export function CbSidebar() {
     <>
       <Stack gap="md" p="md" h="100%">
         {/* ヘッダー */}
-        <Group display="flex" justify="start" align="center" gap="0">
-          <IconBookmark size={24}/>
-          <Title order={3} size="h4">
-            {getTextSync('custom_bookmark')}
-          </Title>
+        <Group 
+          display="flex" 
+          justify="space-between" 
+          align="center" 
+          gap="xs"
+          onMouseEnter={() => setIsHeaderHovered(true)}
+          onMouseLeave={() => setIsHeaderHovered(false)}
+        >
+          <Group display="flex" justify="start" align="center" gap="0">
+            <IconBookmark size={24}/>
+            <Title order={3} size="h4">
+              {getTextSync('custom_bookmark')}
+            </Title>
+          </Group>
+
+          {/* メニューボタン */}
+          <Transition mounted={isHeaderHovered} transition="fade" duration={150}>
+            {(menuStyles) => (
+              <Menu shadow="md" width={150} position="bottom-end">
+                <Menu.Target>
+                  <ActionIcon
+                    variant="subtle"
+                    size="xs"
+                    style={menuStyles}
+                  >
+                    <IconDots size={12} />
+                  </ActionIcon>
+                </Menu.Target>
+
+                <Menu.Dropdown>
+                  <Menu.Item
+                    leftSection={<IconFolderUp size={14} />}
+                    onClick={handleImportCb}
+                  >
+                    {getTextSync('import_cb')}
+                  </Menu.Item>
+                </Menu.Dropdown>
+              </Menu>
+            )}
+          </Transition>
         </Group>
 
         {/* 統計情報 */}
