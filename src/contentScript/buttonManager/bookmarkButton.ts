@@ -223,11 +223,6 @@ export class BookmarkButton extends BaseButton {
         background: rgba(255, 255, 255, 0.1);
       }
       
-      /* セカンダリボタンのホバー効果 */
-      .comiketter-bookmark-button-secondary:hover {
-        background: rgba(15, 20, 25, 0.1) !important;
-      }
-      
       .comiketter-bookmark-button:hover .statusBG,
       .comiketter-bookmark-button:hover .streamBG {
         background: rgba(241, 185, 26, 0.1);

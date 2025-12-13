@@ -29,6 +29,7 @@ export function CbSidebar() {
   const [cbName, setCbName] = useState('');
   const [cbDescription, setCbDescription] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+  const [isSettingsHovered, setIsSettingsHovered] = useState(false);
   
   // i18n機能を一元管理（言語設定の初期化、ストレージ変更の監視、再レンダリングのトリガー）
   useI18n();
@@ -250,7 +251,11 @@ export function CbSidebar() {
               paddingBottom: '12px',
               margin: '8px',
               cursor: 'pointer',
+              backgroundColor: isSettingsHovered ? 'rgba(15, 20, 25, 0.1)' : 'transparent',
+              transition: 'background-color 0.2s ease',
             }}
+            onMouseEnter={() => setIsSettingsHovered(true)}
+            onMouseLeave={() => setIsSettingsHovered(false)}
             onClick={() => {
               if (chrome?.runtime?.openOptionsPage) {
                 chrome.runtime.openOptionsPage();
