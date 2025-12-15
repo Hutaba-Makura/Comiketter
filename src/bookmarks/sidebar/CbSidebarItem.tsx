@@ -211,7 +211,7 @@ export function CbSidebarItem({ cb }: CbSidebarItemProps) {
                         leftSection={<IconFolderUp size={14} />}
                         onClick={handleExport}
                       >
-                        {getTextSync('export_single_cb_list')}
+                        {getTextSync('export_single_cb')}
                       </Menu.Item>
                       <Menu.Divider />
                       <Menu.Item

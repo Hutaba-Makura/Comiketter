@@ -170,18 +170,16 @@ export function CbSidebar() {
 
             <Menu.Dropdown>
               <Menu.Item
-                leftSection={<IconFolderDown size={14} />}
+                leftSection={<IconFolderDown size={24} />}
                 onClick={handleImportCb}
-                style={{ whiteSpace: 'nowrap' }}
               >
-                {getTextSync('import_cb_list')}
+                {getTextSync('import_cb')}
               </Menu.Item>
               <Menu.Item
-                leftSection={<IconFolderUp size={14} />}
+                leftSection={<IconFolderUp size={24} />}
                 onClick={handleExportAllCbLists}
-                style={{ whiteSpace: 'nowrap' }}
               >
-                {getTextSync('export_all_cb_lists')}
+                {getTextSync('export_all_cb')}
               </Menu.Item>
             </Menu.Dropdown>
           </Menu>

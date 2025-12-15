@@ -464,14 +464,14 @@
   "version": {
     "message": "バージョン"
   },
-  "export_single_cb_list": {
-    "message": "このCBリストをエクスポート"
+  "export_single_cb": {
+    "message": "このCBをエクスポート"
   },
-  "import_cb_list": {
-    "message": "CBリストをインポート"
+  "import_cb": {
+    "message": "CBをインポート"
   },
-  "export_all_cb_lists": {
-    "message": "全てのCBリストをエクスポート"
+  "export_all_cb": {
+    "message": "全てのCBをエクスポート"
   },
   "api_type_labels": {
     "message": "{\"HomeTimeline\":\"ホームタイムライン\",\"HomeLatestTimeline\":\"ホーム最新タイムライン\",\"TweetDetail\":\"ツイート詳細\",\"TweetResultByRestId\":\"ツイート結果（ID指定）\",\"ListLatestTweetsTimeline\":\"リスト最新ツイートタイムライン\",\"SearchTimeline\":\"検索タイムライン\",\"CommunityTweetsTimeline\":\"コミュニティタイムライン\",\"CommunityTweetSearchModuleQuery\":\"コミュニティ検索タイムライン\",\"Bookmarks\":\"ブックマークタイムライン\",\"BookmarkSearchTimeline\":\"ブックマーク検索タイムライン\",\"UserTweets\":\"ユーザーツイート\",\"UserTweetsAndReplies\":\"ユーザー返信\",\"Likes\":\"ユーザーいいね\",\"UserHighlightsTweets\":\"ユーザーハイライトツイート\",\"CreateBookmarks\":\"ブックマーク作成\",\"DeleteBookmark\":\"ブックマーク削除\",\"FavoriteTweet\":\"ツイートいいね\",\"UnfavoriteTweet\":\"ツイートいいね解除\",\"CreateRetweet\":\"リツイート作成\",\"DeleteRetweet\":\"リツイート削除\",\"CreateTweet\":\"ツイート作成\",\"UserMedia\":\"ユーザーメディア\",\"NotificationsTimeline\":\"通知タイムライン\"}"
