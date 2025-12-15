@@ -183,7 +183,7 @@ export function CbSidebarItem({ cb }: CbSidebarItemProps) {
               
               <Transition mounted={isHovered || isSelected} transition="fade" duration={150}>
                 {(menuStyles) => (
-                  <Menu shadow="md" width={150} position="bottom-end">
+                  <Menu shadow="md" width="auto" position="bottom-end">
                     <Menu.Target>
                       <ActionIcon
                         variant="subtle"
@@ -211,7 +211,7 @@ export function CbSidebarItem({ cb }: CbSidebarItemProps) {
                         leftSection={<IconFolderUp size={14} />}
                         onClick={handleExport}
                       >
-                        {getTextSync('export_cb')}
+                        {getTextSync('export_single_cb_list')}
                       </Menu.Item>
                       <Menu.Divider />
                       <Menu.Item

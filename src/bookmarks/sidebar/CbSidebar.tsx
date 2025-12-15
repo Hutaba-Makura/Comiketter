@@ -15,7 +15,7 @@ import {
   ActionIcon,
   Menu
 } from '@mantine/core';
-import { IconPencilPlus, IconSearch, IconBookmark, IconSettings, IconDots, IconFolderDown} from '@tabler/icons-react';
+import { IconPencilPlus, IconSearch, IconBookmark, IconSettings, IconDots, IconFolderDown, IconFolderUp} from '@tabler/icons-react';
 import { useCbStore } from '../state/cbStore';
 import { CbSidebarItem } from './CbSidebarItem';
 import { cbService } from '../services/cbService';
@@ -92,6 +92,10 @@ export function CbSidebar() {
     console.log('CBインポート');
   };
 
+  const handleExportAllCbLists = () => {
+    console.log('全てのCBリストをエクスポート');
+  };
+
   // 検索フィルタリングとupdateAt順にソート
   const filteredCbs = cbs
     .filter(cb => 
@@ -160,7 +164,7 @@ export function CbSidebar() {
                 variant="subtle"
                 size="xs"
               >
-                <IconDots size={24} />
+                <IconDots size={24}  color="var(--mantine-color-gray-6)" />
               </ActionIcon>
             </Menu.Target>
 
@@ -170,7 +174,14 @@ export function CbSidebar() {
                 onClick={handleImportCb}
                 style={{ whiteSpace: 'nowrap' }}
               >
-                {getTextSync('import_cb')}
+                {getTextSync('import_cb_list')}
+              </Menu.Item>
+              <Menu.Item
+                leftSection={<IconFolderUp size={14} />}
+                onClick={handleExportAllCbLists}
+                style={{ whiteSpace: 'nowrap' }}
+              >
+                {getTextSync('export_all_cb_lists')}
               </Menu.Item>
             </Menu.Dropdown>
           </Menu>

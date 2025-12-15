@@ -464,6 +464,15 @@
   "version": {
     "message": "Version"
   },
+  "export_single_cb_list": {
+    "message": "Export this CB list"
+  },
+  "import_cb_list": {
+    "message": "Import CB list"
+  },
+  "export_all_cb_lists": {
+    "message": "Export all CB lists"
+  },
   "api_type_labels": {
     "message": "{\"HomeTimeline\":\"Home Timeline\",\"HomeLatestTimeline\":\"Home Latest Timeline\",\"TweetDetail\":\"Tweet Detail\",\"TweetResultByRestId\":\"Tweet Result (by ID)\",\"ListLatestTweetsTimeline\":\"List Latest Tweets Timeline\",\"SearchTimeline\":\"Search Timeline\",\"CommunityTweetsTimeline\":\"Community Timeline\",\"CommunityTweetSearchModuleQuery\":\"Community Search Timeline\",\"Bookmarks\":\"Bookmarks Timeline\",\"BookmarkSearchTimeline\":\"Bookmark Search Timeline\",\"UserTweets\":\"User Tweets\",\"UserTweetsAndReplies\":\"User Replies\",\"Likes\":\"User Likes\",\"UserHighlightsTweets\":\"User Highlights Tweets\",\"CreateBookmarks\":\"Create Bookmarks\",\"DeleteBookmark\":\"Delete Bookmark\",\"FavoriteTweet\":\"Favorite Tweet\",\"UnfavoriteTweet\":\"Unfavorite Tweet\",\"CreateRetweet\":\"Create Retweet\",\"DeleteRetweet\":\"Delete Retweet\",\"CreateTweet\":\"Create Tweet\",\"UserMedia\":\"User Media\",\"NotificationsTimeline\":\"Notifications Timeline\"}"
   }
