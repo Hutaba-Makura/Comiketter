@@ -12,11 +12,10 @@ import {
   Badge,
   ScrollArea,
   LoadingOverlay,
-  Transition,
   ActionIcon,
   Menu
 } from '@mantine/core';
-import { IconPencilPlus, IconSearch, IconBookmark, IconSettings, IconDots, IconFolderDown} from '@tabler/icons-react';
+import { IconPencilPlus, IconSearch, IconBookmark, IconSettings, IconDots, IconFolderDown, IconFolderUp} from '@tabler/icons-react';
 import { useCbStore } from '../state/cbStore';
 import { CbSidebarItem } from './CbSidebarItem';
 import { cbService } from '../services/cbService';
@@ -33,7 +32,6 @@ export function CbSidebar() {
   const [cbDescription, setCbDescription] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [isSettingsHovered, setIsSettingsHovered] = useState(false);
-  const [isHeaderHovered, setIsHeaderHovered] = useState(false);
   
   // i18n機能を一元管理（言語設定の初期化、ストレージ変更の監視、再レンダリングのトリガー）
   useI18n();
@@ -94,6 +92,10 @@ export function CbSidebar() {
     console.log('CBインポート');
   };
 
+  const handleExportAllCbLists = () => {
+    console.log('全てのCBリストをエクスポート');
+  };
+
   // 検索フィルタリングとupdateAt順にソート
   const filteredCbs = cbs
     .filter(cb => 
@@ -147,8 +149,6 @@ export function CbSidebar() {
           justify="space-between" 
           align="center" 
           gap="xs"
-          onMouseEnter={() => setIsHeaderHovered(true)}
-          onMouseLeave={() => setIsHeaderHovered(false)}
         >
           <Group display="flex" justify="start" align="center" gap="0">
             <IconBookmark size={24}/>
@@ -158,30 +158,31 @@ export function CbSidebar() {
           </Group>
 
           {/* メニューボタン */}
-          <Transition mounted={isHeaderHovered} transition="fade" duration={150}>
-            {(menuStyles) => (
-              <Menu shadow="md" width={150} position="bottom-end">
-                <Menu.Target>
-                  <ActionIcon
-                    variant="subtle"
-                    size="xs"
-                    style={menuStyles}
-                  >
-                    <IconDots size={12} />
-                  </ActionIcon>
-                </Menu.Target>
+          <Menu shadow="md" width="auto" position="bottom-end">
+            <Menu.Target>
+              <ActionIcon
+                variant="subtle"
+                size="xs"
+              >
+                <IconDots size={24}  color="var(--mantine-color-gray-6)" />
+              </ActionIcon>
+            </Menu.Target>
 
-                <Menu.Dropdown>
-                  <Menu.Item
-                    leftSection={<IconFolderDown size={14} />}
-                    onClick={handleImportCb}
-                  >
-                    {getTextSync('import_cb')}
-                  </Menu.Item>
-                </Menu.Dropdown>
-              </Menu>
-            )}
-          </Transition>
+            <Menu.Dropdown>
+              <Menu.Item
+                leftSection={<IconFolderDown size={24} />}
+                onClick={handleImportCb}
+              >
+                {getTextSync('import_cb')}
+              </Menu.Item>
+              <Menu.Item
+                leftSection={<IconFolderUp size={24} />}
+                onClick={handleExportAllCbLists}
+              >
+                {getTextSync('export_all_cb')}
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
         </Group>
 
         {/* 統計情報 */}
