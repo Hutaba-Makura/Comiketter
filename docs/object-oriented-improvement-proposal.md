@@ -1,199 +1,206 @@
-# オブジェクト指向設計による改良提案書
+## 自分が開発したプロダクトの概要
 
-## 概要
+2.では自分が開発した **X（旧Twitter）向けChrome拡張機能**を題材として、回答する。
 
-本レポートは、筆者が開発したTwitter向けChrome拡張機能において、オブジェクト指向の設計原則（要求獲得・分析・定義）を適用することで改良できるシステムの例と、具体的な改良案を示します。
+本拡張機能は、X上の投稿（ツイート）をユーザーが選択し、
+ローカルデータベースに保存・整理・閲覧できる機能を提供するものである。
 
-本拡張機能は、Twitter上でユーザーのツイートをローカルのDBに保存し、整理して閲覧できる機能を提供します。ツイートの選別はユーザーが行い、任意のリストに格納できます。
+
+
+## 1. 要求獲得（現状の課題と要望）
+
+### 1.1 現状の課題
+
+本システムは、XのAPI通信結果を取得し、投稿情報を抽出・保存する仕組みを持つが、
+以下の問題を抱えている。
+
+#### (1) 情報取得の不安定性
+
+XのAPIは仕様が複雑で変更頻度も高く、
+現在の実装では「APIの種類ごとに条件分岐を増やす」形になっている。
+その結果、新しいAPI形式が追加されるたびに既存処理を修正する必要がある。
+
+#### (2) エラー処理の一貫性不足
+
+通信失敗、データ形式の不一致、想定外の構造など、
+複数のエラーが発生しうるが、
+エラー処理が個別実装されており統一されていない。
+
+#### (3) 将来拡張への対応困難
+
+現在は画像をURLとして保存しているが、
+将来的に「画像のローカル保存」などの機能追加を行う場合、
+既存の処理全体に影響が及ぶ構造になっている。
+
+#### (4) 保守性の低下
+
+1つの処理が多くの役割を担っており、
+コードの見通しが悪く、修正やテストが困難になっている。
 
 ---
 
-## 1. 要求獲得（現状の課題、問題点、要望）
+### 1.2 利用者・開発者の要望
 
-### 1.1 現状の問題点
-
-本システムは、Twitter APIレスポンスを傍受してツイート情報を抽出・保存する機能を提供していますが、以下の問題が発生しています：
-
-1. **情報獲得の不安定性**: Twitter側のAPI仕様が複雑で頻繁に変更されるため、レスポンス構造の変化に対応しきれていない。現在の実装では、大きな`switch`文でAPIタイプごとの処理を分岐しており、新しいAPIタイプや構造変更に対応するたびに既存コードの修正が必要となる。
-
-2. **エラー処理の不完全性**: 失敗時のパターンが多く、ネットワークエラー、パースエラー、データ不整合など様々なエラーケースが存在するが、適切なエラーハンドリングが実装しきれていない。
-
-3. **拡張性の欠如**: 現在は画像をURLで保存しているが、将来的には画像をローカルでも保存できるようにしたい。しかし、現在の設計では新しい機能を追加する際に既存コードへの影響が大きい。
-
-4. **保守性の低下**: 一つのクラスが多数のAPIタイプの処理を担当しており、コードが肥大化し、可読性が低下している。
-
-### 1.2 要望
-
-- Twitter APIの仕様変更に対して、逐次対処ではなく、より柔軟に対応できる設計にしたい
-- エラー処理を統一し、各エラーパターンに対して適切な処理を行いたい
-- 将来的な機能拡張（ローカル画像保存など）に対応可能な設計にしたい
-- コードの保守性を向上させ、テスト容易性を高めたい
+* API仕様変更に柔軟に対応できる設計にしたい
+* エラー処理を統一し、原因を把握しやすくしたい
+* 将来的な機能追加を容易にしたい
+* 保守・テストがしやすい構造にしたい
 
 ---
 
-## 2. 要求分析（「本当に解決すべき問題」を明確にする）
+## 2. 要求分析（本質的な問題の整理）
 
 ### 2.1 問題の本質
 
-現状の問題を分析すると、以下の本質的な課題が浮かび上がります：
+表面的な問題を整理すると、以下の設計上の問題に集約される。
 
-1. **単一責任原則の違反**: 一つのクラス（`ApiProcessor`）が多数のAPIタイプ（HomeTimeline、Bookmarks、UserTweetsなど）の処理を担当しており、各APIタイプの処理ロジックが混在している。
+#### 単一責任原則の違反
 
-2. **開放閉鎖原則の違反**: 新しいAPIタイプを追加する際、既存クラスの`switch`文を修正する必要があり、既存コードへの影響が大きい。Twitter APIの仕様変更に対応するたびに、既存の安定したコードまで修正が必要となる。
+1つの処理が
+「APIの種類判定」「データ抽出」「保存処理」「エラー対応」
+といった複数の役割を同時に担っている。
 
-3. **エラー処理の分散**: エラー処理が各分岐に散在しており、統一的なエラーハンドリングが困難。失敗パターンが増えるたびに、各分岐に個別に対応する必要がある。
+#### 拡張に弱い構造
 
-### 2.2 解決すべき問題の明確化
+新しいAPI形式を追加するたびに、
+既存の処理を直接書き換える必要があるため、
+変更が連鎖的に影響する。
 
-**本当に解決すべき問題は以下である：**
+#### 処理の流れが分かりにくい
 
-- **拡張性**: Twitter APIの仕様変更や新しいAPIタイプの追加に対して、既存コードを変更せずに対応できる設計が必要
-- **保守性**: 各APIタイプの処理ロジックを独立させ、個別にテスト・修正できる構造が必要
-- **エラー処理の統一**: エラーパターンを分類し、統一的なエラーハンドリング機構を提供する必要
-
-### 2.3 共通処理と差異の分析
-
-- **共通処理**: レスポンスのパース、ツイート抽出、キャッシュ保存、エラーハンドリング
-- **差異**: レスポンス構造、ツイート抽出方法、キャッシュキー生成、エラーパターン
-- **拡張性**: 将来のAPIタイプ追加や仕様変更に対応可能な設計が必要
-
-## 3. 要求定義（分析・明確化された要求を文書定義する）
-
-### 3.1 機能要求
-
-1. **拡張性**: Twitter APIの仕様変更や新しいAPIタイプの追加に対して、既存コードを変更せずに対応できる設計
-2. **保守性**: 各APIタイプの処理ロジックを独立させ、個別にテスト・修正できる構造
-3. **エラー処理の統一**: エラーパターンを分類し、統一的なエラーハンドリング機構の提供
-4. **将来の機能拡張**: ローカル画像保存などの新機能を追加する際、既存コードへの影響を最小限に
-
-### 3.2 非機能要求
-
-1. **単一責任原則の遵守**: 各クラスが明確な責務を持つ
-2. **開放閉鎖原則の遵守**: 拡張に対して開いており、修正に対して閉じている
-3. **テスト容易性**: 各コンポーネントを独立してテスト可能
-4. **コードの可読性**: コードの構造が明確で、理解しやすい
-
-### 3.3 改良案：Strategy パターン + Chain of Responsibility パターン
-
-#### 設計概要
-
-Strategy パターンと Chain of Responsibility パターンを組み合わせることで、各APIタイプの処理を独立した戦略クラスとして実装し、Twitter APIの仕様変更に対して柔軟に対応できる設計を実現します。
-
-```typescript
-// API処理戦略のインターフェース
-interface ApiProcessingStrategy {
-  canHandle(apiType: ApiType): boolean;
-  process(data: unknown, path: string, timestamp: number): Promise<ProcessedTweet[]>;
-}
-
-// ツイート関連APIの基本戦略（共通処理を実装）
-abstract class BaseTweetApiStrategy implements ApiProcessingStrategy {
-  protected tweetExtractor: TweetExtractor;
-  protected mediaExtractor: MediaExtractor;
-  protected userExtractor: UserExtractor;
-
-  abstract canHandle(apiType: ApiType): boolean;
-
-  async process(data: unknown, path: string, timestamp: number): Promise<ProcessedTweet[]> {
-    // 共通処理: レスポンス構造からinstructionsを探索
-    const instructions = this.findInstructions(data);
-    if (!instructions) {
-      return [];
-    }
-
-    // 共通処理: instructionsからツイートを抽出
-    const tweets = this.extractTweetsFromInstructions(instructions);
-
-    // キャッシュ処理
-    return await this.processWithCache(tweets, path, timestamp);
-  }
-
-  protected abstract findInstructions(data: unknown): any[] | null;
-  protected abstract extractTweetWithRetweet(tweet: any): ProcessedTweet | null;
-  protected abstract hasRequiredTweetKeys(tweet: any): boolean;
-}
-
-// HomeTimeline API処理戦略
-class HomeTimelineStrategy extends BaseTweetApiStrategy {
-  canHandle(apiType: ApiType): boolean {
-    return apiType === 'HomeTimeline' || apiType === 'HomeLatestTimeline';
-  }
-
-  protected findInstructions(data: unknown): any[] | null {
-    const response = data as any;
-    return response?.data?.home?.home_timeline_urt?.instructions || 
-           this.findInstructionsRecursively(response?.data);
-  }
-
-  // 他の抽象メソッドの実装...
-}
-
-// 戦略チェーン（Chain of Responsibility パターン）
-class ApiProcessingStrategyChain {
-  private strategies: ApiProcessingStrategy[] = [];
-
-  constructor() {
-    this.strategies.push(new HomeTimelineStrategy());
-    this.strategies.push(new BookmarksStrategy());
-    // 新しいAPIタイプはここに追加するだけ
-  }
-
-  getStrategy(apiType: ApiType): ApiProcessingStrategy | null {
-    return this.strategies.find(strategy => strategy.canHandle(apiType)) || null;
-  }
-}
-
-// 改良されたApiProcessor
-class ApiProcessor {
-  private strategyChain: ApiProcessingStrategyChain;
-
-  async processApiResponse(message: ApiResponseMessage): Promise<ApiProcessingResult> {
-      const apiType = this.extractApiType(message.path);
-      const strategy = this.strategyChain.getStrategy(apiType);
-    
-      if (!strategy) {
-      return { tweets: [], errors: [`未対応のAPIタイプ: ${apiType}`] };
-    }
-
-    try {
-      const tweets = await strategy.process(message.data, message.path, message.timestamp);
-      return { tweets, errors: [] };
-    } catch (error) {
-      return { 
-        tweets: [], 
-        errors: [error instanceof Error ? error.message : 'Unknown error'] 
-      };
-    }
-  }
-}
-```
-
-### 3.4 改良のメリット
-
-1. **単一責任原則の遵守**: 各戦略クラスが特定のAPIタイプのみを担当
-2. **開放閉鎖原則の遵守**: 新しいAPIタイプを追加する際、既存コードを変更せずに新しい戦略クラスを追加するだけ
-3. **テスト容易性**: 各戦略を独立してテスト可能
-4. **保守性の向上**: APIタイプごとの処理ロジックが明確に分離され、修正が容易
-5. **エラー処理の統一**: 共通のエラーハンドリング機構により、エラー処理が統一される
+「どのAPIが」「どの処理で」「どのように扱われるか」が
+構造として見えづらい。
 
 ---
 
+### 2.2 本当に解決すべき問題
 
-## まとめ
+本システムにおいて解決すべき本質的課題は以下である。
 
-本レポートでは、Twitter向けChrome拡張機能のAPI処理機能について、オブジェクト指向の設計原則（要求獲得・分析・定義）を適用した改良案を示しました。
+* **拡張性**：新しいAPI形式を追加しても既存処理を変更しない
+* **保守性**：APIごとの処理を独立させる
+* **構造の明確化**：処理の流れを設計レベルで理解できる
+* **エラー処理の統一**：共通ルールで扱える仕組みを作る
 
-### 適用した設計パターン
+---
 
-- **Strategy パターン**: 各APIタイプの処理を独立した戦略クラスとして実装
-- **Chain of Responsibility パターン**: 戦略チェーンにより、適切な戦略を自動選択
+### 2.3 共通部分と差分の整理
 
-### 改良による効果
+| 観点      | 内容                  |
+| ------- | ------------------- |
+| 共通処理    | データ受信、投稿抽出、保存、エラー処理 |
+| APIごとの差 | データ構造、投稿の取り出し方      |
+| 将来拡張    | 新API追加、保存方式の変更      |
 
-1. **拡張性の向上**: Twitter APIの仕様変更や新しいAPIタイプの追加に対して、既存コードを変更せずに対応可能
-2. **保守性の向上**: 各APIタイプの処理ロジックが明確に分離され、修正が容易
-3. **テスト容易性**: 各戦略を独立してテスト可能
-4. **エラー処理の統一**: 共通のエラーハンドリング機構により、エラー処理が統一される
+---
 
-これらの改良により、Twitter APIの複雑な仕様変更に対して柔軟に対応でき、将来的な機能拡張（ローカル画像保存など）も容易になります。また、エラー処理が統一されることで、失敗パターンに対する適切な対応が可能になります。
+## 3. 要求定義（設計方針）
 
+### 3.1 機能要求
+
+* API形式ごとに独立した処理を持つこと
+* 新しいAPIを追加しても既存処理を修正しないこと
+* エラー処理を共通化すること
+* 将来の機能追加に対応できること
+
+### 3.2 非機能要求
+
+* 各処理の役割が明確であること
+* 設計構造を文章・図で説明できること
+* テストや修正が容易であること
+
+---
+
+## 4. 改良案（設計構造の提案）
+
+### 4.1 設計の考え方（コード非依存）
+
+本改良では以下の2つの設計パターンを組み合わせる。
+
+* **Strategy パターン**
+
+  * 「APIの種類ごとに処理方法を切り替える」
+* **Chain of Responsibility パターン**
+
+  * 「どの処理が担当するかを自動的に選択する」
+
+---
+
+### 4.2 抽象化した構造イメージ（疑似構造）
+
+```text
+APIレスポンス受信
+        ↓
+処理担当を自動選択
+        ↓
+API種類ごとの専用処理
+        ↓
+共通ルールで保存・エラー処理
+```
+
+* 各API処理は「独立した部品」として存在
+* 新しいAPIは「部品を追加するだけ」で対応可能
+
+---
+
+### 4.3 改良後の役割分担
+
+| 要素      | 役割          |
+| ------- | ----------- |
+| API処理管理 | 適切な処理担当を選択  |
+| API別処理  | 特定APIの構造に対応 |
+| 共通処理    | 保存・エラー対応    |
+
+
+### 改良後のUML図
+
+```text
+┌──────────────────┐
+│   ApiProcessor      │
+│──────────────────│
+│ - strategyChain      │
+│──────────────────│
+│ + processApiResponse()│
+└──────────┬───────┘
+           │ uses
+           ▼
+┌───────────────────────┐
+│ApiProcessingStrategyChain │
+│───────────────────────│
+│ - strategies: Strategy[]  │
+│───────────────────────│
+│ + getStrategy(apiType)    │
+└──────────┬────────────┘
+           │ selects
+           ▼
+    ┌───────────────────┐
+    │ <<interface>>         │
+    │ApiProcessingStrategy  │
+    │───────────────────│
+    │ + canHandle(apiType)  │
+    │ + process(data)       │
+    └──────────▲────────┘
+               │ implements
+      ┌────────┴────────┐
+      │                 │
+┌─────────────────────┐ ┌──────────────────┐
+│BaseTweetApiStrategy  │ │(Other Api Strategy) │
+│─────────────────────│ │e.g. BookmarksStrategy│
+│ # extractTweets()    │ │                     │
+│ # handleCache()      │ │                     │
+│ # handleErrors()     │ │                     │
+└──────────▲──────────┘ └──────────────────┘
+           │ extends
+┌──────────────────┐
+│HomeTimelineStrategy │
+│──────────────────│
+│ + canHandle()       │
+│ + extractTweets()   │
+└──────────────────┘
+
+┌──────────────────┐
+│ ErrorHandler        │
+│──────────────────│
+│ + handle(error)     │
+└──────────────────┘
+```
