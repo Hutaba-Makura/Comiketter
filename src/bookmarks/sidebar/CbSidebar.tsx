@@ -15,7 +15,7 @@ import {
   ActionIcon,
   Menu
 } from '@mantine/core';
-import { IconPencilPlus, IconSearch, IconBookmark, IconSettings, IconDots, IconFolderDown, IconFolderUp} from '@tabler/icons-react';
+import { IconPencilPlus, IconSearch, IconBookmark, IconSettings, IconDots, IconArrowBigDownLines, IconFolderUp} from '@tabler/icons-react';
 import { useCbStore } from '../state/cbStore';
 import { CbSidebarItem } from './CbSidebarItem';
 import { cbService } from '../services/cbService';
@@ -170,13 +170,13 @@ export function CbSidebar() {
 
             <Menu.Dropdown>
               <Menu.Item
-                leftSection={<IconFolderDown size={24} />}
+                leftSection={<IconArrowBigDownLines size={22} />}
                 onClick={handleImportCb}
               >
                 {getTextSync('import_cb')}
               </Menu.Item>
               <Menu.Item
-                leftSection={<IconFolderUp size={24} />}
+                leftSection={<IconFolderUp size={22} />}
                 onClick={handleExportAllCbLists}
               >
                 {getTextSync('export_all_cb')}

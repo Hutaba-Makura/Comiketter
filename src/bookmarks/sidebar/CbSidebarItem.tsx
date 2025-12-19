@@ -18,7 +18,7 @@ import {
   IconTrash, 
   IconEdit, 
   IconCopy,
-  IconFolderUp
+  IconArrowBigUpLines
 } from '@tabler/icons-react';
 import { Cb } from '../types/cb';
 import { useCbStore } from '../state/cbStore';
@@ -208,7 +208,7 @@ export function CbSidebarItem({ cb }: CbSidebarItemProps) {
                         {getTextSync('copy')}
                       </Menu.Item>
                       <Menu.Item
-                        leftSection={<IconFolderUp size={14} />}
+                        leftSection={<IconArrowBigUpLines size={14} />}
                         onClick={handleExport}
                       >
                         {getTextSync('export_single_cb')}
