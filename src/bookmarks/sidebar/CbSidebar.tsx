@@ -170,16 +170,16 @@ export function CbSidebar() {
 
             <Menu.Dropdown>
               <Menu.Item
-                leftSection={<IconArrowBigDownLines size={22} />}
-                onClick={handleImportCb}
-              >
-                {getTextSync('import_cb')}
-              </Menu.Item>
-              <Menu.Item
                 leftSection={<IconFolderUp size={22} />}
                 onClick={handleExportAllCbLists}
               >
                 {getTextSync('export_all_cb')}
+              </Menu.Item>
+              <Menu.Item
+                leftSection={<IconArrowBigDownLines size={22} />}
+                onClick={handleImportCb}
+              >
+                {getTextSync('import_cb')}
               </Menu.Item>
             </Menu.Dropdown>
           </Menu>
