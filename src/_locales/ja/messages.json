@@ -224,17 +224,11 @@
   "reload": {
     "message": "再読み込み"
   },
-  "tweets_count": {
-    "message": "{{count}} ツイート"
-  },
   "search_cb_placeholder": {
     "message": "CBを検索..."
   },
   "no_cb_found_for_query": {
     "message": "「{{query}}」に一致するCBが見つかりません"
-  },
-  "no_cb_available": {
-    "message": "CBがありませんよ"
   },
   "create_cb_from_button": {
     "message": "新規作成ボタンからCBを作成してください"
@@ -331,9 +325,6 @@
   },
   "media": {
     "message": "メディア"
-  },
-  "close": {
-    "message": "閉じる"
   },
   "previous_image": {
     "message": "前の画像"
@@ -452,9 +443,6 @@
   "bookmark_list": {
     "message": "ブックマーク一覧"
   },
-  "settings": {
-    "message": "設定"
-  },
   "author_wishlist": {
     "message": "制作者の欲しいものリスト"
   },
@@ -498,13 +486,13 @@
     "message": "上書き"
   },
   "import_mode_overwrite_desc": {
-    "message": "同じCB_IDが存在する場合は上書きします"
+    "message": "名前と説明が一致する既存のCBリストを上書きします"
   },
   "import_mode_merge": {
     "message": "マージ"
   },
   "import_mode_merge_desc": {
-    "message": "既存のCBリストにツイートを追加します（重複ツイートはスキップ）"
+    "message": "名前と説明が一致する既存のCBリストにツイートを追加します（重複ツイートはスキップ）"
   },
   "import_success": {
     "message": "インポート成功"

@@ -224,17 +224,11 @@
   "reload": {
     "message": "Reload"
   },
-  "tweets_count": {
-    "message": "{{count}} Tweets"
-  },
   "search_cb_placeholder": {
     "message": "Search CBs..."
   },
   "no_cb_found_for_query": {
     "message": "No CBs found matching \"{{query}}\""
-  },
-  "no_cb_available": {
-    "message": "No CBs available"
   },
   "create_cb_from_button": {
     "message": "Please create a CB from the create button"
@@ -331,9 +325,6 @@
   },
   "media": {
     "message": "Media"
-  },
-  "close": {
-    "message": "Close"
   },
   "previous_image": {
     "message": "Previous image"
@@ -452,9 +443,6 @@
   "bookmark_list": {
     "message": "Bookmark List"
   },
-  "settings": {
-    "message": "Settings"
-  },
   "author_wishlist": {
     "message": "Author's Wishlist"
   },
@@ -498,13 +486,13 @@
     "message": "Overwrite"
   },
   "import_mode_overwrite_desc": {
-    "message": "Overwrite existing CB lists with the same CB_ID"
+    "message": "Overwrite existing CB lists with matching name and description"
   },
   "import_mode_merge": {
     "message": "Merge"
   },
   "import_mode_merge_desc": {
-    "message": "Add tweets to existing CB lists (skip duplicate tweets)"
+    "message": "Add tweets to existing CB lists with matching name and description (skip duplicate tweets)"
   },
   "import_success": {
     "message": "Import successful"

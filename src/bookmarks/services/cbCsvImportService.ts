@@ -2,7 +2,7 @@
  * CSVファイルからCBリストをインポートするサービス
  */
 
-import { bookmarkDB, BookmarkDB, BookmarkedTweetDB } from '../../utils/bookmarkDB';
+import { bookmarkDB, BookmarkDB } from '../../utils/bookmarkDB';
 import { parseCsv, decodeArrayField, CsvRow } from '../utils/csvParser';
 
 /**
@@ -105,7 +105,7 @@ export class CbCsvImportService {
   /**
    * データ行を検証
    */
-  private validateRow(row: CsvRow, rowNumber: number): { valid: boolean; error?: string } {
+  private validateRow(row: CsvRow): { valid: boolean; error?: string } {
     // 必須フィールドのチェック
     const requiredFields = [
       'CB_ID',
@@ -246,6 +246,27 @@ export class CbCsvImportService {
   }
 
   /**
+   * 名前と説明が一致する既存のCBを検索
+   */
+  private async findExistingCbByNameAndDescription(
+    name: string,
+    description?: string
+  ): Promise<BookmarkDB | undefined> {
+    const allBookmarks = await bookmarkDB.getAllBookmarks();
+    
+    // 説明が空の場合はundefinedとして扱う
+    const normalizedDescription = description?.trim() || undefined;
+    
+    return allBookmarks.find(bookmark => {
+      const bookmarkDescription = bookmark.description?.trim() || undefined;
+      return (
+        bookmark.name === name &&
+        bookmarkDescription === normalizedDescription
+      );
+    });
+  }
+
+  /**
    * 重複しないCB名を生成
    */
   private async generateUniqueCbName(baseName: string): Promise<string> {
@@ -280,6 +301,7 @@ export class CbCsvImportService {
    * CSVファイルをインポート
    */
   async importFromFile(
+    // eslint-disable-next-line no-undef
     file: File,
     mode: ImportMode
   ): Promise<ImportResult> {
@@ -310,7 +332,7 @@ export class CbCsvImportService {
       // データを検証
       const validRows: CsvRow[] = [];
       for (let i = 0; i < rows.length; i++) {
-        const validation = this.validateRow(rows[i], i + 2); // ヘッダー行を考慮して+2
+        const validation = this.validateRow(rows[i]);
         if (validation.valid) {
           validRows.push(rows[i]);
         } else {
@@ -340,8 +362,14 @@ export class CbCsvImportService {
           let targetCbId = cbId;
 
           // インポート方式に応じて処理
+          // 名前と説明で既存のCBを検索
+          const existingCb = await this.findExistingCbByNameAndDescription(
+            cbData.cb.name,
+            cbData.cb.description
+          );
+
           if (mode === 'create') {
-            // 新規作成: 既存のCB_IDと重複しないように新しいIDを生成
+            // 新規作成: 既存のCBと重複しないように新しい名前を生成
             const uniqueName = await this.generateUniqueCbName(cbData.cb.name);
             const newCb = await bookmarkDB.addBookmark({
               name: uniqueName,
@@ -352,15 +380,15 @@ export class CbCsvImportService {
             targetCbId = newCb.id;
             result.importedCbCount++;
           } else if (mode === 'overwrite') {
-            // 上書き: 既存のCBを更新、存在しない場合は新規作成
-            const existingCb = await bookmarkDB.getBookmarkById(cbId);
+            // 上書き: 名前と説明が一致する既存のCBを更新、存在しない場合は新規作成
             if (existingCb) {
-              await bookmarkDB.updateBookmark(cbId, {
+              await bookmarkDB.updateBookmark(existingCb.id, {
                 name: cbData.cb.name,
                 description: cbData.cb.description
               });
               // 既存のツイートを削除
-              await bookmarkDB.deleteBookmarkedTweetsByBookmarkId(cbId);
+              await bookmarkDB.deleteBookmarkedTweetsByBookmarkId(existingCb.id);
+              targetCbId = existingCb.id;
             } else {
               const newCb = await bookmarkDB.addBookmark({
                 name: cbData.cb.name,
@@ -372,9 +400,10 @@ export class CbCsvImportService {
               result.importedCbCount++;
             }
           } else {
-            // マージ: 既存のCBにツイートを追加（重複はスキップ）
-            const existingCb = await bookmarkDB.getBookmarkById(cbId);
-            if (!existingCb) {
+            // マージ: 名前と説明が一致する既存のCBにツイートを追加（重複はスキップ）
+            if (existingCb) {
+              targetCbId = existingCb.id;
+            } else {
               const newCb = await bookmarkDB.addBookmark({
                 name: cbData.cb.name,
                 description: cbData.cb.description,
