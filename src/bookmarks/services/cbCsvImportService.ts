@@ -74,6 +74,35 @@ export type ImportMode = 'create' | 'overwrite' | 'merge';
  */
 export class CbCsvImportService {
   /**
+   * 日時文字列をISO 8601形式に変換
+   */
+  private normalizeDate(dateString: string): string {
+    if (!dateString || dateString.trim() === '') {
+      return '';
+    }
+
+    // 既にISO 8601形式の場合はそのまま返す
+    if (/^\d{4}-\d{2}-\d{2}T/.test(dateString)) {
+      return dateString;
+    }
+
+    // Twitter形式（EEE MMM dd HH:mm:ss ZZZ yyyy）をISO 8601形式に変換
+    // 例: "Sun Dec 21 09:01:56 +0000 2025" -> "2025-12-21T09:01:56.000Z"
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        // パースに失敗した場合は元の値を返す
+        console.warn(`日時のパースに失敗しました: ${dateString}`);
+        return dateString;
+      }
+      return date.toISOString();
+    } catch (error) {
+      console.warn(`日時の変換エラー: ${dateString}`, error);
+      return dateString;
+    }
+  }
+
+  /**
    * データ行を検証
    */
   private validateRow(row: CsvRow, rowNumber: number): { valid: boolean; error?: string } {
@@ -114,15 +143,20 @@ export class CbCsvImportService {
       }
     }
 
-    // 日時形式の検証（簡易チェック）
+    // 日時形式の検証（ISO 8601形式またはTwitter形式を許可）
     const dateFields = ['CB_CREATED_AT', 'CB_UPDATED_AT', 'TWEET_DATE', 'SAVED_AT'];
     for (const field of dateFields) {
       const value = row[field];
-      if (value && !/^\d{4}-\d{2}-\d{2}T/.test(value)) {
-        return {
-          valid: false,
-          error: `日時フィールドの形式が不正です: ${field} (値: ${value})`
-        };
+      if (value) {
+        // ISO 8601形式（YYYY-MM-DDTHH:mm:ss.SSSZ）またはTwitter形式（EEE MMM dd HH:mm:ss ZZZ yyyy）を許可
+        const isIso8601 = /^\d{4}-\d{2}-\d{2}T/.test(value);
+        const isTwitterFormat = /^[A-Za-z]{3}\s+[A-Za-z]{3}\s+\d{1,2}\s+\d{2}:\d{2}:\d{2}\s+[+-]\d{4}\s+\d{4}$/.test(value);
+        if (!isIso8601 && !isTwitterFormat) {
+          return {
+            valid: false,
+            error: `日時フィールドの形式が不正です: ${field} (値: ${value})`
+          };
+        }
       }
     }
 
@@ -154,8 +188,8 @@ export class CbCsvImportService {
       id: row['CB_ID'].trim(),
       name: row['CB_NAME'].trim(),
       description: row['CB_DESCRIPTION']?.trim() || undefined,
-      createdAt: row['CB_CREATED_AT'].trim(),
-      updatedAt: row['CB_UPDATED_AT'].trim()
+      createdAt: this.normalizeDate(row['CB_CREATED_AT'].trim()),
+      updatedAt: this.normalizeDate(row['CB_UPDATED_AT'].trim())
     };
 
     const tweet: BookmarkedTweetImportData = {
@@ -165,8 +199,8 @@ export class CbCsvImportService {
       authorId: row['AUTHOR_ID']?.trim() || undefined,
       authorProfileImageUrl: row['AUTHOR_PROFILE_IMAGE_URL']?.trim() || undefined,
       content: row['CONTENT'].trim(),
-      tweetDate: row['TWEET_DATE'].trim(),
-      savedAt: row['SAVED_AT'].trim(),
+      tweetDate: this.normalizeDate(row['TWEET_DATE'].trim()),
+      savedAt: this.normalizeDate(row['SAVED_AT'].trim()),
       isRetweet: parseBoolean(row['IS_RETWEET']),
       isReply: parseBoolean(row['IS_REPLY']),
       replyToTweetId: row['REPLY_TO_TWEET_ID']?.trim() || undefined,
