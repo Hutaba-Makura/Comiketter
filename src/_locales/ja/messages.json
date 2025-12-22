@@ -473,6 +473,66 @@
   "export_all_cb": {
     "message": "全てのCBをエクスポート"
   },
+  "export_failed": {
+    "message": "エクスポートに失敗しました"
+  },
+  "exporting": {
+    "message": "エクスポート中..."
+  },
+  "select_csv_file": {
+    "message": "CSVファイルを選択"
+  },
+  "select_file": {
+    "message": "ファイルを選択"
+  },
+  "import_mode": {
+    "message": "インポート方式"
+  },
+  "import_mode_create": {
+    "message": "新規作成"
+  },
+  "import_mode_create_desc": {
+    "message": "既存のCBリストと重複しないように新規作成します"
+  },
+  "import_mode_overwrite": {
+    "message": "上書き"
+  },
+  "import_mode_overwrite_desc": {
+    "message": "同じCB_IDが存在する場合は上書きします"
+  },
+  "import_mode_merge": {
+    "message": "マージ"
+  },
+  "import_mode_merge_desc": {
+    "message": "既存のCBリストにツイートを追加します（重複ツイートはスキップ）"
+  },
+  "import_success": {
+    "message": "インポート成功"
+  },
+  "import_failed": {
+    "message": "インポート失敗"
+  },
+  "import_result_summary": {
+    "message": "CBリスト: {{cbCount}}件、ツイート: {{tweetCount}}件をインポートしました（スキップ: {{skippedCount}}件）"
+  },
+  "import_error_summary": {
+    "message": "エラーが {{errorCount}} 件発生しました"
+  },
+  "import_errors": {
+    "message": "エラー詳細"
+  },
+  "row": {
+    "message": "行"
+  },
+  "importing": {
+    "message": "インポート中..."
+  },
+  "import": {
+    "message": "インポート"
+  },
+  "close": {
+    "message": "閉じる"
+  },
   "api_type_labels": {
     "message": "{\"HomeTimeline\":\"ホームタイムライン\",\"HomeLatestTimeline\":\"ホーム最新タイムライン\",\"TweetDetail\":\"ツイート詳細\",\"TweetResultByRestId\":\"ツイート結果（ID指定）\",\"ListLatestTweetsTimeline\":\"リスト最新ツイートタイムライン\",\"SearchTimeline\":\"検索タイムライン\",\"CommunityTweetsTimeline\":\"コミュニティタイムライン\",\"CommunityTweetSearchModuleQuery\":\"コミュニティ検索タイムライン\",\"Bookmarks\":\"ブックマークタイムライン\",\"BookmarkSearchTimeline\":\"ブックマーク検索タイムライン\",\"UserTweets\":\"ユーザーツイート\",\"UserTweetsAndReplies\":\"ユーザー返信\",\"Likes\":\"ユーザーいいね\",\"UserHighlightsTweets\":\"ユーザーハイライトツイート\",\"CreateBookmarks\":\"ブックマーク作成\",\"DeleteBookmark\":\"ブックマーク削除\",\"FavoriteTweet\":\"ツイートいいね\",\"UnfavoriteTweet\":\"ツイートいいね解除\",\"CreateRetweet\":\"リツイート作成\",\"DeleteRetweet\":\"リツイート削除\",\"CreateTweet\":\"ツイート作成\",\"UserMedia\":\"ユーザーメディア\",\"NotificationsTimeline\":\"通知タイムライン\"}"
   }

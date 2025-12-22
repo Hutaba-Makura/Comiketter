@@ -473,6 +473,66 @@
   "export_all_cb": {
     "message": "Export all CB"
   },
+  "export_failed": {
+    "message": "Export failed"
+  },
+  "exporting": {
+    "message": "Exporting..."
+  },
+  "select_csv_file": {
+    "message": "Select CSV file"
+  },
+  "select_file": {
+    "message": "Select file"
+  },
+  "import_mode": {
+    "message": "Import mode"
+  },
+  "import_mode_create": {
+    "message": "Create new"
+  },
+  "import_mode_create_desc": {
+    "message": "Create new CB lists without duplicating existing ones"
+  },
+  "import_mode_overwrite": {
+    "message": "Overwrite"
+  },
+  "import_mode_overwrite_desc": {
+    "message": "Overwrite existing CB lists with the same CB_ID"
+  },
+  "import_mode_merge": {
+    "message": "Merge"
+  },
+  "import_mode_merge_desc": {
+    "message": "Add tweets to existing CB lists (skip duplicate tweets)"
+  },
+  "import_success": {
+    "message": "Import successful"
+  },
+  "import_failed": {
+    "message": "Import failed"
+  },
+  "import_result_summary": {
+    "message": "Imported {{cbCount}} CB lists and {{tweetCount}} tweets (skipped: {{skippedCount}})"
+  },
+  "import_error_summary": {
+    "message": "{{errorCount}} errors occurred"
+  },
+  "import_errors": {
+    "message": "Error details"
+  },
+  "row": {
+    "message": "Row"
+  },
+  "importing": {
+    "message": "Importing..."
+  },
+  "import": {
+    "message": "Import"
+  },
+  "close": {
+    "message": "Close"
+  },
   "api_type_labels": {
     "message": "{\"HomeTimeline\":\"Home Timeline\",\"HomeLatestTimeline\":\"Home Latest Timeline\",\"TweetDetail\":\"Tweet Detail\",\"TweetResultByRestId\":\"Tweet Result (by ID)\",\"ListLatestTweetsTimeline\":\"List Latest Tweets Timeline\",\"SearchTimeline\":\"Search Timeline\",\"CommunityTweetsTimeline\":\"Community Timeline\",\"CommunityTweetSearchModuleQuery\":\"Community Search Timeline\",\"Bookmarks\":\"Bookmarks Timeline\",\"BookmarkSearchTimeline\":\"Bookmark Search Timeline\",\"UserTweets\":\"User Tweets\",\"UserTweetsAndReplies\":\"User Replies\",\"Likes\":\"User Likes\",\"UserHighlightsTweets\":\"User Highlights Tweets\",\"CreateBookmarks\":\"Create Bookmarks\",\"DeleteBookmark\":\"Delete Bookmark\",\"FavoriteTweet\":\"Favorite Tweet\",\"UnfavoriteTweet\":\"Unfavorite Tweet\",\"CreateRetweet\":\"Create Retweet\",\"DeleteRetweet\":\"Delete Retweet\",\"CreateTweet\":\"Create Tweet\",\"UserMedia\":\"User Media\",\"NotificationsTimeline\":\"Notifications Timeline\"}"
   }

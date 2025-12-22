@@ -20,6 +20,8 @@ import { useCbStore } from '../state/cbStore';
 import { CbSidebarItem } from './CbSidebarItem';
 import { cbService } from '../services/cbService';
 import { getTextSync, useI18n } from '../utils/i18n';
+import { cbCsvExportService } from '../services/cbCsvExportService';
+import { CbImportModal } from '../components/CbImportModal';
 
 /**
  * CBサイドバーコンポーネント
@@ -32,6 +34,8 @@ export function CbSidebar() {
   const [cbDescription, setCbDescription] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [isSettingsHovered, setIsSettingsHovered] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   
   // i18n機能を一元管理（言語設定の初期化、ストレージ変更の監視、再レンダリングのトリガー）
   useI18n();
@@ -68,7 +72,7 @@ export function CbSidebar() {
 
   const handleCreateCbSubmit = async () => {
     if (!cbName.trim()) {
-      alert(getTextSync('cb_name_required'));
+      window.alert(getTextSync('cb_name_required'));
       return;
     }
 
@@ -81,19 +85,37 @@ export function CbSidebar() {
       setCbDescription('');
     } catch (err) {
       console.error('CB作成エラー:', err);
-      alert(getTextSync('cb_create_failed'));
+      window.alert(getTextSync('cb_create_failed'));
     } finally {
       setIsCreating(false);
     }
   };
 
-  // 実装中
   const handleImportCb = () => {
-    console.log('CBインポート');
+    setIsImportModalOpen(true);
   };
 
-  const handleExportAllCbLists = () => {
-    console.log('全てのCBリストをエクスポート');
+  const handleExportAllCbLists = async () => {
+    setIsExporting(true);
+    try {
+      await cbCsvExportService.exportAllCbs();
+    } catch (error) {
+      console.error('エクスポートエラー:', error);
+      window.alert(getTextSync('export_failed'));
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleImportSuccess = async () => {
+    // CB一覧を再取得
+    try {
+      const cbList = await cbService.listCbs();
+      setCbs(cbList);
+    } catch (err) {
+      console.error('CB一覧取得エラー:', err);
+    }
+    setIsImportModalOpen(false);
   };
 
   // 検索フィルタリングとupdateAt順にソート
@@ -172,8 +194,9 @@ export function CbSidebar() {
               <Menu.Item
                 leftSection={<IconFolderUp size={22} />}
                 onClick={handleExportAllCbLists}
+                disabled={isExporting || cbs.length === 0}
               >
-                {getTextSync('export_all_cb')}
+                {isExporting ? getTextSync('exporting') : getTextSync('export_all_cb')}
               </Menu.Item>
               <Menu.Item
                 leftSection={<IconArrowBigDownLines size={22} />}
@@ -414,6 +437,13 @@ export function CbSidebar() {
           </Box>
         </div>
       )}
+
+      {/* インポートモーダル */}
+      <CbImportModal
+        opened={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onSuccess={handleImportSuccess}
+      />
     </>
   );
 }
