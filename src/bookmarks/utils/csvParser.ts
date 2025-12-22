@@ -104,6 +104,53 @@ export function parseCsvLine(line: string, headers: string[]): CsvRow {
 }
 
 /**
+ * CSV文字列を行に分割（ダブルクォート内の改行を考慮）
+ * @param csvText CSV文字列
+ * @returns 行の配列
+ */
+function splitCsvLines(csvText: string): string[] {
+  const lines: string[] = [];
+  let currentLine = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < csvText.length; i++) {
+    const char = csvText[i];
+    const nextChar = csvText[i + 1];
+
+    if (char === '"') {
+      if (inQuotes && nextChar === '"') {
+        // エスケープされたダブルクォート（""）
+        currentLine += '""';
+        i++; // 次の文字をスキップ
+      } else {
+        // クォートの開始/終了
+        inQuotes = !inQuotes;
+        currentLine += char;
+      }
+    } else if ((char === '\n' || (char === '\r' && nextChar !== '\n')) && !inQuotes) {
+      // クォート外の改行は行区切り
+      if (currentLine.trim() !== '') {
+        lines.push(currentLine);
+      }
+      currentLine = '';
+      // \r\nの場合は次の文字もスキップ
+      if (char === '\r' && nextChar === '\n') {
+        i++;
+      }
+    } else {
+      currentLine += char;
+    }
+  }
+
+  // 最後の行を追加
+  if (currentLine.trim() !== '') {
+    lines.push(currentLine);
+  }
+
+  return lines;
+}
+
+/**
  * CSV文字列をパース
  * @param csvText CSV文字列
  * @returns パースされた行データの配列
@@ -112,7 +159,8 @@ export function parseCsv(csvText: string): CsvRow[] {
   // UTF-8 BOMを除去
   const text = csvText.startsWith('\uFEFF') ? csvText.slice(1) : csvText;
 
-  const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
+  // ダブルクォート内の改行を考慮して行を分割
+  const lines = splitCsvLines(text);
   
   if (lines.length === 0) {
     return [];
@@ -134,6 +182,7 @@ export function parseCsv(csvText: string): CsvRow[] {
         i++;
       } else {
         inQuotes = !inQuotes;
+        // クォート文字自体はヘッダーに含めない
       }
     } else if (char === ',' && !inQuotes) {
       headers.push(currentHeader.trim());
