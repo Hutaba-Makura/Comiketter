@@ -398,27 +398,31 @@ export class CbCsvImportService {
             }
 
             try {
-              await bookmarkDB.addBookmarkedTweet({
-                bookmarkId: targetCbId,
-                tweetId: tweet.tweetId,
-                authorUsername: tweet.authorUsername,
-                authorDisplayName: tweet.authorDisplayName,
-                authorId: tweet.authorId,
-                authorProfileImageUrl: tweet.authorProfileImageUrl,
-                content: tweet.content,
-                mediaUrls: tweet.mediaUrls,
-                mediaTypes: tweet.mediaTypes,
-                mediaPreviewUrls: tweet.mediaPreviewUrls,
-                tweetDate: tweet.tweetDate,
-                isRetweet: tweet.isRetweet,
-                isReply: tweet.isReply,
-                replyToTweetId: tweet.replyToTweetId,
-                replyToUsername: tweet.replyToUsername,
-                saveType: tweet.saveType,
-                favoriteCount: tweet.favoriteCount,
-                retweetCount: tweet.retweetCount,
-                replyCount: tweet.replyCount
-              });
+              // CSVのsavedAtを優先して使用（インポート時に元の保存日時を保持）
+              await bookmarkDB.addBookmarkedTweet(
+                {
+                  bookmarkId: targetCbId,
+                  tweetId: tweet.tweetId,
+                  authorUsername: tweet.authorUsername,
+                  authorDisplayName: tweet.authorDisplayName,
+                  authorId: tweet.authorId,
+                  authorProfileImageUrl: tweet.authorProfileImageUrl,
+                  content: tweet.content,
+                  mediaUrls: tweet.mediaUrls,
+                  mediaTypes: tweet.mediaTypes,
+                  mediaPreviewUrls: tweet.mediaPreviewUrls,
+                  tweetDate: tweet.tweetDate,
+                  isRetweet: tweet.isRetweet,
+                  isReply: tweet.isReply,
+                  replyToTweetId: tweet.replyToTweetId,
+                  replyToUsername: tweet.replyToUsername,
+                  saveType: tweet.saveType,
+                  favoriteCount: tweet.favoriteCount,
+                  retweetCount: tweet.retweetCount,
+                  replyCount: tweet.replyCount
+                },
+                tweet.savedAt // CSVから読み込んだsavedAtを明示的に指定
+              );
               result.importedTweetCount++;
             } catch (error) {
               console.error('ツイート追加エラー:', error);

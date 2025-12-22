@@ -476,8 +476,13 @@ export class BookmarkDatabase {
 
   /**
    * ブックマーク済みツイートを追加（既に存在する場合は上書き）
+   * @param tweet ツイートデータ
+   * @param savedAt 保存日時（オプション、指定されない場合は現在時刻を使用）
    */
-  async addBookmarkedTweet(tweet: Omit<BookmarkedTweetDB, 'id' | 'savedAt'>): Promise<BookmarkedTweetDB> {
+  async addBookmarkedTweet(
+    tweet: Omit<BookmarkedTweetDB, 'id' | 'savedAt'>,
+    savedAt?: string
+  ): Promise<BookmarkedTweetDB> {
     if (this.useIndexedDB) {
       try {
         const db = await this.init();
@@ -497,12 +502,15 @@ export class BookmarkDatabase {
 
               let finalTweet: BookmarkedTweetDB;
 
+              // savedAtが指定されている場合はそれを使用、そうでない場合は現在時刻を使用
+              const finalSavedAt = savedAt || new Date().toISOString();
+
               if (existingTweet) {
                 // 既に存在する場合は、既存のIDを使って更新（最新情報で上書き）
                 finalTweet = {
                   ...tweet,
                   id: existingTweet.id,
-                  savedAt: new Date().toISOString(), // 保存日時を更新
+                  savedAt: finalSavedAt,
                 };
                 console.log('Comiketter: 既存のツイートを更新:', finalTweet.id);
               } else {
@@ -510,7 +518,7 @@ export class BookmarkDatabase {
                 finalTweet = {
                   ...tweet,
                   id: this.generateId(),
-                  savedAt: new Date().toISOString(),
+                  savedAt: finalSavedAt,
                 };
                 console.log('Comiketter: 新しいツイートを追加:', finalTweet.id);
               }
@@ -582,13 +590,16 @@ export class BookmarkDatabase {
       t => t.bookmarkId === tweet.bookmarkId && t.tweetId === tweet.tweetId
     );
 
+    // savedAtが指定されている場合はそれを使用、そうでない場合は現在時刻を使用
+    const finalSavedAt = savedAt || new Date().toISOString();
+
     let finalTweet: BookmarkedTweetDB;
     if (existingTweetIndex !== -1) {
       // 既に存在する場合は、既存のIDを使って更新（最新情報で上書き）
       finalTweet = {
         ...tweet,
         id: tweets[existingTweetIndex].id,
-        savedAt: new Date().toISOString(), // 保存日時を更新
+        savedAt: finalSavedAt,
       };
       tweets[existingTweetIndex] = finalTweet;
       console.log('Comiketter: 既存のツイートを更新:', finalTweet.id);
@@ -597,7 +608,7 @@ export class BookmarkDatabase {
       finalTweet = {
         ...tweet,
         id: this.generateId(),
-        savedAt: new Date().toISOString(),
+        savedAt: finalSavedAt,
       };
       tweets.push(finalTweet);
       console.log('Comiketter: 新しいツイートを追加:', finalTweet.id);
