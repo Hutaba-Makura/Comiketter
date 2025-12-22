@@ -240,9 +240,15 @@ export class CbDataService {
         throw new Error('CBが見つかりません');
       }
 
+      // descriptionが明示的に指定されている場合（undefinedでない場合）はその値を使用
+      // undefinedの場合は既存の値を保持
+      const descriptionToUpdate = 'description' in updates 
+        ? (updates.description ?? '') 
+        : bookmark.description;
+
       await this.db.updateBookmark(cbId, {
         name: updates.name ?? bookmark.name,
-        description: updates.description ?? bookmark.description
+        description: descriptionToUpdate
       });
 
       const updatedBookmark = await this.db.getBookmarkById(cbId);
