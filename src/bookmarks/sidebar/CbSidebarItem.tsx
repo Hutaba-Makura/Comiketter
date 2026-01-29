@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   Paper, 
   Text, 
@@ -17,13 +17,15 @@ import {
   IconDotsVertical, 
   IconTrash, 
   IconEdit, 
-  IconCopy
+  IconCopy,
+  IconArrowBigUpLine
 } from '@tabler/icons-react';
 import { Cb } from '../types/cb';
 import { useCbStore } from '../state/cbStore';
 import { formatCount } from '../utils/format';
 import { cbService } from '../services/cbService';
 import { getTextSync, useI18n } from '../utils/i18n';
+import { cbCsvExportService } from '../services/cbCsvExportService';
 
 interface CbSidebarItemProps {
   cb: Cb;
@@ -37,6 +39,7 @@ export function CbSidebarItem({ cb }: CbSidebarItemProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const isSelected = selectedCbId === cb.id;
 
   // i18n機能を一元管理（言語設定の初期化、ストレージ変更の監視、再レンダリングのトリガー）
@@ -58,7 +61,7 @@ export function CbSidebarItem({ cb }: CbSidebarItemProps) {
       setIsDeleteModalOpen(false);
     } catch (error) {
       console.error('CB削除エラー:', error);
-      alert(getTextSync('cb_delete_failed'));
+      window.alert(getTextSync('cb_delete_failed'));
     } finally {
       setIsDeleting(false);
     }
@@ -69,13 +72,11 @@ export function CbSidebarItem({ cb }: CbSidebarItemProps) {
   };
 
   // CBの名前の編集を開始（TimelineViewのCB情報ヘッダーで編集）
-  const handleEdit: React.MouseEventHandler<HTMLButtonElement> = (e) => {
-    e.stopPropagation(); // PaperのonClickを防ぐ
+  const handleEdit = () => {
     selectCbAndEditName(cb.id); // CBを選択して編集モードに入る
   };
 
-  const handleCopy: React.MouseEventHandler<HTMLButtonElement> = async (e) => {
-    e.stopPropagation(); // PaperのonClickを防ぐ
+  const handleCopy = async () => {
     try {
       // CBをコピー
       const newCb = await cbService.copyCb(cb.id);
@@ -86,7 +87,19 @@ export function CbSidebarItem({ cb }: CbSidebarItemProps) {
       console.log('CBコピー完了:', newCb.id);
     } catch (error) {
       console.error('CBコピーエラー:', error);
-      alert(getTextSync('cb_copy_failed'));
+      window.alert(getTextSync('cb_copy_failed'));
+    }
+  };
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      await cbCsvExportService.exportSingleCb(cb.id);
+    } catch (error) {
+      console.error('CBエクスポートエラー:', error);
+      window.alert(getTextSync('export_failed'));
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -177,7 +190,7 @@ export function CbSidebarItem({ cb }: CbSidebarItemProps) {
               
               <Transition mounted={isHovered || isSelected} transition="fade" duration={150}>
                 {(menuStyles) => (
-                  <Menu shadow="md" width={150} position="bottom-end">
+                  <Menu shadow="md" width="auto" position="bottom-end">
                     <Menu.Target>
                       <ActionIcon
                         variant="subtle"
@@ -191,15 +204,22 @@ export function CbSidebarItem({ cb }: CbSidebarItemProps) {
                     <Menu.Dropdown>
                       <Menu.Item
                         leftSection={<IconEdit size={14} />}
-                        onClick={handleEdit}
+                        onClick={() => handleEdit()}
                       >
                         {getTextSync('edit')}
                       </Menu.Item>
                       <Menu.Item
                         leftSection={<IconCopy size={14} />}
-                        onClick={handleCopy}
+                        onClick={() => handleCopy()}
                       >
                         {getTextSync('copy')}
+                      </Menu.Item>
+                      <Menu.Item
+                        leftSection={<IconArrowBigUpLine size={14} />}
+                        onClick={() => handleExport()}
+                        disabled={isExporting || cb.tweetCount === 0}
+                      >
+                        {isExporting ? getTextSync('exporting') : getTextSync('export_single_cb')}
                       </Menu.Item>
                       <Menu.Divider />
                       <Menu.Item

@@ -292,11 +292,12 @@ export function TimelineView() {
 
     setIsSaving(true);
     try {
+      // 空文字列も明示的に渡す（undefinedに変換しない）
       const updatedCb = await cbService.updateCb(selectedCbId, { 
-        description: trimmedDescription || undefined 
+        description: trimmedDescription 
       });
       updateCbInStore(selectedCbId, { 
-        description: trimmedDescription || undefined 
+        description: trimmedDescription 
       });
       setEditingDescription(false);
     } catch (error) {

@@ -11,13 +11,17 @@ import {
   Divider,
   Badge,
   ScrollArea,
-  LoadingOverlay
+  LoadingOverlay,
+  ActionIcon,
+  Menu
 } from '@mantine/core';
-import { IconPencilPlus, IconSearch, IconBookmark, IconSettings} from '@tabler/icons-react';
+import { IconPencilPlus, IconSearch, IconBookmark, IconSettings, IconDots, IconArrowBigDownLines, IconFolderUp} from '@tabler/icons-react';
 import { useCbStore } from '../state/cbStore';
 import { CbSidebarItem } from './CbSidebarItem';
 import { cbService } from '../services/cbService';
 import { getTextSync, useI18n } from '../utils/i18n';
+import { cbCsvExportService } from '../services/cbCsvExportService';
+import { CbImportModal } from '../components/CbImportModal';
 
 /**
  * CBサイドバーコンポーネント
@@ -30,6 +34,8 @@ export function CbSidebar() {
   const [cbDescription, setCbDescription] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [isSettingsHovered, setIsSettingsHovered] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   
   // i18n機能を一元管理（言語設定の初期化、ストレージ変更の監視、再レンダリングのトリガー）
   useI18n();
@@ -66,7 +72,7 @@ export function CbSidebar() {
 
   const handleCreateCbSubmit = async () => {
     if (!cbName.trim()) {
-      alert(getTextSync('cb_name_required'));
+      window.alert(getTextSync('cb_name_required'));
       return;
     }
 
@@ -79,10 +85,37 @@ export function CbSidebar() {
       setCbDescription('');
     } catch (err) {
       console.error('CB作成エラー:', err);
-      alert(getTextSync('cb_create_failed'));
+      window.alert(getTextSync('cb_create_failed'));
     } finally {
       setIsCreating(false);
     }
+  };
+
+  const handleImportCb = () => {
+    setIsImportModalOpen(true);
+  };
+
+  const handleExportAllCbLists = async () => {
+    setIsExporting(true);
+    try {
+      await cbCsvExportService.exportAllCbs();
+    } catch (error) {
+      console.error('エクスポートエラー:', error);
+      window.alert(getTextSync('export_failed'));
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleImportSuccess = async () => {
+    // CB一覧を再取得
+    try {
+      const cbList = await cbService.listCbs();
+      setCbs(cbList);
+    } catch (err) {
+      console.error('CB一覧取得エラー:', err);
+    }
+    setIsImportModalOpen(false);
   };
 
   // 検索フィルタリングとupdateAt順にソート
@@ -133,11 +166,46 @@ export function CbSidebar() {
     <>
       <Stack gap="md" p="md" h="100%">
         {/* ヘッダー */}
-        <Group display="flex" justify="start" align="center" gap="0">
-          <IconBookmark size={24}/>
-          <Title order={3} size="h4">
-            {getTextSync('custom_bookmark')}
-          </Title>
+        <Group 
+          display="flex" 
+          justify="space-between" 
+          align="center" 
+          gap="xs"
+        >
+          <Group display="flex" justify="start" align="center" gap="0">
+            <IconBookmark size={24}/>
+            <Title order={3} size="h4">
+              {getTextSync('custom_bookmark')}
+            </Title>
+          </Group>
+
+          {/* メニューボタン */}
+          <Menu shadow="md" width="auto" position="bottom-end">
+            <Menu.Target>
+              <ActionIcon
+                variant="subtle"
+                size="xs"
+              >
+                <IconDots size={24}  color="var(--mantine-color-gray-6)" />
+              </ActionIcon>
+            </Menu.Target>
+
+            <Menu.Dropdown>
+              <Menu.Item
+                leftSection={<IconFolderUp size={22} />}
+                onClick={handleExportAllCbLists}
+                disabled={isExporting || cbs.length === 0}
+              >
+                {isExporting ? getTextSync('exporting') : getTextSync('export_all_cb')}
+              </Menu.Item>
+              <Menu.Item
+                leftSection={<IconArrowBigDownLines size={22} />}
+                onClick={handleImportCb}
+              >
+                {getTextSync('import_cb')}
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
         </Group>
 
         {/* 統計情報 */}
@@ -369,6 +437,13 @@ export function CbSidebar() {
           </Box>
         </div>
       )}
+
+      {/* インポートモーダル */}
+      <CbImportModal
+        opened={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onSuccess={handleImportSuccess}
+      />
     </>
   );
 }
